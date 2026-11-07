@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>cislunar: Earth-Moon orbit toolkit</title>
+<style>
+  :root { --bg: #fbfaf8; --fg: #0b0b0b; --muted: #52514e; --line: #e4e3df; --accent: #2a78d6; --card: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141413; --fg: #f1f0ec; --muted: #a3a29d; --line: #33322f; --accent: #6da7ec; --card: #1c1c1b; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 24px; }
+  h1 { font-size: 2rem; margin: 0 0 8px; }
+  p { color: var(--muted); }
+  a.card { display: block; margin: 20px 0; padding: 20px 22px; border: 1px solid var(--line); border-radius: 10px;
+           background: var(--card); color: var(--fg); text-decoration: none; }
+  a.card:hover { border-color: var(--accent); }
+  a.card b { color: var(--accent); font-size: 1.1rem; }
+  a.card span { display: block; color: var(--muted); margin-top: 4px; }
+  footer { margin-top: 40px; font-size: 0.9rem; color: var(--muted); }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<h1>cislunar</h1>
+<p>A Python toolkit for orbits in Earth-Moon space, built on the circular restricted three-body problem: halo orbits, NRHOs and DROs;
+transfers and rendezvous; transient orbits; Delta-v budgets; and orbit determination from sparse observations.</p>
+
+<a class="card" href="manual.html"><b>User manual</b>
+<span>A guided tour for readers who know orbits from Kerbal Space Program, with interactive simulations. The page is about 12 MB, so it takes a moment to load.</span></a>
+
+<a class="card" href="case_study_base_stations.html"><b>Case study: base stations for satellite servicing</b>
+<span>Where should a servicing station live? Station Delta-v, the route matrix, and 10 / 100 / 1,000-mission campaigns compared with direct launches. About 6 MB.</span></a>
+
+<footer>Source code, examples and tests: <a href="https://github.com/yoyoerx/cislunar">github.com/yoyoerx/cislunar</a> &middot; MIT License</footer>
+</main>
+</body>
+</html>

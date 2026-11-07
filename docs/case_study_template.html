@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case study: cislunar base stations for satellite servicing</title>
+<style>/*__CSS__*/
+.chip { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+td.best { font-weight: 700; }
+.small { font-size: 13px; }
+.kpi { font-size: 15px; }
+</style>
+<script>/*__PLOTLY__*/</script>
+</head>
+<body>
+<header class="top">
+  <span class="brand">cislunar</span><span class="ver">case study &middot; base stations for satellite servicing &middot; v__VERSION__</span>
+  <button id="themeBtn" type="button">Toggle dark mode</button>
+</header>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+<ol>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#findings">What the numbers say</a></li>
+  <li><a href="#question">The question</a></li>
+  <li><a href="#orbits">Stations &amp; clients</a></li>
+  <li><a href="#routes">Route costs</a></li>
+  <li><a href="#fielding">Fielding a station</a></li>
+  <li><a href="#campaign">Campaign economics</a></li>
+  <li><a href="#ledger">The &Delta;v ledger</a></li>
+  <li><a href="#best">Best station per client</a></li>
+  <li><a href="#breakeven">Break-even</a></li>
+  <li><a href="#fleet">Mixed fleet</a></li>
+  <li><a href="#assumptions">Assumptions &amp; limits</a></li>
+  <li><a href="#reproduce">Reproduce it</a></li>
+</ol>
+</nav>
+<main>
+
+<section id="summary">
+<h1>Where should a satellite-servicing base station live?</h1>
+<p class="lede">A case study using the <code>cislunar</code> toolkit. It compares eight candidate base stations, from a LEO depot to
+stations near the Moon, as homes for reusable servicing vehicles. Their clients are satellites in nine orbit families: LEO, MEO, GEO,
+translunar, cislunar and lunar. The study covers the &Delta;v to field each station, the &Delta;v of every servicing route, and what
+10, 100 or 1,000 servicing missions add up to.</p>
+<div class="callout">
+<span class="tag">Headline results (default assumptions; they update as you change the model below)</span>
+<div id="headline"></div>
+</div>
+<div class="callout warn"><span class="tag">How to read the numbers</span>
+&Delta;v figures are computed by the toolkit's three-body model and are reliable to a few percent for the routes and orbits defined here.
+Campaign totals combine those &Delta;v values with a <b>mass model</b>: vehicle masses, engine efficiency and lifetimes. That model is an
+assumption, so every one of those inputs is a slider in <a href="#campaign">section 6</a>. Treat the campaign results as a structured
+comparison, not a cost estimate.</div>
+</section>
+
+
+<section id="findings">
+<h2>What the numbers say</h2>
+<p class="muted small">Figures in this section use the default mass model (20 t station, 2 t reusable servicer, 500 kg kit per mission, Isp 320 s,
+servicer replaced every 20 missions, 10-year station life). The interactive sections recompute everything as you change it.</p>
+<ol>
+<li><b>Plane changes decide the Earth-side market.</b> LEO and GNSS clients sit in steeply inclined planes. A launcher can put a servicer straight into
+the client's plane, so flying direct costs only 164 m/s (SSO) or 3.4 km/s (GNSS). Any single base station must instead pay the plane change: 8.6 km/s from a
+28.5&deg; LEO depot to SSO, and 3.8&ndash;4.2 km/s from every high station. <b>No station in this study ever beats direct launches for LEO or MEO clients.</b></li>
+<li><b>Cislunar space is a tight network.</b> Any two of the NRHO, DRO, L1 and L2 halos and the 2:1 translunar orbit are 0.17&ndash;0.69 km/s apart (L1 &harr; L2 halo is
+the cheapest, at 174 m/s). Low lunar orbit is 0.68&ndash;0.95 km/s from the libration orbits. Reaching any of them from LEO costs 3.6&ndash;4.4 km/s. Once
+something is in cislunar space, moving it around is cheap.</li>
+<li><b>GEO is the hinge.</b> From high orbits GEO is 1.4&ndash;2.1 km/s away (cheapest from the 2:1 translunar orbit at 1,364 m/s and the L1 halo at
+1,417 m/s), against 4.2 km/s from LEO. Plane changes are cheap far from Earth. But a reusable servicer pays that <em>twice</em> (there and back, with the kit
+aboard), and its propellant must first be shipped up to the station. So with the default masses, <b>serving GEO from a remote station costs 28&ndash;34% more
+than flying direct</b>, while <b>a depot in GEO itself saves 65% at 100 missions and 73% at 1,000.</b></li>
+<li><b>Ten missions never justify a station; about a dozen do.</b> With a station in the client's own orbit, break-even comes after 12&ndash;15 missions for every
+GEO, translunar, cislunar and lunar class. A cislunar station serving <em>neighbouring</em> cislunar orbits breaks even after 12&ndash;31 missions (DRO serving
+the L2 halo: 14; L1 halo serving the L2 halo: 12). Serving LLO from a libration-orbit station takes 20&ndash;90.</li>
+<li><b>For a mixed customer base, two stations beat one.</b> In the default mix (35% GEO, 25% SSO, 10% GNSS, 30% translunar, cislunar and lunar) and 100
+missions, the best plan is a <b>GEO depot plus one cislunar station</b>, with LEO and GNSS clients served by direct launches. It needs about 540 t in LEO
+against 766 t with no station, a saving of about 30%. The cislunar partner barely matters: DRO, L1 halo and NRHO are within about 3% of each other. So choose it on other
+grounds: the DRO needs no station-keeping, the L1 halo is closest to GEO and LLO, and the NRHO shares Gateway's infrastructure.</li>
+<li><b>What would change the answer.</b> A lighter servicer relative to its kit, a higher-Isp engine, or longer servicer life all favour remote stations.
+So does lunar propellant, if it can be delivered for less than about half the cost per kg of propellant launched to LEO (try the slider in section 6).
+The rest of this report lets you test each of these.</li>
+</ol>
+</section>
+
+<section id="question">
+<h2>2. The question</h2>
+<p>A <b>servicing mission</b> sends a robotic vehicle (the <b>servicer</b>) to a client satellite to refuel it, repair it, upgrade it or attach a
+life-extension pod. It leaves behind a <b>servicing kit</b> of propellant, parts or a pod. There are two ways to run a servicing business:</p>
+<table>
+<tr><th>Architecture</th><th>How each mission flies</th><th>KSP analogy</th></tr>
+<tr><td><b>Direct</b></td><td>Launch a new servicer and kit to LEO, fly LEO &rarr; client, and stay attached to the client (the servicer is used once)</td><td>Launch a fresh rescue ship for every stranded Kerbal</td></tr>
+<tr><td><b>Base station</b></td><td>Field a station once. A reusable servicer lives there and flies station &rarr; client &rarr; station each mission. Kits and propellant are shipped up from LEO</td><td>Build a refuelling station in orbit and run a reusable tug from it</td></tr>
+</table>
+<p>A station costs a lot up front but makes each later mission cheaper, <em>if</em> it sits somewhere that is cheap to reach the clients from.
+High orbits have a hidden advantage: changing the orbital plane is cheap far from Earth, where you move slowly, and very expensive in LEO. A
+station near the Moon can reach GEO, or an inclined orbit, without paying LEO's plane-change bill.</p>
+<p>Every route here is computed, not looked up: the toolkit searches for the minimum-&Delta;v two-burn transfer between each pair of orbits,
+using the full Earth&ndash;Moon three-body model (<code>servicing.node_transfer</code>).</p>
+</section>
+
+<section id="orbits">
+<h2>3. Candidate stations and client orbits</h2>
+<div id="nodeTable"></div>
+<div class="figure">
+  <div class="ftitle">Figure 1. The orbits in this study</div>
+  <div class="fsub">Rotating frame (Earth&ndash;Moon line fixed). Colour shows the orbit family. Switch to the Moon-centred view to see the cislunar
+  orbits up close. Drag to rotate.</div>
+  <div class="controls">
+    <label>View <select id="mapView"><option value="earth">whole system (Earth-centred)</option><option value="moon">Moon vicinity (Moon-centred)</option></select></label>
+  </div>
+  <div id="fig-map" class="plot tall"></div>
+</div>
+</section>
+
+<section id="routes">
+<h2>4. Route costs: what each trip costs</h2>
+<p>Each cell is the minimum total &Delta;v (departure burn + arrival burn) to fly from a station orbit to a rendezvous with a client in another
+orbit, assuming the servicer can wait for good timing. The diagonal (station and client sharing an orbit) is the cost of <b>phasing</b>:
+catching up with a client a quarter of an orbit ahead within about a month. Returns cost the same as the outbound trip (by a symmetry of the
+three-body problem, spot-checked below).</p>
+<div class="figure">
+  <div class="ftitle">Figure 2. One-way &Delta;v, station &rarr; client [m/s]: click a cell</div>
+  <div class="fsub">Hover for the split between departure and arrival burns, the flight time and the method. Click any cell computed with the
+  three-body model to see the trajectory on the right.</div>
+  <div class="row2"><div id="fig-matrix" class="plot tall"></div><div id="fig-route" class="plot tall"></div></div>
+  <div class="tiles" id="routeTiles"></div>
+</div>
+<div id="checkNote" class="small muted"></div>
+</section>
+
+<section id="fielding">
+<h2>5. Fielding a station</h2>
+<p>Fielding means getting the station from LEO into its orbit. This is paid once, but on the station's full mass. It is the same route-cost
+calculation, from the LEO depot orbit to each station orbit.</p>
+<div class="figure">
+  <div class="ftitle">Figure 3. &Delta;v from LEO to each station orbit</div>
+  <div id="fig-field" class="plot short" style="height:330px"></div>
+</div>
+</section>
+
+<section id="campaign">
+<h2>6. Campaign economics: 10, 100 or 1,000 missions</h2>
+<p>&Delta;v alone cannot compare architectures: one km/s for a 20-tonne station is not the same as one km/s for a 2-tonne servicer. So
+campaigns are scored by the <b>rocket equation</b>, as <b>mass needed in LEO</b> (IMLEO). That includes everything that must be launched:
+the station, the servicers and their replacements, the kits, and all the propellant to move them, including the propellant to ship
+propellant up to the station.</p>
+<div class="figure">
+  <div class="ftitle">Mass model and campaign settings</div>
+  <div class="controls">
+    <label>Client orbit <select id="cClient"></select></label>
+    <label>Missions N <select id="cN"><option>10</option><option selected>100</option><option>1000</option></select></label>
+  </div>
+  <div class="controls">
+    <label>Station mass <input type="range" id="mSt" min="2000" max="100000" step="1000" value="20000"><output id="mStO"></output></label>
+    <label>Servicer (dry) <input type="range" id="mSv" min="300" max="10000" step="100" value="2000"><output id="mSvO"></output></label>
+    <label>Kit per mission <input type="range" id="mKit" min="0" max="5000" step="50" value="500"><output id="mKitO"></output></label>
+    <label>Isp <input type="range" id="mIsp" min="220" max="460" step="5" value="320"><output id="mIspO"></output></label>
+  </div>
+  <div class="controls">
+    <label>Servicer life <input type="range" id="mLife" min="1" max="100" step="1" value="20"><output id="mLifeO"></output></label>
+    <label>Per-leg allowance <input type="range" id="mAllow" min="0" max="10" step="0.5" value="3"><output id="mAllowO"></output></label>
+    <label>Station life <input type="range" id="mYears" min="1" max="30" step="1" value="10"><output id="mYearsO"></output></label>
+    <label><input type="checkbox" id="mLunar"> propellant mined on the Moon (needs a lunar ISRU industry)</label>
+    <label>price of 1 kg lunar propellant vs 1 kg in LEO <input type="range" id="mLam" min="0" max="2" step="0.05" value="0.5"><output id="mLamO"></output></label>
+  </div>
+  <div class="tiles" id="campTiles"></div>
+  <div class="row2"><div id="fig-camp" class="plot"></div><div id="fig-camppm" class="plot"></div></div>
+  <div class="small muted" id="campNote"></div>
+</div>
+</section>
+
+<section id="ledger">
+<h2>7. The &Delta;v ledger</h2>
+<p>For the record, here is the plain sum of every burn flown in the campaign, split into fielding the station, flying the servicing missions,
+and logistics flights to resupply the station (one flight per five missions). It shows <em>where</em> the &Delta;v is spent. It can't rank
+architectures, because it adds up burns of very different vehicles.</p>
+<div class="figure">
+  <div class="ftitle">Figure 5. Total &Delta;v flown for the selected client and N</div>
+  <div id="fig-ledger" class="plot" style="height:420px"></div>
+</div>
+</section>
+
+<section id="best">
+<h2>8. Best station for each client</h2>
+<p>Cheapest architecture (mass in LEO) for each client orbit and campaign size, using the current mass model. Each row assumes one dedicated
+architecture serving only that client class. A station <em>in the client's own orbit</em> usually wins, since every mission is then a short
+phasing hop. So each cell also shows the best station <b>in a different orbit</b>: the one that could serve this class as a side business.</p>
+<div id="bestTable"></div>
+</section>
+
+<section id="breakeven">
+<h2>9. Break-even: how many missions pay for a station?</h2>
+<p>The number of missions after which a station needs less total mass in LEO than flying every mission directly. "never" means the
+station's per-mission cost is not lower than going direct, however many missions are flown.</p>
+<div id="beTable"></div>
+</section>
+
+<section id="fleet">
+<h2>10. Mixed fleet: one station (or two) for everyone</h2>
+<p>A real business serves a mix of clients. Set the share of missions going to each orbit family. The chart ranks every single-station
+architecture and every two-station combination. Each client class is served by whichever option is cheapest: one of the stations, or a
+direct launch from Earth (so a station is only used where it pays). Fielding and station-keeping of each station are counted once.
+Mission counts per class are rounded.</p>
+<div class="figure">
+  <div class="ftitle">Figure 6. Mixed-fleet mass in LEO</div>
+  <div class="controls" id="mixCtl"></div>
+  <div class="controls"><label>Total missions <select id="mixN"><option>10</option><option selected>100</option><option>1000</option></select></label></div>
+  <div class="tiles" id="mixTiles"></div>
+  <div id="fig-mix" class="plot" style="height:460px"></div>
+</div>
+</section>
+
+<section id="assumptions">
+<h2>11. Assumptions and limitations</h2>
+<table>
+<tr><th>Topic</th><th>Assumption</th><th>Effect</th></tr>
+<tr><td>Dynamics</td><td>Earth&ndash;Moon circular restricted three-body problem (no Sun, circular lunar orbit, point masses). Near-Earth to near-Earth legs (LEO/MEO/GEO) use two-body Hohmann transfers with an optimally split plane change.</td><td>&Delta;v within a few percent of high-fidelity values for these orbit types; low-energy routes using the Sun (ballistic lunar transfers) are not found, so cislunar fielding costs are slightly pessimistic.</td></tr>
+<tr><td>Timing</td><td>Phase-free: the servicer waits for the best phasing between orbits (searched over where each transfer starts and ends and over flight time). A per-leg allowance (default 3% + 10 m/s) covers phasing, navigation and finite burns.</td><td>Optimistic for urgent missions. Waiting times can be weeks for some pairs.</td></tr>
+<tr><td>Reference planes</td><td>Earth's equator is taken as inclined 23.4&deg; to the Moon's orbit (the real value cycles between 18.3&deg; and 28.6&deg; over 18.6 years). GEO sits at 23.4&deg; to the Earth&ndash;Moon plane. GNSS and SSO clients use their equatorial inclination as a nominal relative inclination. The LEO depot's plane is chosen freely within what a 28.5&deg; launch allows. Earth-to-Earth legs assume RAANs aligned (wait for nodal drift).</td><td>Real clients are spread in RAAN; plane-change costs for specific clients in LEO/MEO can be higher.</td></tr>
+<tr><td>Returns</td><td>Client &rarr; station costs the same as station &rarr; client (time-reversal symmetry of the CR3BP); spot-checked numerically (section 4).</td><td>&mdash;</td></tr>
+<tr><td>Co-orbital phasing</td><td>Neighbouring-orbit phasing where the family allows it; otherwise a drift-rate estimate (2/3)&middot;distance/time (small halos, whose period barely changes with size).</td><td>Diagonal entries are estimates for halos.</td></tr>
+<tr><td>Station-keeping</td><td>Station upkeep per year: NRHO, L1/L2 halos, DRO and the 2:1 orbit from the toolkit's Floquet-mode Monte Carlo (lower bounds: no Sun). LEO (drag, 50 m/s/yr), GEO (north&ndash;south, 50 m/s/yr) and LLO (mascons, 100 m/s/yr) are typical literature values, <b>not computed by the toolkit</b>.</td><td>LEO/GEO/LLO upkeep is approximate.</td></tr>
+<tr><td>Mass model</td><td>Single Isp for all in-space propulsion; logistics stage dry mass ignored; station delivered in one piece; servicer replaced every N<sub>life</sub> missions; kits left at clients.</td><td>All adjustable in section 6.</td></tr>
+<tr><td>Lunar propellant</td><td>Optional: servicer propellant mined on the Moon. Lunar ascent to LLO taken as 1.87 km/s (typical published value, not computed), then LLO &rarr; station from the route matrix. Earth then only launches the station, servicers and kits.</td><td>Assumes a lunar mining industry exists; its cost isn't counted.</td></tr>
+<tr><td>Not included</td><td>Launch costs to LEO, radiation and thermal environment, communications, servicing time on station, debris and conjunctions, the 18.6-year lunar nodal cycle, low-thrust propulsion.</td><td>&mdash;</td></tr>
+</table>
+</section>
+
+<section id="reproduce">
+<h2>12. Reproduce it</h2>
+<pre><code>from cislunar import servicing as SV
+nodes = SV.default_nodes()                       # the 10 orbits above
+r = SV.node_transfer(nodes["nrho"], nodes["geo"])  # one route (~1-2 min)
+print(r.dv1_mps, r.dv2_mps, r.tof_days)
+costs = SV.cost_matrix()                          # every route, parallel (~30 min); run under if __name__ == "__main__"
+mm = SV.MassModel(station_kg=20000, servicer_kg=2000, kit_kg=500, isp_s=320)
+for n in (10, 100, 1000):
+    print(n, SV.campaign(n, "geo", "nrho", costs, mm)["imleo_kg"],
+             SV.campaign(n, "geo", None, costs, mm)["imleo_kg"])
+print(SV.break_even("geo", "nrho", costs, mm))</code></pre>
+<p>Full pipeline: <code>python docs/build_case_study.py --rebuild</code> (route matrix, trajectories, tables) and <code>examples/08_servicing_stations.py</code>.</p>
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+const D = /*__DATA__*/null;
+const L = 384400.0, CFG = {displaylogo: false, responsive: true, modeBarButtonsToRemove: ["select2d", "lasso2d"]};
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 0) => Number(v).toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
+const tonnes = (kg) => kg >= 1e6 ? `${fmt(kg / 1e6, 2)} <small>kt</small>` : `${fmt(kg / 1000, kg < 1e4 ? 1 : 0)} <small>t</small>`;
+function tok() {
+  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim();
+  return {surface: g("--surface"), ink: g("--ink"), ink2: g("--ink2"), muted: g("--muted"), grid: g("--grid"), axis: g("--axis"),
+    earth: g("--earth"), moon: g("--moon"), s: [g("--s1"), g("--s2"), g("--s3"), g("--s4"), g("--s5"), g("--s6")],
+    seq: g("--seq").replace(/"/g, "").split(","), good: g("--good"), critical: g("--critical")};
+}
+const charts = [];
+function register(fn) { charts.push(fn); fn(); }
+function redrawAll() { charts.forEach((f) => f()); }
+$("themeBtn").addEventListener("click", () => {
+  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
+  document.documentElement.dataset.theme = dark ? "light" : "dark"; redrawAll();
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redrawAll);
+function axis(t, title, extra = {}) {
+  return Object.assign({title: {text: title, font: {color: t.ink2, size: 13}}, gridcolor: t.grid, zerolinecolor: t.axis,
+    linecolor: t.axis, tickfont: {color: t.ink2, size: 11}}, extra);
+}
+function layout2d(t, xt, yt, extra = {}) {
+  return Object.assign({paper_bgcolor: t.surface, plot_bgcolor: t.surface, font: {family: "system-ui, -apple-system, Segoe UI, sans-serif", color: t.ink, size: 12},
+    margin: {l: 64, r: 16, t: 30, b: 50}, xaxis: axis(t, xt), yaxis: axis(t, yt), legend: {font: {color: t.ink}, bgcolor: "rgba(0,0,0,0)"}}, extra);
+}
+function layout3d(t, extra = {}) {
+  const ax = (n) => ({title: {text: `${n} [km]`, font: {color: t.ink2, size: 12}}, gridcolor: t.grid, zerolinecolor: t.axis,
+    backgroundcolor: t.surface, showbackground: true, tickfont: {color: t.ink2, size: 10}});
+  return Object.assign({paper_bgcolor: t.surface, font: {color: t.ink, size: 12}, margin: {l: 0, r: 0, t: 10, b: 0},
+    legend: {font: {color: t.ink, size: 11}, x: 0.01, y: 0.98, bgcolor: "rgba(0,0,0,0)"},
+    scene: {aspectmode: "data", xaxis: ax("x"), yaxis: ax("y"), zaxis: ax("z"), camera: {eye: {x: 0.6, y: -1.9, z: 1.3}}}}, extra);
+}
+function sphere(cx, cy, cz, r, color, name) {
+  const n = 28, m = 14, X = [], Y = [], Z = [];
+  for (let i = 0; i <= m; i++) { const v = Math.PI * i / m, rx = [], ry = [], rz = [];
+    for (let j = 0; j <= n; j++) { const u = 2 * Math.PI * j / n; rx.push(cx + r * Math.cos(u) * Math.sin(v)); ry.push(cy + r * Math.sin(u) * Math.sin(v)); rz.push(cz + r * Math.cos(v)); }
+    X.push(rx); Y.push(ry); Z.push(rz); }
+  return {type: "surface", x: X, y: Y, z: Z, colorscale: [[0, color], [1, color]], showscale: false, name, hovertemplate: name + "<extra></extra>",
+    lighting: {ambient: 0.75, diffuse: 0.6, specular: 0.05}, showlegend: false};
+}
+// Fit a 3D scene to its line traces; very flat scenes get the vertical axis stretched
+// (at most 4x the true proportion) so they stay readable, and the plot says so.
+function fitScene(t, traces, extra = {}) {
+  const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+  traces.filter((tr) => tr.type === "scatter3d").forEach((tr) => ["x", "y", "z"].forEach((k, i) =>
+    tr[k].forEach((v) => { if (v !== null) { lo[i] = Math.min(lo[i], v); hi[i] = Math.max(hi[i], v); } })));
+  const span = hi.map((h, i) => Math.max(h - lo[i], 1)), mx = Math.max(...span);
+  const ar = span.map((v) => v / mx), zTrue = ar[2];
+  ar[2] = Math.max(ar[2], Math.min(0.35, 4 * zTrue));
+  const lay = layout3d(t, extra);
+  lay.scene.aspectmode = "manual";
+  lay.scene.aspectratio = {x: ar[0], y: ar[1], z: ar[2]};
+  lay.scene.camera = {eye: {x: 0.9, y: -1.5, z: 0.9}};
+  if (ar[2] > zTrue * 1.01) lay.annotations = [{text: `vertical scale ×${(ar[2] / zTrue).toFixed(1)}`, xref: "paper", yref: "paper",
+    x: 0.99, y: 0.01, xanchor: "right", showarrow: false, font: {size: 11, color: t.ink2}}];
+  return lay;
+}
+const tileHtml = (rows) => rows.map(([a, b]) => `<div class="tile"><div class="k">${a}</div><div class="v">${b}</div></div>`).join("");
+
+/* ------------------------------------------------------------ data helpers */
+const N = D.nodes, ST = D.stations, CL = D.clients, C = D.costs;
+const SHORT = {leo: "LEO depot", sso: "LEO SSO", meo: "MEO/GNSS", geo: "GEO", heo21: "2:1 translunar", nrho: "NRHO", dro: "DRO", l1h: "L1 halo", l2h: "L2 halo", llo: "LLO"};
+const CAT_COLOR = (t, c) => ({earth: t.s[0], translunar: t.s[3], cislunar: t.s[1], lunar: t.s[2]}[c]);
+// station upkeep, m/s per year: toolkit Floquet-mode Monte Carlo (p95) where computed; literature values flagged
+const SK = {nrho: [1.4, "toolkit"], l1h: [8.3, "toolkit"], l2h: [5.8, "toolkit"], dro: [0.0, "toolkit (stable)"], heo21: [0.0, "toolkit (stable, ν = 1)"],
+  leo: [50.0, "literature: drag at 400 km"], geo: [50.0, "literature: north-south"], llo: [100.0, "literature: lunar mascons"]};
+const LUNAR_ASCENT = 1870.0;  // m/s lunar surface -> LLO (typical published value; not computed)
+const dv = (a, b) => (a === b ? C[`${a}->${a}`].total_mps : C[`${a}->${b}`].total_mps);
+
+function model() {
+  return {st: +$("mSt").value, sv: +$("mSv").value, kit: +$("mKit").value, isp: +$("mIsp").value, life: +$("mLife").value,
+    af: +$("mAllow").value / 100, am: 10, years: +$("mYears").value, lunar: $("mLunar").checked, batch: 5, lam: +$("mLam").value};
+}
+function campaign(n, client, station, m) {
+  const c = m.isp * 9.80665, g = (d) => Math.exp(d / c), leg = (d) => d * (1 + m.af) + m.am;
+  if (station === null) {
+    const d = leg(C[`direct->${client}`].total_mps), imleo = n * (m.sv + m.kit) * g(d);
+    return {imleo, score: imleo, ledger: {fielding: 0, servicing: n * d, logistics: 0}, perMission: d, lunarKg: 0,
+      parts: {station: 0, servicers: n * m.sv * g(d), kits: n * m.kit * g(d), propellant: 0}};
+  }
+  const dls = station === "leo" ? 0 : leg(dv("leo", station));
+  const dout = leg(dv(station, client)), dback = leg(dv(client, station));
+  const prop = (m.sv * g(dback) + m.kit) * g(dout) - m.sv - m.kit;
+  const nserv = Math.ceil(n / m.life), skProp = m.st * (g(SK[station][0] * m.years) - 1);
+  const field = (m.st + m.sv) * g(dls), servs = (nserv - 1) * m.sv * g(dls), kits = n * m.kit * g(dls);
+  let propLEO = n * prop * g(dls), skLEO = skProp * g(dls), lunarKg = 0;
+  if (m.lunar) {
+    const dms = station === "llo" ? LUNAR_ASCENT : LUNAR_ASCENT + leg(dv("llo", station));
+    lunarKg = (n * prop + skProp) * g(dms); propLEO = 0; skLEO = 0;
+  }
+  const nflights = Math.ceil(n / m.batch);
+  const imleo = field + servs + kits + propLEO + skLEO;
+  return {imleo, score: imleo + (m.lunar ? m.lam * lunarKg : 0), perMission: dout + dback, lunarKg,
+    ledger: {fielding: dls, servicing: n * (dout + dback), logistics: (nflights + nserv - 1) * dls + (SK[station][0] * m.years)},
+    parts: {station: field, servicers: servs, kits, propellant: propLEO, upkeep: skLEO}};
+}
+function archName(s) { return s === null ? "Direct from LEO" : `Station: ${SHORT[s]}`; }
+
+/* ------------------------------------------------------------ node table */
+(function nodeTable() {
+  let h = "<table><tr><th>Orbit</th><th>Family</th><th>Period</th><th>Role</th><th>Station upkeep</th></tr>";
+  Object.entries(N).forEach(([k, n]) => {
+    const role = [ST.includes(k) ? "station" : "", CL.includes(k) ? "client" : ""].filter(Boolean).join(" + ");
+    const sk = SK[k] ? `${SK[k][0]} m/s/yr <span class="muted small">(${SK[k][1]})</span>` : "&mdash;";
+    h += `<tr><td>${n.label}</td><td>${n.category}</td><td class="num">${n.period_d < 1 ? fmt(n.period_d * 24, 1) + " h" : fmt(n.period_d, 2) + " d"}</td><td>${role}</td><td>${sk}</td></tr>`;
+  });
+  $("nodeTable").innerHTML = h + "</table>";
+})();
+
+/* ------------------------------------------------------------ Figure 1 */
+register(function mapDraw() {
+  const t = tok(), view = $("mapView").value, tr = [];
+  const seen = {};
+  Object.entries(N).forEach(([k, n]) => {
+    if (view === "moon" && (n.category === "earth" || k === "heo21")) return;
+    const p = n[view], col = CAT_COLOR(t, n.category);
+    tr.push({type: "scatter3d", mode: "lines", x: p.x, y: p.y, z: p.z, name: n.category, legendgroup: n.category, showlegend: !seen[n.category],
+      line: {color: col, width: 4}, text: n.label, hovertemplate: "%{text}<extra></extra>"});
+    seen[n.category] = true;
+  });
+  if (view === "earth") { tr.push(sphere(0, 0, 0, 6378, t.earth, "Earth"), sphere(L, 0, 0, 1737, t.moon, "Moon")); }
+  else tr.push(sphere(0, 0, 0, 1737, t.moon, "Moon"));
+  Plotly.react("fig-map", tr, fitScene(t, tr, {uirevision: view}), CFG);
+});
+$("mapView").addEventListener("change", redrawAll);
+
+/* ------------------------------------------------------------ Figure 2 */
+const RT = {sel: "nrho->geo"};
+register(function matrixDraw() {
+  const t = tok();
+  const z = ST.map((s) => CL.map((c) => dv(s, c)));
+  const text = ST.map((s) => CL.map((c) => { const r = C[`${s}->${c}`];
+    return `${SHORT[s]} → ${SHORT[c]}<br>${fmt(r.total_mps)} m/s (${fmt(r.dv1_mps)} + ${fmt(r.dv2_mps)})<br>${r.method}${r.tof_days ? `, ${r.tof_days.toFixed(1)} d` : ""}${r.note ? "<br>" + r.note : ""}`; }));
+  const cs = t.seq.map((c, k) => [k / (t.seq.length - 1), c]);
+  const ann = [];
+  ST.forEach((s, i) => CL.forEach((c, j) => ann.push({x: SHORT[c], y: SHORT[s], text: fmt(z[i][j]), showarrow: false,
+    font: {size: 10, color: z[i][j] > 2500 ? "#ffffff" : "#0b0b0b"}})));
+  Plotly.react("fig-matrix", [{type: "heatmap", x: CL.map((c) => SHORT[c]), y: ST.map((s) => SHORT[s]), z, text, colorscale: cs, zmin: 0, zmax: 5000,
+    xgap: 2, ygap: 2, hovertemplate: "%{text}<extra></extra>", colorbar: {title: {text: "m/s", font: {color: t.ink2}}, tickfont: {color: t.ink2}, outlinecolor: t.grid}}],
+    layout2d(t, "client orbit", "station orbit", {annotations: ann, margin: {l: 110, r: 10, t: 20, b: 90},
+      xaxis: axis(t, "client orbit", {tickangle: -35}), yaxis: axis(t, "station orbit", {autorange: "reversed"})}), CFG);
+  routeDraw();
+});
+function routeDraw() {
+  const t = tok(), k = RT.sel, r = C[k], [a, b] = k.split("->");
+  const key = D.routes[k] ? k : D.routes[`${b}->${a}`] ? `${b}->${a}` : null;
+  const view = (N[a].category === "earth" || N[b].category === "earth" || a === "heo21" || b === "heo21") ? "earth" : "moon";
+  const tr = [];
+  [a, b].forEach((n, i) => { const p = N[n][view]; tr.push({type: "scatter3d", mode: "lines", x: p.x, y: p.y, z: p.z, name: (i ? "client: " : "station: ") + SHORT[n],
+    line: {color: i ? t.s[1] : t.s[0], width: 3}, hoverinfo: "name"}); });
+  if (key) { const p = D.routes[key][view];
+    tr.push({type: "scatter3d", mode: "lines", x: p.x, y: p.y, z: p.z, name: key === k ? "transfer" : "transfer (computed in reverse; same path)", line: {color: t.ink, width: 5}, hoverinfo: "name"}); }
+  if (view === "earth") tr.push(sphere(0, 0, 0, 6378, t.earth, "Earth"), sphere(L, 0, 0, 1737, t.moon, "Moon"));
+  else tr.push(sphere(0, 0, 0, 1737, t.moon, "Moon"));
+  Plotly.react("fig-route", tr, fitScene(t, tr, {uirevision: k}), CFG);
+  $("routeTiles").innerHTML = tileHtml([["Route", `${SHORT[a]} → ${SHORT[b]}`], ["Departure burn", `${fmt(r.dv1_mps)} <small>m/s</small>`],
+    ["Arrival burn", `${fmt(r.dv2_mps)} <small>m/s</small>`], ["Total", `${fmt(r.total_mps)} <small>m/s</small>`],
+    ["Flight time", r.tof_days ? `${r.tof_days.toFixed(1)} <small>days</small>` : "&mdash;"], ["Method", r.method + (key ? "" : " (no trajectory)")]]);
+}
+$("fig-matrix").on("plotly_click", (ev) => {
+  const p = ev.points[0], s = ST.find((x) => SHORT[x] === p.y), c = CL.find((x) => SHORT[x] === p.x);
+  RT.sel = `${s}->${c}`; routeDraw();
+});
+(function checks() {
+  $("checkNote").innerHTML = "Symmetry spot-checks (ADR-22): " + D.checks.map((c) =>
+    `${c.route} computed directly ${fmt(c.direct_mps)} m/s vs. matrix ${fmt(c.matrix_mps)} m/s`).join("; ") +
+    ". Differences reflect the optimiser's tolerance (a few percent), not asymmetry.";
+})();
+
+/* ------------------------------------------------------------ Figure 3 */
+register(function fieldDraw() {
+  const t = tok(), xs = ST.filter((s) => s !== "leo"), ys = xs.map((s) => dv("leo", s));
+  Plotly.react("fig-field", [{type: "bar", orientation: "h", y: xs.map((s) => SHORT[s]), x: ys, marker: {color: xs.map((s) => CAT_COLOR(t, N[s].category))},
+    text: ys.map((v) => fmt(v) + " m/s"), textposition: "outside", textfont: {color: t.ink2}, hovertemplate: "%{y}: %{x:,.0f} m/s<extra></extra>"}],
+    layout2d(t, "Δv from LEO [m/s]", "", {margin: {l: 110, r: 60, t: 10, b: 46}, yaxis: axis(t, "", {autorange: "reversed"}), showlegend: false}), CFG);
+});
+
+/* ------------------------------------------------------------ campaign */
+CL.forEach((c) => { const o = document.createElement("option"); o.value = c; o.textContent = N[c].label; $("cClient").appendChild(o); });
+$("cClient").value = "geo";
+const ARCHS = [null, ...ST];
+function archColor(t, s, i) { return s === null ? t.ink : [t.s[0], t.s[1], t.s[2], t.s[3], t.s[4], t.s[5], "#6250d6", "#e34948"][i - 1]; }
+function campDraw() {
+  const t = tok(), m = model(), client = $("cClient").value, n = +$("cN").value;
+  $("mStO").textContent = `${fmt(m.st / 1000, 0)} t`; $("mSvO").textContent = `${fmt(m.sv)} kg`; $("mKitO").textContent = `${fmt(m.kit)} kg`;
+  $("mIspO").textContent = `${m.isp} s`; $("mLifeO").textContent = `${m.life} missions`; $("mAllowO").textContent = `${m.af * 100}% + 10 m/s`; $("mYearsO").textContent = `${m.years} yr`;
+  const ns = [1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 70, 100, 150, 200, 300, 500, 700, 1000];
+  const res = ARCHS.map((s) => campaign(n, client, s, m));
+  const order = ARCHS.map((s, i) => i).sort((i, j) => res[i].score - res[j].score);
+  const show = new Set([0, ARCHS.indexOf("leo"), ...order.slice(0, 3)]);
+  const tr = ARCHS.map((s, i) => ({type: "scatter", mode: "lines", x: ns, y: ns.map((k) => campaign(k, client, s, m).score / 1000), name: archName(s),
+    line: {color: archColor(t, s, i), width: s === null ? 2.5 : 2, dash: s === null ? "dash" : "solid"}, visible: show.has(i) ? true : "legendonly",
+    hovertemplate: "%{x} missions: %{y:,.0f} t<extra>" + archName(s) + "</extra>"}));
+  Plotly.react("fig-camp", tr, layout2d(t, "number of missions", "mass in LEO [t] (log)", {xaxis: axis(t, "number of missions (log)", {type: "log"}),
+    yaxis: axis(t, m.lunar ? "LEO mass + price × lunar mass [t] (log)" : "total mass needed in LEO [t] (log)", {type: "log"}), legend: {font: {color: t.ink, size: 10}, x: 0.01, y: 0.99, bgcolor: t.surface},
+    shapes: [{type: "line", x0: n, x1: n, yref: "paper", y0: 0, y1: 1, line: {color: t.ink2, dash: "dot", width: 1}}],
+    title: {text: `${N[client].label}: click legend entries to show more stations`, font: {size: 12, color: t.ink2}, x: 0.02}}), CFG);
+  const pm = order.map((i) => ({s: ARCHS[i], v: res[i].score / n, i}));
+  Plotly.react("fig-camppm", [{type: "bar", orientation: "h", y: pm.map((p) => archName(p.s)), x: pm.map((p) => p.v / 1000),
+    marker: {color: pm.map((p) => archColor(t, p.s, p.i))}, text: pm.map((p) => fmt(p.v / 1000, 1) + " t"), textposition: "outside", textfont: {color: t.ink2},
+    hovertemplate: "%{y}: %{x:,.1f} t per mission<extra></extra>"}],
+    layout2d(t, `mass in LEO per mission at N = ${n} [t]`, "", {yaxis: axis(t, "", {autorange: "reversed"}), margin: {l: 150, r: 60, t: 30, b: 46}, showlegend: false,
+      title: {text: `Ranked at N = ${n}`, font: {size: 12, color: t.ink2}, x: 0.02}}), CFG);
+  const best = pm[0], direct = res[0];
+  $("campTiles").innerHTML = tileHtml([["Best at N = " + n, archName(best.s)], ["Mass in LEO (best)", tonnes(res[best.i].imleo)],
+    ["Direct from LEO", tonnes(direct.imleo)], ["Saving vs direct", `${fmt(100 * (1 - res[best.i].score / direct.score), 0)}<small>%</small>`],
+    ["Δv per mission (best)", `${fmt(res[best.i].perMission)} <small>m/s</small>`]].concat(m.lunar && best.s ? [["Lunar propellant (best)", tonnes(res[best.i].lunarKg)]] : []));
+  $("mLamO").textContent = `${m.lam.toFixed(2)}`;
+  $("campNote").innerHTML = m.lunar ? `Lunar propellant on: Earth launches only the station, servicers and kits. Architectures are ranked by mass in LEO + ${m.lam.toFixed(2)} × lunar-surface propellant mass (lunar ascent 1.87 km/s assumed), so the charts show that combined score.` :
+    "Propellant for every mission and for station upkeep is launched from Earth and shipped to the station.";
+  ledgerDraw(); bestTable(); beTable(); mixDraw(); headline();
+}
+["cClient", "cN", "mLunar"].forEach((id) => $(id).addEventListener("change", campDraw));
+["mSt", "mSv", "mKit", "mIsp", "mLife", "mAllow", "mYears", "mLam"].forEach((id) => $(id).addEventListener("input", campDraw));
+
+function ledgerDraw() {
+  const t = tok(), m = model(), client = $("cClient").value, n = +$("cN").value;
+  const names = ARCHS.map(archName), res = ARCHS.map((s) => campaign(n, client, s, m));
+  const parts = [["fielding", t.s[0]], ["servicing", t.s[1]], ["logistics", t.s[2]]];
+  Plotly.react("fig-ledger", parts.map(([p, col]) => ({type: "bar", orientation: "h", y: names, x: res.map((r) => r.ledger[p] / 1000), name: p,
+    marker: {color: col, line: {color: t.surface, width: 1}}, hovertemplate: `${p}: %{x:,.1f} km/s<extra>%{y}</extra>`})),
+    layout2d(t, "sum of all burns flown [km/s]", "", {barmode: "stack", margin: {l: 150, r: 20, t: 30, b: 46}, yaxis: axis(t, "", {autorange: "reversed"}),
+      legend: {orientation: "h", x: 0, y: 1.06, font: {color: t.ink}, traceorder: "normal"}}), CFG);
+}
+function bestTable() {
+  const t = tok(), m = model();
+  let h = "<table><tr><th>Client orbit</th>" + D.ns.map((n) => `<th>N = ${n}</th>`).join("") + "<th>Direct from LEO, Δv per mission</th></tr>";
+  CL.forEach((c) => {
+    h += `<tr><td>${N[c].label}</td>`;
+    D.ns.forEach((n) => {
+      const r = ARCHS.map((s) => ({s, v: campaign(n, c, s, m).score})).sort((a, b) => a.v - b.v), b = r[0], d = r.find((x) => x.s === null);
+      const o = r.find((x) => x.s !== null && x.s !== c);
+      const pct = (x) => x.v <= d.v ? `${fmt(100 * (1 - x.v / d.v), 0)}% below direct` : `${fmt(100 * (x.v / d.v - 1), 0)}% above direct`;
+      h += `<td><span class="chip" style="background:${archColor(t, b.s, ARCHS.indexOf(b.s))}"></span><b>${b.s === null ? "Direct" : SHORT[b.s]}</b> <span class="small muted">${tonnes(b.v)}${b.s === null ? "" : ", " + pct(b)}</span>` +
+        `<br><span class="small">best station elsewhere: <b>${SHORT[o.s]}</b> <span class="muted">${tonnes(o.v)}, ${pct(o)}</span></span></td>`;
+    });
+    h += `<td class="num">${fmt(C[`direct->${c}`].total_mps)} m/s</td></tr>`;
+  });
+  $("bestTable").innerHTML = h + "</table>";
+}
+function beTable() {
+  const m = model();
+  const be = (c, s) => { const f = (n) => campaign(n, c, s, m).score - campaign(n, c, null, m).score;
+    if (f(1e6) > 0) return null; let lo = 1, hi = 1e6; if (f(1) <= 0) return 1; while (hi - lo > 1) { const mid = Math.floor((lo + hi) / 2); f(mid) > 0 ? lo = mid : hi = mid; } return hi; };
+  let h = "<table><tr><th>Client \\ station</th>" + ST.map((s) => `<th>${SHORT[s]}</th>`).join("") + "</tr>";
+  CL.forEach((c) => {
+    const vals = ST.map((s) => be(c, s)), finite = vals.filter((v) => v !== null), mn = finite.length ? Math.min(...finite) : null;
+    h += `<tr><td>${SHORT[c]}</td>` + vals.map((v) => `<td class="num${v !== null && v === mn ? " best" : ""}">${v === null ? '<span class="muted">never</span>' : fmt(v)}</td>`).join("") + "</tr>";
+  });
+  $("beTable").innerHTML = h + "</table><p class='small muted'>Bold: the station that pays for itself soonest for that client.</p>";
+}
+
+/* ------------------------------------------------------------ mixed fleet */
+const MIX0 = {sso: 25, meo: 10, geo: 35, heo21: 5, nrho: 8, dro: 5, l1h: 3, l2h: 3, llo: 6};
+CL.forEach((c) => { const l = document.createElement("label");
+  l.innerHTML = `${SHORT[c]} <input type="range" id="mix_${c}" min="0" max="50" step="1" value="${MIX0[c]}" style="width:90px"><output id="mixo_${c}"></output>`;
+  $("mixCtl").appendChild(l); $("mix_" + c).addEventListener("input", mixDraw); });
+$("mixN").addEventListener("change", mixDraw);
+function mixCounts() {
+  const w = {}, tot = CL.reduce((a, c) => a + +$("mix_" + c).value, 0) || 1, n = +$("mixN").value;
+  CL.forEach((c) => { w[c] = Math.round(n * +$("mix_" + c).value / tot); $("mixo_" + c).textContent = `${w[c]}`; });
+  return w;
+}
+function fleetCost(stations, counts, m) {
+  // one fielding per station; each client class served by the cheaper option (station or direct for the direct-only case)
+  let total = 0;
+  CL.forEach((c) => { const k = counts[c]; if (!k) return;
+    total += Math.min(campaign(k, c, null, m).score, ...stations.filter((s) => s !== null).map((s) => {
+      const r = campaign(k, c, s, m); return r.score - r.parts.station - r.parts.upkeep; })); });
+  stations.forEach((s) => { if (s !== null) { const r = campaign(1, CL[0], s, m); total += r.parts.station + r.parts.upkeep; } });
+  return total;
+}
+function mixUse(stations, counts, m) {  // which option serves each class
+  return CL.filter((c) => counts[c]).map((c) => {
+    let best = ["direct", campaign(counts[c], c, null, m).score];
+    stations.filter((s) => s !== null).forEach((s) => { const r = campaign(counts[c], c, s, m), v = r.score - r.parts.station - r.parts.upkeep;
+      if (v < best[1]) best = [SHORT[s], v]; });
+    return `${SHORT[c]}: ${best[0]}`; }).join("<br>");
+}
+function mixDraw() {
+  const t = tok(), m = model(), counts = mixCounts();
+  const opts = [{name: "Direct from LEO only (no station)", st: [null]}];
+  ST.forEach((s) => opts.push({name: `${SHORT[s]}`, st: [s]}));
+  ST.forEach((a, i) => ST.slice(i + 1).forEach((b) => opts.push({name: `${SHORT[a]} + ${SHORT[b]}`, st: [a, b]})));
+  opts.forEach((o) => { o.v = fleetCost(o.st, counts, m); });
+  opts.sort((a, b) => a.v - b.v);
+  const top = opts.slice(0, 15), direct = opts.find((o) => o.st[0] === null);
+  if (!top.includes(direct)) top.push(direct);
+  Plotly.react("fig-mix", [{type: "bar", orientation: "h", y: top.map((o) => o.name), x: top.map((o) => o.v / 1000),
+    marker: {color: top.map((o) => o.st[0] === null ? t.muted : o.st.length === 2 ? t.s[1] : t.s[0])},
+    customdata: top.map((o) => mixUse(o.st, counts, m)), hovertemplate: "%{y}: %{x:,.0f} t<br>%{customdata}<extra></extra>",
+    text: top.map((o) => fmt(o.v / 1000) + " t"), textposition: "outside", textfont: {color: t.ink2}}],
+    layout2d(t, "total mass in LEO [t]", "", {yaxis: axis(t, "", {autorange: "reversed"}), margin: {l: 170, r: 60, t: 10, b: 46}, showlegend: false}), CFG);
+  $("mixTiles").innerHTML = tileHtml([["Best", top[0].name], ["Mass in LEO", tonnes(top[0].v)], ["Direct from LEO only", tonnes(direct.v)],
+    ["Saving", `${fmt(100 * (1 - top[0].v / direct.v), 0)}<small>%</small>`],
+    ["Legend", `<span class="chip" style="background:${t.s[0]}"></span>one station <span class="chip" style="background:${t.s[1]}"></span>two <span class="chip" style="background:${t.muted}"></span>none`]]);
+}
+function headline() {
+  if (!$("mix_sso")) return;
+  const m = model(), rows = [];
+  [10, 100, 1000].forEach((n) => {
+    const by = {};
+    CL.forEach((c) => { const b = ARCHS.map((s) => ({s, v: campaign(n, c, s, m).score})).sort((a, b) => a.v - b.v)[0]; (by[b.s === null ? "direct launches" : "a station in " + SHORT[b.s]] ||= []).push(SHORT[c]); });
+    rows.push(`<li><b>${n} missions per client class:</b> ` + Object.entries(by).map(([k, v]) => `${k} for ${v.join(", ")}`).join("; ") + ".</li>");
+  });
+  const rk = (n, c) => ARCHS.map((s) => ({s, v: campaign(n, c, s, m).score})).sort((a, b) => a.v - b.v);
+  const geo = rk(100, "geo"), geoRemote = geo.find((x) => x.s !== null && x.s !== "geo");
+  const counts = mixCounts(), fleetBest = (() => { const o = [];
+    ST.forEach((a, i) => { o.push({n: SHORT[a], v: fleetCost([a], counts, m)}); ST.slice(i + 1).forEach((b) => o.push({n: `${SHORT[a]} + ${SHORT[b]}`, v: fleetCost([a, b], counts, m)})); });
+    return o.sort((x, y) => x.v - y.v)[0]; })(), fleetDirect = fleetCost([null], counts, m);
+  $("headline").innerHTML = `<ul style="margin:6px 0 0">${rows.join("")}</ul><p class="small" style="margin:6px 0 0">Example: 100 GEO missions need
+    ${tonnes(geo.find((x) => x.s === null).v)} in LEO flown directly, ${tonnes(geo[0].v)} with a ${archName(geo[0].s).replace("Station: ", "")} station, or
+    ${tonnes(geoRemote.v)} from the best station in another orbit (${SHORT[geoRemote.s]}). For the default mixed fleet of
+    ${+$("mixN").value} missions (section 10) the best plan is <b>${fleetBest.n}</b> at ${tonnes(fleetBest.v)}, against ${tonnes(fleetDirect)} with no station.</p>`;
+}
+register(campDraw);
+headline();
+</script>
+</body>
+</html>

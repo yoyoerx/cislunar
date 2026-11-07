@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cislunar: User Manual</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10); --code: #f1f0ec;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300;
+  --earth: #5f87b3; --moon: #9a9993; --forbid: #d9d8d3; --accent: #2a78d6;
+  --good: #0ca30c; --warning: #fab219; --critical: #d03b3b; --good-text: #006300;
+  --seq: "#cde2fb,#9ec5f4,#6da7ec,#3987e5,#256abf,#184f95,#0d366b";
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --code: #232322;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
+    --earth: #6f98c4; --moon: #a8a79f; --forbid: #383835; --accent: #3987e5; --good-text: #0ca30c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --code: #232322;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300;
+  --earth: #6f98c4; --moon: #a8a79f; --forbid: #383835; --accent: #3987e5; --good-text: #0ca30c;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header.top { position: sticky; top: 0; z-index: 20; background: var(--page);
+  border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex;
+  align-items: center; gap: 16px; }
+header.top .brand { font-weight: 700; }
+header.top .ver { color: var(--muted); font-size: 13px; }
+header.top button { margin-left: auto; }
+.layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 32px;
+  max-width: 1320px; margin: 0 auto; padding: 0 24px; }
+nav.toc { position: sticky; top: 60px; align-self: start; max-height: calc(100vh - 70px);
+  overflow-y: auto; padding: 20px 0; font-size: 14px; }
+nav.toc ol { padding-left: 18px; margin: 0; }
+nav.toc li { margin: 3px 0; }
+nav.toc a { color: var(--ink2); text-decoration: none; }
+nav.toc a:hover { color: var(--accent); }
+main { padding: 24px 0 120px; min-width: 0; }
+h1 { font-size: 34px; line-height: 1.2; margin: 18px 0 8px; }
+h2 { font-size: 26px; margin: 64px 0 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+h3 { font-size: 19px; margin: 32px 0 8px; }
+h4 { font-size: 16px; margin: 20px 0 6px; }
+p, li { max-width: 78ch; }
+a { color: var(--accent); }
+.lede { font-size: 19px; color: var(--ink2); max-width: 70ch; }
+.muted { color: var(--muted); }
+code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.9em;
+  background: var(--code); padding: 1px 5px; border-radius: 4px; }
+pre { background: var(--code); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; overflow-x: auto; font-size: 13.5px; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+table { border-collapse: collapse; margin: 12px 0 20px; font-size: 14.5px; }
+th, td { border-bottom: 1px solid var(--border); padding: 7px 12px; text-align: left; vertical-align: top; }
+th { color: var(--ink2); font-weight: 600; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.callout { border-left: 4px solid var(--accent); background: var(--surface); padding: 12px 16px;
+  border-radius: 0 8px 8px 0; margin: 18px 0; max-width: 82ch; }
+.callout.ksp { border-left-color: var(--s3); }
+.callout.warn { border-left-color: var(--warning); }
+.callout .tag { font-weight: 700; font-size: 13px; letter-spacing: .03em; text-transform: uppercase;
+  color: var(--ink2); display: block; margin-bottom: 2px; }
+.figure { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; margin: 22px 0 28px; }
+.figure .ftitle { font-weight: 650; font-size: 15px; margin-bottom: 2px; }
+.figure .fsub { color: var(--ink2); font-size: 14px; margin-bottom: 10px; max-width: 90ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 6px 0 10px;
+  font-size: 14px; color: var(--ink2); }
+.controls label { display: inline-flex; align-items: center; gap: 8px; }
+.controls input[type=range] { width: 170px; accent-color: var(--accent); }
+.controls output { font-variant-numeric: tabular-nums; color: var(--ink); min-width: 4ch; display: inline-block; }
+select, button, input[type=number] { font: inherit; font-size: 14px; color: var(--ink);
+  background: var(--page); border: 1px solid var(--border); border-radius: 6px; padding: 4px 9px; }
+input[type=number] { width: 80px; }
+button { cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.plot { width: 100%; height: 520px; }
+.plot.tall { height: 620px; }
+.plot.short { height: 300px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.tiles { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 4px; }
+.tile { background: var(--page); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 14px; min-width: 130px; }
+.tile .k { font-size: 12.5px; color: var(--ink2); }
+.tile .v { font-size: 20px; font-weight: 650; }
+.tile .v small { font-size: 13px; font-weight: 400; color: var(--ink2); }
+.status { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.status .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+figure.static { margin: 18px 0; }
+figure.static img { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+figure.static figcaption { font-size: 14px; color: var(--ink2); }
+details { margin: 8px 0; }
+summary { cursor: pointer; color: var(--ink2); font-size: 14px; }
+.api-toc li { margin: 2px 0; }
+.api-item { border-top: 1px solid var(--border); padding: 10px 0; }
+.api-sig { font-family: ui-monospace, Consolas, monospace; font-size: 14px; word-break: break-word; }
+.api-sig .kw { color: var(--muted); }
+.api-sig .sig { color: var(--ink2); }
+pre.api-doc { background: none; border: none; padding: 4px 0 0 18px; margin: 0; white-space: pre-wrap;
+  font-family: inherit; font-size: 14px; color: var(--ink2); }
+.api-moddoc { white-space: pre-wrap; color: var(--ink2); font-size: 14.5px; }
+.api-members { font-size: 13.5px; color: var(--ink2); margin: 4px 0 0 18px; }
+.kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px;
+  font-size: 13px; background: var(--page); }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  nav.toc { position: static; max-height: none; }
+  .row2 { grid-template-columns: 1fr; }
+}
+</style>
+<script>/*__PLOTLY__*/</script>
+</head>
+<body>
+<header class="top">
+  <span class="brand">cislunar</span><span class="ver">user manual &middot; v__VERSION__</span>
+  <button id="themeBtn" type="button" aria-label="Toggle light or dark theme">Toggle dark mode</button>
+</header>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+<ol>
+  <li><a href="#welcome">Welcome</a></li>
+  <li><a href="#ksp">From Kerbin to cislunar space</a></li>
+  <li><a href="#frame">The rotating frame</a></li>
+  <li><a href="#units">Units you will see</a></li>
+  <li><a href="#lagrange">Lagrange points &amp; energy</a></li>
+  <li><a href="#zoo">The orbit zoo</a></li>
+  <li><a href="#sandbox">Maneuver sandbox</a></li>
+  <li><a href="#transfers">Getting there: transfers</a></li>
+  <li><a href="#rpod">Rendezvous &amp; docking</a></li>
+  <li><a href="#rosettes">Advanced: rosette orbits</a></li>
+  <li><a href="#transient">Advanced: transient orbits &amp; &Delta;v budgets</a></li>
+  <li><a href="#python">Using the Python tools</a></li>
+  <li><a href="#recipes">Recipes</a></li>
+  <li><a href="#gallery">Figure gallery</a></li>
+  <li><a href="#trouble">Troubleshooting</a></li>
+  <li><a href="#limits">Limitations</a></li>
+  <li><a href="#glossary">Glossary</a></li>
+  <li><a href="#api">API reference</a></li>
+</ol>
+</nav>
+<main>
+
+<!-- ===================================================================== -->
+<section id="welcome">
+<h1>cislunar: a field manual for orbits between the Earth and the Moon</h1>
+<p class="lede">This manual teaches you to use the <code>cislunar</code> Python toolkit to design orbits
+around the Moon, plot them in 2D and 3D, plan transfers between them and plan rendezvous and
+docking. If you learned orbits by flying rockets in Kerbal Space Program, you already have good
+instincts. This manual shows where those instincts still work and where the real Earth&ndash;Moon
+system behaves differently.</p>
+<p>Every chart in this manual was generated by the toolkit itself. The interactive panels run a
+small copy of the toolkit's three-body integrator in your browser, so you can make your own
+burns and watch the result. Nothing needs to be installed to read and play; you only need Python
+when you want to use the tools yourself (<a href="#python">section 12</a>).</p>
+<div class="callout">
+<span class="tag">How to read this manual</span>
+Sections 2&ndash;5 are the concepts that make the rest make sense. Sections 6&ndash;9 are the
+toolkit's main capabilities, each with an interactive figure and the Python call that produced it.
+Sections 10&ndash;11 are advanced topics: rosette orbits, then transient orbits, flybys and &Delta;v budgets.
+Sections 12&ndash;18 are reference material:
+installation, recipes, troubleshooting and the full API.
+</div>
+<p>What the toolkit does, in one table:</p>
+<table>
+<tr><th>Job</th><th>Main functions</th><th>Section</th></tr>
+<tr><td>Find special orbits (halo, NRHO, DRO, Lyapunov)</td><td><code>halo</code>, <code>nrho</code>, <code>dro</code>, <code>lyapunov</code>, <code>continue_arclength</code></td><td><a href="#zoo">6</a></td></tr>
+<tr><td>Fly a trajectory forward in time</td><td><code>propagate</code>, <code>propagate_state</code></td><td><a href="#sandbox">7</a></td></tr>
+<tr><td>Plan a transfer from orbit A to orbit B</td><td><code>intercept</code>, <code>porkchop</code>, <code>optimize_transfer</code></td><td><a href="#transfers">8</a></td></tr>
+<tr><td>Plan an approach and docking</td><td><code>plan_waypoints</code>, <code>passive_abort</code>, <code>cw_two_impulse</code></td><td><a href="#rpod">9</a></td></tr>
+<tr><td>Build resonant "rosette" orbits</td><td><code>periodic.resonant</code>, <code>correct_symmetric_period</code></td><td><a href="#rosettes">10</a></td></tr>
+<tr><td>Unstable/transient orbits, flybys, &Delta;v budgets</td><td><code>manifolds</code>, <code>flyby</code>, <code>navigation</code>, <code>DeltaVBudget</code></td><td><a href="#transient">11</a></td></tr>
+<tr><td>Draw it</td><td><code>plot_trajectories_2d/3d</code>, <code>plot_porkchop</code>, <code>plot_relative_2d</code>, <code>interactive_3d</code></td><td><a href="#gallery">14</a></td></tr>
+</table>
+</section>
+
+<!-- ===================================================================== -->
+<section id="ksp">
+<h2>2. From Kerbin to cislunar space</h2>
+<p>In KSP, your ship only ever feels the gravity of <em>one</em> body at a time. Inside the Mun's
+<b>sphere of influence</b> (SOI) only the Mun pulls on you; outside it, only Kerbin does. Each piece of
+the flight is a perfect ellipse (or hyperbola), and the pieces are stitched together at the SOI
+boundary. Real mission designers call this the <b>patched-conic approximation</b>. It is a good
+model for interplanetary flight and a decent first guess for going to the Moon.</p>
+<p>In reality, both the Earth and the Moon pull on your spacecraft at all times. When you are far
+from the Moon, Earth dominates and patched conics work well. But many of the most useful orbits
+for lunar missions, including NASA's Gateway orbit, spend their time around 70,000 km from the
+Moon. That is right at the edge of the Moon's sphere of influence (about 66,000 km), where
+<em>neither</em> body dominates. Here patched conics do not just lose accuracy; they miss
+whole classes of orbits that only exist because two bodies pull at once.</p>
+<p><b>Cislunar</b> ("this side of the Moon") space is the region from Earth out to just beyond the Moon.
+The model that captures it is the <b>three-body problem</b>: Earth, Moon and your spacecraft.
+The toolkit uses the <b>circular restricted three-body problem</b> (CR3BP): the Earth and Moon move in
+circles around their common centre of mass, and the spacecraft is too light to disturb them.</p>
+
+<div class="figure" id="fig-kepler-wrap">
+  <div class="ftitle">Figure 1. Same burn, two models of gravity</div>
+  <div class="fsub">A spacecraft leaves a 400 km low Earth orbit with the trans-lunar injection burn
+  that the toolkit computed to reach the Gateway orbit (section 8), then coasts to arrival. The blue path uses
+  Earth <em>and</em> Moon gravity and arrives on the NRHO. The orange path uses Earth's gravity only, like
+  KSP outside the Mun's SOI: a plain ellipse that ignores the Moon. As the spacecraft approaches the Moon the two models
+  pull apart. Earth-centred view that does not rotate. Hover for details; drag to zoom.</div>
+  <div class="controls">
+    <label><input type="checkbox" id="kepShowMoon" checked> show the Moon's path</label>
+  </div>
+  <div class="row2"><div id="fig-kepler" class="plot"></div><div id="fig-kepler-zoom" class="plot"></div></div>
+</div>
+<div class="callout ksp"><span class="tag">KSP instinct check</span>
+Your instinct that "the Moon captures me when I enter its SOI" is roughly right for fast fly-bys. For
+slow-moving spacecraft far from both bodies, think of the Moon's pull as a gentle, constant tug
+that bends your whole path, not a sudden handover at a boundary.</div>
+</section>
+
+<!-- ===================================================================== -->
+<section id="frame">
+<h2>3. The rotating frame: a camera that follows the Moon</h2>
+<p>KSP's map view is usually <b>inertial</b>: the camera does not spin, and the Mun moves around Kerbin.
+Three-body work is almost always done in a <b>rotating frame</b> (also called the <b>synodic
+frame</b>), a camera that turns with the Moon. In it:</p>
+<ul>
+  <li>The Earth and Moon <b>sit still</b> on the x-axis. The origin is their centre of mass (the
+  <b>barycentre</b>), about 4,670 km from the Earth's centre, still inside the Earth.</li>
+  <li><b>+x</b> points from the Earth toward the Moon, <b>+z</b> points "up" out of the Moon's orbital plane,
+  and <b>+y</b> is the direction the Moon is moving.</li>
+  <li>The frame turns once per <b>sidereal month</b> (about 27.3 days).</li>
+</ul>
+<p>Orbits that look like messy spirals in the inertial view become closed loops in the rotating
+view. That is why the toolkit computes everything in the rotating frame and only converts to
+other views for plotting. <code>frames.trajectory_to_inertial()</code> does the conversion.</p>
+
+<div class="figure">
+  <div class="ftitle">Figure 2. One orbit, two cameras</div>
+  <div class="fsub">Left: the rotating frame, centred on the Moon. Right: an inertial frame (one that does not rotate).
+  Press play to watch the spacecraft move in both views at once.</div>
+  <div class="controls">
+    <label>Orbit <select id="frOrbit">
+      <option value="nrho">9:2 NRHO (4 revolutions)</option>
+      <option value="dro">DRO 70,000 km (2 revolutions)</option>
+      <option value="l2h">L2 halo (2 revolutions)</option></select></label>
+    <label>Inertial view centred on <select id="frCenter">
+      <option value="earth">Earth</option><option value="moon">Moon</option></select></label>
+    <button id="frPlay" type="button" class="primary">Play</button>
+    <label>Day <input type="range" id="frT" min="0" max="499" value="0"><output id="frTo">0.0</output></label>
+  </div>
+  <div class="row2"><div id="fig-frame-rot" class="plot"></div><div id="fig-frame-in" class="plot"></div></div>
+</div>
+<div class="callout warn"><span class="tag">Watch out</span>
+The toolkit's "inertial" frame lines up with the rotating frame at time zero, and its z-axis is the
+Moon's orbit normal. It is <b>not</b> the J2000 / ICRF frame used by NASA ephemerides. Rotate your state
+vectors into the Earth&ndash;Moon plane before handing them to the toolkit (see <a href="#recipes">recipes</a>).</div>
+</section>
+
+<!-- ===================================================================== -->
+<section id="units">
+<h2>4. Units you will see</h2>
+<p>Inside the toolkit, all numbers are <b>nondimensional</b>, meaning they are scaled so the important
+quantities equal 1. This keeps the maths well behaved and lets the same code work for any pair
+of bodies. You will see these numbers when you print raw states, so it helps to recognise them:</p>
+<table>
+<tr><th>Unit</th><th>Equals</th><th>Meaning</th></tr>
+<tr><td>1 length unit (LU)</td><td class="num" id="uL"></td><td>Earth&ndash;Moon distance</td></tr>
+<tr><td>1 time unit (TU)</td><td class="num" id="uT"></td><td>1/(2&pi;) of a sidereal month: the rotating frame turns 1 radian per TU</td></tr>
+<tr><td>1 velocity unit (VU)</td><td class="num" id="uV"></td><td>LU / TU, roughly the Moon's orbital speed</td></tr>
+<tr><td>&mu; (mass parameter)</td><td class="num" id="uMu"></td><td>Moon mass / (Earth + Moon mass)</td></tr>
+</table>
+<p>The <code>System</code> object (<code>cl.EARTH_MOON</code>) converts for you: <code>S.km()</code>, <code>S.mps()</code>,
+<code>S.days()</code> go to physical units and <code>S.nd_length()</code>, <code>S.nd_time_days()</code>,
+<code>S.nd_velocity()</code> come back.</p>
+<div class="figure">
+  <div class="ftitle">Unit converter</div>
+  <div class="controls">
+    <label>Value <input type="number" id="cvVal" value="1" step="any"></label>
+    <label>Kind <select id="cvKind"><option value="L">length</option><option value="T">time</option><option value="V">velocity</option></select></label>
+    <label>Direction <select id="cvDir"><option value="nd2">nondimensional &rarr; physical</option><option value="2nd">physical &rarr; nondimensional</option></select></label>
+    <span id="cvOut" style="color:var(--ink);font-weight:600"></span>
+  </div>
+</div>
+</section>
+
+<!-- ===================================================================== -->
+<section id="lagrange">
+<h2>5. Lagrange points and the energy map</h2>
+<p>In the rotating frame there are five places where the Earth's pull, the Moon's pull and the
+rotation of the frame balance exactly. A spacecraft parked there, with zero velocity, stays put. These
+are the <b>Lagrange points</b> (also called libration points), L1 to L5. KSP's patched conics have no
+Lagrange points, which is why they may be new to you.</p>
+<ul>
+  <li><b>L1</b>: between Earth and Moon, about 58,000 km from the Moon.</li>
+  <li><b>L2</b>: behind the Moon, about 64,500 km beyond it.</li>
+  <li><b>L3</b>: on the far side of the Earth.</li>
+  <li><b>L4, L5</b>: 60&deg; ahead of and behind the Moon along its orbit.</li>
+</ul>
+<p>L1, L2 and L3 are unstable, like a ball balanced on a hilltop, but orbits <em>around</em> L1 and L2
+are the backbone of cislunar mission design (section 6).</p>
+<h3>The Jacobi constant: energy in the rotating frame</h3>
+<p>In KSP, a coasting ship's orbital energy is fixed. In the rotating frame, the equivalent conserved
+quantity is the <b>Jacobi constant</b> <i>C</i>. Higher <i>C</i> means <em>less</em> energy (the sign is
+flipped by convention). For a given <i>C</i>, some regions of space are simply unreachable: you would
+need negative kinetic energy to be there. Their boundary is called the <b>zero-velocity curve</b>.</p>
+<p>As energy rises (lower <i>C</i>), "gates" open at the Lagrange points: first L1 (the door between Earth and
+Moon), then L2 (the door out the back of the Moon), then L3, and finally L4/L5, after which nothing is
+forbidden. Drag the slider to watch the gates open.</p>
+<div class="figure">
+  <div class="ftitle">Figure 3. Forbidden regions versus energy</div>
+  <div class="fsub">Shaded: where a spacecraft with this Jacobi constant can never go. Python equivalent:
+  <code>viz.plot_zero_velocity(ax, C)</code>; compute <i>C</i> with <code>cr3bp.jacobi(state, mu)</code>.</div>
+  <div class="controls">
+    <label>Jacobi constant C <input type="range" id="zvcC" min="2.95" max="3.25" step="0.001" value="3.18"><output id="zvcCo"></output></label>
+    <span id="zvcMsg"></span>
+  </div>
+  <div id="fig-zvc" class="plot tall"></div>
+</div>
+</section>
+
+<!-- ===================================================================== -->
+<section id="zoo">
+<h2>6. The orbit zoo</h2>
+<p>Most useful cislunar orbits are <b>periodic orbits</b>: in the rotating frame they repeat the same closed
+loop forever (in this idealised model). They come in <b>families</b>: continuous sequences of orbits that
+change gradually, like a series of ellipses of growing size. The main families:</p>
+<table>
+<tr><th>Family</th><th>What it looks like</th><th>Why missions use it</th><th>Toolkit</th></tr>
+<tr><td><b>Lyapunov</b></td><td>flat loop around L1 or L2 in the Moon's orbital plane</td><td>simplest libration orbit; stepping stone to the others</td><td><code>lyapunov(1, ax_km)</code></td></tr>
+<tr><td><b>Halo</b></td><td>3D loop around L1 or L2, tilted like a halo above or below the Moon</td><td>always visible from Earth (never behind the Moon); used for relay satellites</td><td><code>halo(2, az_km, "south")</code></td></tr>
+<tr><td><b>NRHO</b> (near-rectilinear halo orbit)</td><td>very stretched halo: dives to a few thousand km over one lunar pole, swings out to ~70,000 km over the other</td><td>Gateway's orbit: cheap to reach and leave, easy to keep stable, continuous Earth contact</td><td><code>nrho((9, 2))</code></td></tr>
+<tr><td><b>DRO</b> (distant retrograde orbit)</td><td>large flat loop around the Moon, going backwards (retrograde) in the rotating frame</td><td>extremely stable: a spacecraft can sit there for years with no correction burns (Artemis I used one)</td><td><code>dro(x_offset_km)</code></td></tr>
+</table>
+<p><b>Tip:</b> set <em>Colour path by</em> to a speed option to see the orbit as a heat map of its speed.
+On an NRHO the spacecraft creeps along at under 100 m/s at apolune and races past the Moon's pole at about 1.7 km/s:
+"rectilinear" orbits spend most of their time far away and slow, like a ball thrown straight up.</p>
+<h3>Reading the numbers</h3>
+<ul>
+  <li><b>Perilune / apolune</b>: closest and farthest distance from the Moon's centre. These are KSP's periapsis
+  and apoapsis, measured from the body's centre, not its surface (subtract 1,737 km for altitude above
+  the Moon).</li>
+  <li><b>Period</b>: time for one loop in the rotating frame.</li>
+  <li><b>Stability index &nu;</b>: how fast small errors grow. If &nu; = 1 the orbit is stable: errors do not
+  grow. If &nu; &gt; 1, each revolution multiplies an unlucky error by roughly 2&nu;. Small L1 halos have
+  &nu; around 1,000, so a 1 m position error becomes 2 km after one lap. NRHOs are much gentler (&nu;&nbsp;&asymp;&nbsp;1.3).
+  This is why some orbits need regular <b>station-keeping</b> burns.</li>
+  <li><b>Resonance</b>: the 9:2 NRHO completes 9 laps every 2 <b>synodic months</b> (the 29.5-day cycle of
+  lunar phases). This keeps it in step with the Sun and lets it avoid long eclipses.</li>
+</ul>
+<h3>How the toolkit finds them</h3>
+<p>You cannot just write down a periodic orbit; you have to search for it. The toolkit starts from an
+approximate guess (for halos, a classic formula by Richardson) and then uses <b>differential correction</b>:
+it flies the guess half an orbit, measures how far it misses a perfect mirror-image crossing of the
+x&ndash;z plane, and adjusts the starting state. A few repetitions converge it to about 10<sup>&minus;11</sup>
+(a few millimetres). To walk along a family it uses <b>continuation</b>: take a converged orbit, nudge it,
+re-converge, repeat. <code>continue_arclength</code> can even follow a family around a "fold", where the family
+turns back on itself. That is how the L2 halos turn into the NRHOs in Figure 4.</p>
+
+<div class="figure">
+  <div class="ftitle">Figure 4. Family explorer</div>
+  <div class="fsub">Every orbit here was computed by the toolkit. Pick a family, then slide through its members.
+  The faint lines are the other members of the family. Moon-centred rotating frame, km. Drag to rotate.</div>
+  <div class="controls">
+    <label>Family <select id="famSel"></select></label>
+    <label>Member <input type="range" id="famIdx" min="0" max="10" value="0"><output id="famIdxO"></output></label>
+  </div>
+  <div class="tiles" id="famTiles"></div>
+  <div id="fig-family" class="plot tall"></div>
+  <div id="fig-stab" class="plot short"></div>
+  <details><summary>Show this family as a table</summary><div id="famTable"></div></details>
+</div>
+<p>Python that produces the L2 family:</p>
+<pre><code>import cislunar as cl
+from cislunar import periodic as P
+
+start = P.halo(2, 5000.0, "south")                 # small L2 southern halo
+fam = P.continue_arclength(start, 0.01,            # step size (nondimensional)
+                           stop=lambda o: o.period_days &lt; 6.0,
+                           direction=(0.0, 1.0, 0.0))  # which way to walk in (x0, z0, vy0)
+for o in fam[::8]:
+    print(o.summary())</code></pre>
+</section>
+
+<!-- ===================================================================== -->
+<section id="sandbox">
+<h2>7. Maneuver sandbox</h2>
+<p>This is KSP's maneuver node, three-body edition. Pick a starting orbit and a point along it, then
+add a burn in the familiar directions:</p>
+<ul>
+  <li><b>Prograde / retrograde</b>: along / against your velocity <em>relative to the chosen reference body</em>.</li>
+  <li><b>Normal / anti-normal</b>: perpendicular to your orbital plane.</li>
+  <li><b>Radial out / in</b>: within the orbital plane, away from / toward the body.</li>
+</ul>
+<p>The trajectory is integrated in your browser with the same equations the toolkit uses
+(<code>cr3bp.eom</code>; a Dormand&ndash;Prince 5(4) integrator with tolerance 10<sup>&minus;10</sup>). Things to try:</p>
+<ul>
+  <li><b>NRHO, 0 m/s, 120 days</b>: the orbit repeats, but leftover numerical error slowly grows.
+  NRHOs are only mildly unstable, so this takes months to show.</li>
+  <li><b>L1 halo, 1 m/s prograde</b>: watch how quickly a strongly unstable orbit throws you out.</li>
+  <li><b>DRO, 20 m/s any direction</b>: the orbit wobbles but stays around the Moon. That is stability.</li>
+  <li><b>Low lunar orbit, 820 m/s prograde</b>: escape the Moon, and see that the Earth then takes over.</li>
+  <li><b>LEO, 3,100 m/s prograde</b>: a trans-lunar-sized burn fired at an arbitrary moment. Apogee reaches the
+  Moon's distance, but the Moon is not there. Timing the burn is the job of <code>optimize_transfer</code> (section 8).</li>
+</ul>
+<div class="figure">
+  <div class="ftitle">Figure 5. Make a burn, see what happens</div>
+  <div class="controls">
+    <label>Start orbit <select id="sbStart"></select></label>
+    <label>Burn at <input type="range" id="sbPhase" min="0" max="1" step="0.005" value="0"><output id="sbPhaseO"></output></label>
+    <label>Directions relative to <select id="sbBody"><option value="moon">Moon</option><option value="earth">Earth</option></select></label>
+  </div>
+  <div class="controls">
+    <label>Prograde <input type="number" id="sbPro" value="0" step="1"> m/s</label>
+    <label>Normal <input type="number" id="sbNrm" value="0" step="1"> m/s</label>
+    <label>Radial out <input type="number" id="sbRad" value="0" step="1"> m/s</label>
+    <label>Fly for <input type="range" id="sbDur" min="1" max="120" step="1" value="30"><output id="sbDurO"></output></label>
+    <label>View <select id="sbView">
+      <option value="rotM">rotating, Moon-centred</option><option value="rotE">rotating, Earth-centred</option>
+      <option value="inE">inertial, Earth-centred</option><option value="inM">inertial, Moon-centred</option></select></label>
+  </div>
+  <div class="controls">
+    Presets:
+    <button type="button" data-preset="nrho0">NRHO, no burn, 120 d</button>
+    <button type="button" data-preset="l1kick">L1 halo +1 m/s</button>
+    <button type="button" data-preset="drokick">DRO +20 m/s radial</button>
+    <button type="button" data-preset="lloesc">LLO escape</button>
+    <button type="button" data-preset="leotli">LEO +3,100 m/s (not aimed)</button>
+  </div>
+  <div class="tiles" id="sbTiles"></div>
+  <div id="fig-sandbox" class="plot tall"></div>
+</div>
+<p>The same experiment in Python:</p>
+<pre><code>import numpy as np, cislunar as cl
+from cislunar import frames
+S = cl.EARTH_MOON
+nrho = cl.nrho()
+x = nrho.state_at(0.25 * nrho.period)           # a quarter of the way around
+v_rel = x[3:] + np.cross([0, 0, 1], x[:3] - S.pos2)   # velocity relative to the Moon, non-rotating
+prograde = v_rel / np.linalg.norm(v_rel)
+x[3:] += S.nd_velocity(5.0 / 1000) * prograde    # +5 m/s prograde
+traj = cl.propagate(x, S.nd_time_days(30), S, n_points=3000)</code></pre>
+</section>
+
+<!-- ===================================================================== -->
+<section id="transfers">
+<h2>8. Getting there: transfers and intercepts</h2>
+<h3>Lambert's problem: the question behind every maneuver node</h3>
+<p>When you drag a maneuver node in KSP until you get an encounter, you are solving <b>Lambert's problem</b>
+by hand: <em>"I am here now. I want to be there at that time. What velocity do I need?"</em> With
+one gravitating body this has a neat solution (<code>lambert.lambert()</code>). With two bodies there is
+no formula, so the toolkit uses <b>shooting</b>: guess a departure velocity (using the one-body
+Lambert answer as the first guess), fly it, measure the miss, correct, repeat. This is
+<code>targeting.shoot()</code>, usually reached through <code>intercept()</code>.</p>
+<p>A <b>rendezvous</b> needs two burns: <b>&Delta;v<sub>1</sub></b> to leave your orbit and <b>&Delta;v<sub>2</sub></b> to match
+the target's velocity on arrival. An <b>intercept</b> only needs the first burn.</p>
+<h3>Porkchop plots: KSP's transfer window planner</h3>
+<p>The cost of a transfer depends on <em>when</em> you leave and <em>how long</em> you take. A
+<b>porkchop plot</b> maps total &Delta;v over a grid of departure times and flight times, just like the
+transfer window planner mods for KSP. <code>porkchop()</code> computes one by solving a full rendezvous at every
+grid point.</p>
+<div class="figure">
+  <div class="ftitle">Figure 6. DRO to NRHO porkchop: click any cell</div>
+  <div class="fsub">From a 70,000 km DRO to the 9:2 NRHO, 264 rendezvous solutions (computed with <code>refine=3</code>). Lighter means cheaper. Click a cell to
+  fly that transfer in the 3D view (your browser re-integrates the arc from the toolkit's departure state).
+  The diagonal dark ridges are arrivals while the NRHO is racing through perilune, which makes velocity matching expensive.</div>
+  <div class="tiles" id="pcTiles"></div>
+  <div class="row2"><div id="fig-porkchop" class="plot"></div><div id="fig-pc3d" class="plot"></div></div>
+</div>
+<pre><code>dro, nrho = cl.dro(70000.0), cl.nrho()
+t_dep = np.linspace(0, S.nd_time_days(14), 22)
+tofs  = np.linspace(S.nd_time_days(2), S.nd_time_days(9), 12)
+pc = cl.porkchop(dro, nrho, t_dep, tofs,        # ~1 minute for the basic sweep
+                 keep_transfers=True, refine=3) # + a few minutes of clean-up passes
+print(pc.best.summary())                        # cheapest transfer found
+viz.plot_porkchop(pc)</code></pre>
+<div class="callout warn"><span class="tag">About local solutions</span>
+Each grid point is solved starting from its neighbour's answer. This is fast, but a cell can lock
+onto a more expensive solution branch. Without clean-up, this grid had a solid dark stripe at departure
+days 4.7&ndash;5.3 that was purely a solver artifact. <code>refine=</code> re-solves every cell from each neighbour's solution and keeps the
+cheapest, which removed the stripe and lowered the best transfer from 515 to 498 m/s. If you still see a dark island among cheap cells,
+re-solve it with <code>intercept(..., seeds="all")</code>.</div>
+
+<h3>From low Earth orbit to the Gateway orbit</h3>
+<p>Leaving Earth works like a KSP Mun transfer: a <b>trans-lunar injection</b> (TLI) burn of about 3.1 km/s from
+low orbit, a coast of 4&ndash;5 days, then a <b>NRHO insertion</b> burn at arrival. The toolkit helps with
+two real-world details KSP hides:</p>
+<ul>
+  <li><b>Plane alignment.</b> A 28.5&deg; inclined parking orbit (Cape Canaveral's latitude) must be oriented so
+  its plane contains the arrival point; otherwise a large plane change is needed.
+  <code>targeting.raan_for_target()</code> picks the orientation (the RAAN, right ascension of the
+  ascending node, which sets where the orbit crosses the equator).</li>
+  <li><b>Timing.</b> <code>optimize_transfer()</code> first scans departure time and flight time with
+  cheap one-body Lambert solutions, then refines the best candidates with the real three-body model.</li>
+</ul>
+<div class="figure">
+  <div class="ftitle">Figure 7. LEO to NRHO, and how sensitive the TLI burn is</div>
+  <div class="fsub">The toolkit's optimised transfer. Use the slider to make the TLI burn slightly too weak or too strong
+  and watch the arrival miss grow. This is why real missions plan <b>trajectory correction maneuvers</b> along the way.</div>
+  <div class="controls">
+    <label>View <select id="leoView"><option value="rot">rotating, Earth-centred</option><option value="in">inertial, Earth-centred</option></select></label>
+    <label>TLI error <input type="range" id="leoErr" min="-20" max="20" step="0.5" value="0"><output id="leoErrO"></output></label>
+  </div>
+  <div class="tiles" id="leoTiles"></div>
+  <div id="fig-leo" class="plot tall"></div>
+</div>
+<pre><code>from cislunar import targeting, frames
+from cislunar.constants import R_EARTH
+nrho = cl.nrho()
+inc = np.radians(28.5)
+r_arr = frames.rotating_to_inertial(S.nd_time_days(4.5), nrho.state_at(S.nd_time_days(4.5)), S, "earth")[:3]
+raan = targeting.raan_for_target(r_arr, inc)[0]
+leo = targeting.keplerian_state_fn(R_EARTH + 400, 0.0, inc, raan, 0.0, 0.0, S)
+tr = cl.optimize_transfer(leo, nrho, (0, S.nd_time_seconds(5550)),
+                          (S.nd_time_days(3.5), S.nd_time_days(5.5)))   # ~2-3 minutes
+print(tr.summary())</code></pre>
+</section>
+
+<!-- ===================================================================== -->
+<section id="rpod">
+<h2>9. Rendezvous, proximity operations and docking (RPOD)</h2>
+<p>RPOD is the last few tens of kilometres: getting from "nearby" to "docked". In KSP you switch the navball
+to <b>target mode</b> and fly by relative velocity. Real operations do the same thing in a carefully defined
+moving frame attached to the target, the <b>LVLH frame</b> (local vertical, local horizontal):</p>
+<table>
+<tr><th>Axis</th><th>Name</th><th>Points</th><th>KSP analogue</th></tr>
+<tr><td>x</td><td><b>V-bar</b></td><td>the target's direction of travel</td><td>the target's prograde</td></tr>
+<tr><td>y</td><td><b>&minus;H-bar</b></td><td>opposite the target's orbit normal</td><td>the target's anti-normal</td></tr>
+<tr><td>z</td><td><b>R-bar</b></td><td>"down", toward the body being orbited (the Moon by default)</td><td>the target's radial-in</td></tr>
+</table>
+<p>"Approaching along V-bar from behind" means sitting on the target's track and closing in from the
+&minus;x side. R-bar is drawn pointing <em>down</em> in all toolkit plots, as in NASA practice.</p>
+<h3>Why you cannot just point at the target and thrust</h3>
+<p>Every KSP player has tried thrusting straight at a target in orbit and watched the ship sail past above
+it. The <b>Clohessy&ndash;Wiltshire (CW) equations</b> describe this counter-intuitive relative motion for a target in a
+circular orbit. A burn <em>toward</em> the target along V-bar raises your orbit, which slows you down, so you
+drift <em>backwards</em>. Try it:</p>
+<div class="figure">
+  <div class="ftitle">Figure 8. Relative-motion playground (target in a 400 km circular Earth orbit)</div>
+  <div class="fsub">The chaser starts at rest relative to the target, then makes one burn. Analytic CW solution
+  (<code>relative.cw_stm</code>). Dots mark each completed orbit (about 92 minutes).</div>
+  <div class="controls">
+    <label>Start on V-bar <input type="range" id="cwX0" min="-2000" max="2000" step="50" value="-1000"><output id="cwX0o"></output></label>
+    <label>Burn V-bar <input type="range" id="cwVx" min="-2" max="2" step="0.01" value="0.5"><output id="cwVxo"></output></label>
+    <label>Burn R-bar <input type="range" id="cwVz" min="-2" max="2" step="0.01" value="0"><output id="cwVzo"></output></label>
+    <label>Orbits <input type="range" id="cwN" min="0.5" max="5" step="0.5" value="2"><output id="cwNo"></output></label>
+  </div>
+  <div class="controls">Presets:
+    <button type="button" data-cw="pro">Burn toward target (+V-bar)</button>
+    <button type="button" data-cw="retro">Burn away (&minus;V-bar)</button>
+    <button type="button" data-cw="football">Radial burn: "football" orbit</button>
+    <button type="button" data-cw="hop">One-orbit hop to target</button>
+  </div>
+  <div id="cwMsg" class="fsub"></div>
+  <div id="fig-cw" class="plot"></div>
+</div>
+<div class="callout ksp"><span class="tag">The RPOD cheat sheet</span>
+<b>+V-bar burn</b> &rarr; you rise and fall behind. <b>&minus;V-bar burn</b> &rarr; you sink and move ahead.
+<b>Radial burn</b> &rarr; a closed loop that returns you to your starting point one orbit later.
+To <em>catch up</em> with a target ahead of you, you burn <em>retrograde</em>.</div>
+<p>CW assumes a circular orbit around one body. An NRHO is neither circular nor around one body, so for real
+cislunar RPOD the toolkit propagates <em>both</em> spacecraft in the full three-body model and expresses
+the result in the target's LVLH frame. <code>linear_relative_targeting</code> uses the target's own
+<b>state transition matrix</b> (a table of how small offsets grow over time) as a fast first guess.
+<code>plan_waypoints</code> then solves each leg exactly.</p>
+
+<h3>Planning an approach</h3>
+<p>An approach is a list of <b>waypoints</b>: where (in LVLH) the chaser should be, and when.
+<code>plan_waypoints</code> places a burn at the start of each leg so the chaser arrives at the next waypoint, plus a
+final burn that sets the docking speed (here 3 cm/s). Safety checks:</p>
+<ul>
+  <li><b>Keep-out sphere</b> (KOS): a 200 m bubble around the target that only the final approach may enter
+  (<code>keep_out_violations</code>).</li>
+  <li><b>Approach corridor</b>: inside the KOS, stay within a cone around the docking axis
+  (<code>corridor_violations</code>).</li>
+  <li><b>Passive abort safety</b>: if a burn fails, where does the chaser drift? A safe plan never coasts into
+  the target (<code>passive_abort</code>).</li>
+</ul>
+<div class="figure">
+  <div class="ftitle">Figure 9. A 21-hour approach to a spacecraft at NRHO apolune</div>
+  <div class="fsub">The chaser starts 20 km behind and 1 km below the target, and arrives through hold points at 5 km, 1 km, 200 m and 30 m. Tick a box to see
+  where it would drift for 24 hours if the next burn were missed. Several of those drifts pass dangerously close: this straight-in
+  approach is <b>not passively safe</b>, which <code>passive_abort</code> reveals.</div>
+  <div class="controls">
+    <label>Zoom <select id="rpZoom"><option value="all">whole approach</option><option value="1200">last 1.2 km</option><option value="60">last 60 m</option></select></label>
+    <label>Time <input type="range" id="rpT" min="0" max="1000" value="0"><output id="rpTo"></output></label>
+    <span id="rpAborts"></span>
+  </div>
+  <div class="tiles" id="rpTiles"></div>
+  <div id="fig-rpod" class="plot"></div>
+  <div id="fig-range" class="plot short"></div>
+  <div id="rpTable"></div>
+</div>
+<pre><code>from cislunar import frames, relative as R
+nrho = cl.nrho()
+xt0 = nrho.state_at(0.0)                                   # target at apolune
+rel0 = np.r_[S.nd_length(np.array([-20.0, 0, 1.0])), 0, 0, 0]   # 20 km behind, 1 km below
+xc0 = frames.from_lvlh(xt0, rel0, S)
+plan = R.plan_waypoints(xt0, xc0, [
+    R.Waypoint(8,  (-5.0, 0, 0), "5 km"),
+    R.Waypoint(14, (-1.0, 0, 0), "1 km"),
+    R.Waypoint(18, (-0.2, 0, 0), "200 m"),
+    R.Waypoint(20, (-0.03, 0, 0), "30 m"),
+    R.Waypoint(21, (0.0, 0, 0), "dock"),
+], S, final_rhodot_mps=(0.03, 0, 0))
+print(plan.summary())
+for a in R.passive_abort(plan, duration_hours=24):
+    print(a.burn_index, a.min_range_km * 1000, "m")</code></pre>
+</section>
+
+<!-- ===================================================================== -->
+<section id="rosettes">
+<h2>10. Advanced: rosette orbits</h2>
+<p>Some orbits draw a flower: loop after loop, each one turned a little from the last, until the
+petals close up into a finished pattern. These are <b>rosette orbits</b>. The key idea of this section is
+that <em>a rosette is a simple orbit seen from a frame that turns at a different rate</em>. The shape you see depends
+as much on the camera as on the orbit.</p>
+<div class="callout ksp"><span class="tag">You have seen this before</span>
+Think of a Spirograph, or of a satellite's ground track. A satellite in a plain circular orbit draws a
+wandering, repeating pattern on the map because the planet turns underneath it. If the orbit period and the
+planet's day are in a whole-number ratio, the track repeats exactly: a rosette drawn on the ground. Cislunar
+rosettes are the same thing, with the Moon's monthly turn playing the role of the planet's daily spin.</div>
+<p>Two kinds matter in cislunar space, and they are mirror images of each other:</p>
+<table>
+<tr><th></th><th>Inertial view (fixed to the stars)</th><th>Rotating view (fixed to the Moon)</th></tr>
+<tr><td><b>Earth&ndash;Moon resonant orbits</b> (10.1)</td><td>almost a plain ellipse around the Earth</td><td><b>rosette</b></td></tr>
+<tr><td><b>Lunar libration orbits</b>: NRHO, DRO, halo (10.2)</td><td><b>rosette</b> around the Moon</td><td>a single closed loop</td></tr>
+</table>
+<p class="muted" style="font-size:14px">Not to be confused with "rosette constellations" (Ballard/Walker), a way of
+arranging many satellites in circular orbits. That is a different use of the same word.</p>
+
+<h3>10.1 Earth&ndash;Moon resonant orbits</h3>
+<p>A <b>p:q resonant orbit</b> goes around the Earth <b>p</b> times while the Moon goes around <b>q</b> times. Because
+the spacecraft and the Moon then return to the same relative positions, the orbit repeats exactly in the rotating
+frame after about <b>q sidereal months</b>. Interior resonances (p &gt; q) stay inside the Moon's orbit; exterior ones
+(p &lt; q) go outside it. Rules of thumb you can check in Figure 10:</p>
+<ul>
+  <li>An interior p:q orbit has <b>p perigee passes per period</b>, which show up as <b>p lobes</b> in the rotating frame.
+  The 2:1 is a figure-eight, the 3:1 a three-leaf clover, the 4:1 four petals and the 5:2 a five-petal flower that needs two months to close.</li>
+  <li>The Moon's repeated, evenly spaced tugs either <b>cancel out</b>, giving a very stable orbit (stability index &nu; = 1), or
+  <b>add up</b>, giving an unstable one. Orbits that pass close to the Moon, such as the 3:2 here, are strongly unstable.</li>
+  <li><b>Real missions use them.</b> NASA's TESS space telescope (2018) flies a 2:1 lunar-resonant orbit with its apogees about 90&deg;
+  away from the Moon, so it can stay in orbit for decades with almost no fuel. IBEX was moved into a 3:1 resonant orbit in 2011 for the same reason.</li>
+</ul>
+<div class="figure">
+  <div class="ftitle">Figure 10. Resonant rosette explorer</div>
+  <div class="fsub">Each orbit was computed by <code>periodic.resonant(p, q, e)</code>. Left: rotating frame (Earth at the centre, Moon fixed
+  on the right). Right: the same orbit in an inertial frame, with the Moon moving along the dotted circle. Drag the slider or press play to
+  watch the flower draw itself. Tick the box to fly the <em>uncorrected</em> Keplerian guess and see why correction is needed.</div>
+  <div class="controls">
+    <label>Resonance <select id="rsSel"></select></label>
+    <button id="rsPlay" type="button" class="primary">Play</button>
+    <label>Drawn <input type="range" id="rsT" min="0" max="1000" value="1000"><output id="rsTo"></output></label>
+    <label><input type="checkbox" id="rsGuess"> show uncorrected Keplerian guess</label>
+  </div>
+  <div class="tiles" id="rsTiles"></div>
+  <div class="row2"><div id="fig-ros-rot" class="plot"></div><div id="fig-ros-in" class="plot"></div></div>
+  <details><summary>Show all resonant orbits as a table</summary><div id="rsTable"></div></details>
+</div>
+<h4>How the toolkit finds them</h4>
+<ol>
+  <li><b>Keplerian guess</b> (<code>resonant_guess</code>): an Earth-only ellipse whose period is exactly q/p of the Moon's, starting at
+  perigee on the far side of the Earth, where the velocity is perpendicular to the x-axis.</li>
+  <li><b>Fixed-time correction</b> (<code>correct_symmetric_period</code>): these orbits cross the x-axis several times per lap, so the
+  usual "stop at the first crossing" corrector (section 6) does not work. Instead the toolkit flies exactly half a period and adjusts
+  the perigee speed and the period together until the orbit crosses the x-axis at right angles there. A symmetric orbit that does that
+  is periodic.</li>
+  <li><b>Mass homotopy</b> (automatic fallback): over two or three months the Moon can drag the guess too far for the corrector to
+  recover. The toolkit then starts with an almost massless Moon, where the guess is exactly periodic, and raises the Moon's mass to its true
+  value in small steps, re-correcting each time. The 5:2 orbit with <code>e=0.5</code> needs this.</li>
+</ol>
+<p>Not every combination exists. As the Moon's mass grows, some resonant orbits merge with other families and disappear. Then
+<code>resonant</code> raises an error saying so (for example 4:3 and 5:3 at their default eccentricity); try a different <code>e</code>.</p>
+<pre><code>from cislunar import periodic as P, frames
+from cislunar.viz import plot_trajectories_2d
+
+tess = P.resonant(2, 1, e=0.55)          # TESS-like orbit
+print(tess.summary())                    # period ~27.2 d (two laps of 13.6 d), stability index 1.0
+tr = tess.trajectory(3000)
+plot_trajectories_2d(tr, "xy", origin="earth", fit="all")                    # the rosette
+plot_trajectories_2d(frames.trajectory_to_inertial(tr, "earth"), "xy")        # the ellipse
+
+flower = P.resonant(5, 2, e=0.5)         # needs the mass homotopy (~20 s)</code></pre>
+
+<h3>10.2 Lunar rosettes</h3>
+<p>Now turn the idea around. The NRHO and the DRO are single closed loops in the rotating frame (section 6). But the rotating frame
+turns once per 27.3 days, so to someone watching from the stars, each loop is drawn a little further round than the last:</p>
+<ul>
+  <li>The <b>9:2 NRHO</b> takes 6.56 days per loop, so each loop is rotated about 86&deg; from the previous one. The petals all meet
+  at the perilune over the Moon's north pole and fan out at apolune, 70,000 km south.</li>
+  <li>The <b>70,000 km DRO</b> takes 13.9 days per loop, about half a month, so successive loops are turned by roughly 180&deg;
+  and the pattern becomes a slowly turning, rounded square.</li>
+</ul>
+<p>Why it matters: an inertial rosette sets where the Sun is relative to the orbit on each pass, which drives
+lighting, eclipses and thermal conditions. It also sets which way the spacecraft's antennas and solar arrays point. The
+"9:2" in the NRHO's name is chosen so that this pattern stays in step with the Sun, repeating every two synodic months. The toolkit's CR3BP
+has no Sun, so here the rosette keeps turning slowly instead of closing exactly.</p>
+<div class="figure">
+  <div class="ftitle">Figure 11. One loop, or a flower? Lunar orbits in two frames</div>
+  <div class="fsub">Left: one period in the rotating frame (Moon-centred). Right: the same motion over several periods in a Moon-centred
+  inertial frame. Slide to add revolutions. Drag either view to rotate.</div>
+  <div class="controls">
+    <label>Orbit <select id="lrSel"></select></label>
+    <label>Revolutions <input type="range" id="lrN" min="1" max="18" value="9"><output id="lrNo"></output></label>
+  </div>
+  <div class="row2"><div id="fig-lr-rot" class="plot"></div><div id="fig-lr-in" class="plot"></div></div>
+</div>
+<pre><code>nrho = cl.nrho()
+tr = cl.propagate(nrho.state0, 9 * nrho.period, n_points=6000)     # 9 loops, ~59 days
+plot_trajectories_3d(frames.trajectory_to_inertial(tr, "moon"))     # the lunar rosette</code></pre>
+</section>
+
+<!-- ===================================================================== -->
+<section id="transient">
+<h2>11. Advanced: transient orbits, flybys and &Delta;v budgets</h2>
+<p>Most of this manual is about orbits that repeat. This section is about the ones that don't, or don't for long:
+unstable orbits, the "highways" that lead away from them, trajectories that are captured by the Moon for a while and then
+leave. It then covers how to turn all of that into a <b>&Delta;v budget</b>: the number every mission is designed around.</p>
+<div class="callout ksp"><span class="tag">KSP instinct check</span>
+In KSP an orbit is either stable forever or you are on an escape or impact trajectory. In the three-body world there is a large
+middle ground: orbits that last for weeks or months and then leave, and orbits that only stay because someone nudges them every few days.
+"Unstable" is not a yes/no label; it is a <em>time scale</em>.</div>
+
+<h3>11.1 How fast errors grow</h3>
+<p>Every periodic orbit has a <b>monodromy matrix</b>: the table of how a small error changes over one lap. Its largest eigenvalue
+&lambda; is the factor by which the worst-case error grows per lap, so the <b>e-folding time</b> T / ln &lambda; is how long an error takes
+to grow by a factor of e (about 2.7). This is the planning number. It tells you how often you must track and correct the spacecraft.</p>
+<div class="figure">
+  <div class="ftitle">Figure 12. Error-growth time across orbit families</div>
+  <div class="fsub">E-folding time for every member of the families from Figure 4, computed from each orbit's stability index.
+  DROs are stable (no growth), so they do not appear. Python: <code>manifolds.efolding_time(orbit)</code>.</div>
+  <div id="fig-efold" class="plot short" style="height:360px"></div>
+</div>
+<p>Small L1 and L2 halos double their errors in about a day; the NRHO takes about a week. A 1 m navigation error on a small L1 halo becomes
+1 km in about 11 days; on the NRHO, in about 58.</p>
+
+<h3>11.2 Invariant manifolds: the free highways</h3>
+<p>The direction in which errors grow fastest is also a free ride. Nudge a spacecraft a tiny distance along it and it leaves the orbit
+on its own, with no further burns, following one of a family of trajectories called the <b>unstable manifold</b>. Run time backwards and
+the same idea gives the <b>stable manifold</b>: trajectories that drift <em>onto</em> the orbit without an arrival burn. Together they
+form tubes that pass through the L1 and L2 gates of section 5, and they are how low-energy transfers such as CAPSTONE's ballistic lunar
+transfer get by on so little fuel.</p>
+<ul>
+  <li><b>Interior</b> branch: the first step goes toward the Earth; <b>exterior</b>: away from it.</li>
+  <li>A 50 km nudge along the unstable direction is equivalent to a burn of well under 1 m/s, yet carries the spacecraft out of the
+  Moon's neighbourhood within a few weeks.</li>
+  <li>Stable orbits (the DRO) have no manifolds. <code>manifold()</code> raises an error for them.</li>
+</ul>
+<div class="figure">
+  <div class="ftitle">Figure 13. Manifold explorer</div>
+  <div class="fsub">24 trajectories, starting evenly around the orbit, each displaced 50 km along the unstable (or stable) direction and flown for
+  up to 30 days. Colour shows where each one ends up, using the same colours as the fate map in Figure 14. Slide to grow the tube. Moon-centred rotating frame.</div>
+  <div class="controls">
+    <label>Orbit <select id="mfOrbit"></select></label>
+    <label>Manifold <select id="mfKind"><option value="unstable">unstable (leaving)</option><option value="stable">stable (arriving, traced backwards)</option></select></label>
+    <label>Branch <select id="mfBranch"><option value="both">both</option><option value="interior">interior (toward Earth)</option><option value="exterior">exterior</option></select></label>
+    <label>View <select id="mfPlane"><option value="xy">top (x&ndash;y)</option><option value="xz">side (x&ndash;z)</option></select></label>
+    <label>Days along the tube <input type="range" id="mfDay" min="1" max="30" value="30"><output id="mfDayO"></output></label>
+  </div>
+  <div class="tiles" id="mfTiles"></div>
+  <div id="fig-manifold" class="plot tall"></div>
+</div>
+<pre><code>from cislunar import manifolds as M, periodic as P
+from cislunar.viz import plot_manifold
+
+l1 = P.lyapunov(1, 20000.0)
+print(M.efolding_time(l1) * cl.EARTH_MOON.tstar / 86400, "days")
+tubes = [M.manifold(l1, "unstable", "interior", n=40, tf_days=30),
+         M.manifold(l1, "unstable", "exterior", n=40, tf_days=30)]
+for t in tubes:
+    print(t.branch, t.fate_counts())    # how many go to Earth, leave via L2, hit the Moon ...
+plot_manifold(tubes, "xy", origin="moon")</code></pre>
+
+<h3>11.3 Where do trajectories go? Fates, lifetimes and FTLE</h3>
+<p>For a trajectory that is not periodic, the useful questions are <em>what happens to it</em> and <em>when</em>. The toolkit gives every
+trajectory near the Moon a <b>fate</b>:</p>
+<ul>
+  <li><b>leaves via L1</b>: passes a plane 40,000 km beyond L1, heading toward Earth;</li>
+  <li><b>leaves via L2</b>: passes a plane 40,000 km beyond L2, heading outward;</li>
+  <li><b>impacts</b> the Moon (or Earth);</li>
+  <li><b>still captured</b>: none of these within the time horizon.</li>
+</ul>
+<p>The time of that event is the trajectory's <b>lifetime</b>. A second measure, the <b>finite-time Lyapunov exponent</b> (FTLE), says how fast
+two neighbouring trajectories separate. High FTLE marks the knife-edges between outcomes, where a tiny change in starting state flips the result.
+These ridges trace the manifold tubes from 11.2.</p>
+<div class="figure">
+  <div class="ftitle">Figure 14. Fate map: start near the Moon, see what happens</div>
+  <div class="fsub">Each cell is one trajectory starting on the Earth&ndash;Moon line at the given distance from the Moon, moving perpendicular to it
+  (retrograde or prograde around the Moon) with the speed set by the energy (Jacobi constant, as in Figure 3). 6,300 trajectories, each flown for 60 days.
+  <b>Click a cell</b> to fly that trajectory in your browser (right).
+  Python: <code>manifolds.fate_map(d_km, C, "retrograde", horizon_days=60, with_ftle=True)</code>.</div>
+  <div class="controls">
+    <label>Show <select id="fmKind"><option value="fate">fate</option><option value="life">lifetime</option><option value="ftle">FTLE (10 days)</option></select></label>
+    <label>Start <select id="fmSense"><option value="retrograde">retrograde</option><option value="prograde">prograde</option></select></label>
+  </div>
+  <div class="tiles" id="fmTiles"></div>
+  <div class="row2"><div id="fig-fatemap" class="plot"></div><div id="fig-fatepath" class="plot"></div></div>
+</div>
+<p>Reading the map: at high C (low energy, top) the L1 and L2 gates are closed. A spacecraft can only stay or fall into the Moon.
+Below C &asymp; 3.19 the L1 gate opens, then below about 3.17 the L2 gate, and trajectories starting near the Moon begin to leave. Note how many
+starts are still captured after 60 days even though they are not on any periodic orbit. These are the temporary captures, the cislunar version
+of a "minimoon". Retrograde starts survive much better than prograde ones, for the same reason DROs are stable.</p>
+
+<h3>11.4 Flybys: paying only half</h3>
+<p>A <b>rendezvous</b> pays twice: once to leave, once to match the target's velocity. A <b>flyby</b> (for inspection or imaging) skips the second burn,
+so the spacecraft passes the target at the <b>relative speed at encounter</b>. That speed is a budget line in its own right: at 1 km/s you get
+a few seconds of close-range imaging and a high-consequence collision risk. Real inspection flybys also aim for a deliberate <b>miss distance</b>.
+<code>targeting.flyby(..., miss_km=25)</code> aims at a point offset perpendicular to the relative velocity, so that point is the true closest approach,
+and verifies the result with a dense search.</p>
+<div class="figure">
+  <div class="ftitle">Figure 15. Flyby versus rendezvous on the same grid</div>
+  <div class="fsub">Left: the DRO&rarr;NRHO grid from Figure 6, re-scored three ways. Right: range to the target around closest approach for flybys
+  aimed at different miss distances (departure day 7.3, 9-day flight). The table shows that a larger miss costs almost nothing.</div>
+  <div class="controls">
+    <label>Colour by <select id="fbMetric"><option value="dv1">flyby cost: departure &Delta;v only</option><option value="vrel">relative speed at encounter</option><option value="tot">rendezvous cost: total &Delta;v</option></select></label>
+  </div>
+  <div class="row2"><div id="fig-fbgrid" class="plot"></div><div id="fig-fbrange" class="plot"></div></div>
+  <div id="fbTable"></div>
+</div>
+<pre><code>fb = T.flyby(dro, nrho, S.nd_time_days(7.33), S.nd_time_days(9.0), miss_km=25.0)
+print(fb.summary())     # departure dv, true closest approach, relative speed
+pc = cl.porkchop(dro, nrho, t_dep, tofs, rendezvous=False)   # pc.dv1_mps, pc.vrel_mps</code></pre>
+
+<h3>11.5 Statistical &Delta;v: trajectory correction maneuvers</h3>
+<p>No burn is perfect. A departure burn that is slightly off grows into a large miss: the same error growth as in 11.1, now along a transfer.
+A <b>trajectory correction maneuver</b> (TCM) fixes it, and its cost depends on <em>how early</em> you make it. Because the cost is (to first order)
+proportional to the error, the toolkit computes it from the transfer's sensitivity matrix (the state transition matrix) by sampling thousands of
+possible errors. It then reports percentiles: budgets usually carry the <b>99th percentile</b> ("p99"), the cost that 99% of real flights stay under.
+<code>monte_carlo_tcm</code> re-flies the transfer with full nonlinear dynamics, navigation errors and imperfect TCM execution to check that the
+shortcut holds.</p>
+<div class="figure">
+  <div class="ftitle">Figure 16. TCM cost versus when you correct</div>
+  <div class="fsub">Left: cost of a single TCM at each time after departure (log scale). Linear in the error size, so the slider rescales the curves
+  exactly. Right: 400 nonlinear Monte Carlo runs of a two-TCM strategy (day 0.5 and day 3) for the LEO&rarr;NRHO transfer at 1 m/s per axis, against the
+  linear prediction.</div>
+  <div class="controls">
+    <label>Transfer <select id="tcLeg"><option value="leo">LEO &rarr; NRHO (injection error, per axis)</option><option value="outbound">DRO &rarr; NRHO flyby (departure-burn execution error)</option><option value="return">return to DRO (departure-burn execution error)</option></select></label>
+    <label><span id="tcScaleLabel">Error</span> <input type="range" id="tcScale" min="0.1" max="5" step="0.1" value="1"><output id="tcScaleO"></output></label>
+  </div>
+  <div class="tiles" id="tcTiles"></div>
+  <div class="row2"><div id="fig-tcm" class="plot"></div><div id="fig-tcmmc" class="plot"></div></div>
+</div>
+<pre><code>from cislunar import navigation as N
+P0 = N.injection_covariance(1.0)                         # 1 m/s per axis
+# or N.burn_execution_covariance(tr.dv1, mag_frac=0.01, pointing_deg=0.5)
+lin = N.linear_tcm(x_post, tof, P0, S.nd_time_days([0.25, 0.5, 1, 2]), dv_arrival=dv2)
+print(lin.table())
+mc = N.monte_carlo_tcm(x_post, tof, P0, S.nd_time_days([0.5, 3.0]), target_state=x_target, n=400)
+print(mc.summary())</code></pre>
+
+<h3>11.6 Station-keeping: the price of staying</h3>
+<p>Staying on an unstable orbit means watching the error grow and nudging it back. The toolkit's controller uses <b>Floquet modes</b>: it decomposes the
+deviation from the orbit into its natural directions and cancels only the one that grows, with the smallest possible burn. Stable directions are left alone because
+they don't grow, so a stable orbit like the DRO needs nothing. Two subtleties show up in the results:</p>
+<ul>
+  <li><b>Tracking too often wastes fuel</b>: each pass reacts to navigation noise. <b>Tracking too rarely</b> lets the error grow large, or, on fast-diverging
+  orbits, loses the orbit altogether. Each orbit has a sweet spot, roughly 0.5&ndash;2 e-folding times.</li>
+  <li><b>Not every point on the orbit is a good place to burn.</b> Near the NRHO's perilune a burn barely affects the growing direction, so the
+  controller skips those passes and waits for a better one, as real NRHO operations do.</li>
+</ul>
+<div class="figure">
+  <div class="ftitle">Figure 17. Station-keeping cost versus tracking interval</div>
+  <div class="fsub">Floquet-mode Monte Carlo (12 runs of 180 days each, navigation 1 km and 1 cm/s, 2% execution error). Bars span mean to 95th percentile.
+  &times; would mark intervals where control was lost. None are lost in this sweep, but stretch the interval far enough and it happens:
+  <code>stationkeeping_mc(P.halo(1, 15000, "north"), 20)</code> loses the small L1 halo every time. Right: deviation from the orbit's path in one run, with burns marked.
+  The model has no Sun or other unmodelled forces, so treat absolute values as lower bounds; the trends are what matter.</div>
+  <div class="controls">
+    <label>History for <select id="skHist"></select></label>
+  </div>
+  <div class="row2"><div id="fig-sk" class="plot"></div><div id="fig-skhist" class="plot"></div></div>
+</div>
+<pre><code>sk = N.stationkeeping_mc(cl.nrho(), interval_days=6.56, duration_days=180, n=20)
+print(sk.summary())     # m/s per year (mean, p95), burns, max deviation; or "control LOST"</code></pre>
+
+<h3>11.7 Putting it together: a &Delta;v budget</h3>
+<p>A mission's &Delta;v budget stacks four layers:</p>
+<table>
+<tr><th>Layer</th><th>What goes in</th><th>Toolkit source</th></tr>
+<tr><td><b>Deterministic</b></td><td>planned burns: departure, insertion, return</td><td><code>Transfer</code>, <code>FlybyResult</code></td></tr>
+<tr><td><b>Statistical</b></td><td>corrections that depend on errors (usually p99)</td><td><code>linear_tcm</code>, <code>monte_carlo_tcm</code></td></tr>
+<tr><td><b>Station-keeping</b></td><td>m/s per year &times; years on an unstable orbit</td><td><code>stationkeeping_mc</code></td></tr>
+<tr><td><b>Margin</b></td><td>a percentage of everything above: finite-burn losses, model error, contingency</td><td><code>DeltaVBudget(margin_frac=...)</code></td></tr>
+</table>
+<div class="figure">
+  <div class="ftitle">Figure 18. Interactive &Delta;v budget</div>
+  <div class="fsub">Two scenarios built from the toolkit's results. <b>Gateway logistics</b>: launch to LEO, transfer to the 9:2 NRHO, stay there.
+  <b>DRO inspector</b>: a spacecraft parked in the 70,000 km DRO flies past an object in the NRHO and returns home. Every input is a toolkit result;
+  the sliders rescale the statistical and station-keeping terms.</div>
+  <div class="controls">
+    <label>Scenario <select id="bgScen"><option value="A">Gateway logistics (LEO &rarr; NRHO, stay)</option><option value="B">DRO inspector (NRHO flyby and return)</option></select></label>
+  </div>
+  <div class="controls" id="bgCtlA">
+    <label>Injection error <input type="range" id="bgSig" min="0.1" max="5" step="0.1" value="1"><output id="bgSigO"></output></label>
+    <label>TCM at day <select id="bgTcmA"><option>0.25</option><option selected>0.5</option><option>1</option><option>2</option></select></label>
+    <label>Years in NRHO <input type="range" id="bgYrs" min="0" max="15" step="1" value="5"><output id="bgYrsO"></output></label>
+    <label>Tracking every <select id="bgSkInt"></select></label>
+  </div>
+  <div class="controls" id="bgCtlB" style="display:none">
+    <label>Burn execution error &times; <input type="range" id="bgExe" min="0.25" max="4" step="0.25" value="1"><output id="bgExeO"></output></label>
+    <label>TCM at day <select id="bgTcmB"><option>0.25</option><option selected>0.5</option><option>1</option><option>2</option></select></label>
+    <label>Miss distance <select id="bgMiss"></select></label>
+    <label>Years in DRO <input type="range" id="bgYrsB" min="0" max="15" step="1" value="3"><output id="bgYrsBO"></output></label>
+  </div>
+  <div class="controls"><label>Margin <input type="range" id="bgMar" min="0" max="25" step="1" value="10"><output id="bgMarO"></output></label></div>
+  <div class="tiles" id="bgTiles"></div>
+  <div id="fig-budget" class="plot" style="height:200px"></div>
+  <div id="bgTable"></div>
+</div>
+<pre><code>from cislunar import DeltaVBudget
+b = DeltaVBudget("DRO inspector", margin_frac=0.10)
+b.add_transfer(fb.transfer, "outbound flyby", flyby=True)
+b.add_transfer(ret, "return to DRO")
+b.add_tcm(lin_outbound, "outbound TCM", index=1)          # p99 at the 2nd candidate time
+b.add_stationkeeping(sk_dro, years=3)
+print(b.table())</code></pre>
+<p>The full worked example is <code>examples/07_flyby_budget.py</code>; manifolds and fate maps are in <code>examples/06_manifolds_and_fates.py</code>.</p>
+</section>
+
+<!-- ===================================================================== -->
+<section id="python">
+<h2>12. Using the Python tools</h2>
+<h3>Install</h3>
+<pre><code>git clone https://github.com/yoyoerx/cislunar.git
+cd cislunar
+pip install -e .                 # numpy, scipy, matplotlib
+pip install -e .[interactive]    # adds plotly for interactive 3D HTML
+pip install -e .[test]           # adds pytest
+python -m pytest                 # 59 tests, about 3 minutes</code></pre>
+<h3>The five-minute tour</h3>
+<pre><code>import numpy as np
+import cislunar as cl
+from cislunar.viz import plot_trajectories_3d, interactive_3d
+
+S = cl.EARTH_MOON                  # the Earth-Moon system: constants and unit conversion
+
+nrho = cl.nrho((9, 2), "south")    # a PeriodicOrbit
+print(nrho.summary())              # period, Jacobi constant, stability, perilune/apolune
+traj = nrho.trajectory(2000)       # a Trajectory: .t, .x (N x 6), .r_km, .t_days
+
+dro = cl.dro(70000.0)
+tr = cl.intercept(dro, nrho, t_depart=0.0, tof=S.nd_time_days(6.0))
+print(tr.summary())                # dv1, dv2 in m/s
+
+plot_trajectories_3d([dro.trajectory(), traj, tr.trajectory()], origin="moon")
+interactive_3d([dro.trajectory(), traj], "orbits.html", origin="moon")   # opens in a browser</code></pre>
+<h3>Core objects</h3>
+<table>
+<tr><th>Object</th><th>What it holds</th><th>Useful members</th></tr>
+<tr><td><code>System</code></td><td>the two bodies and the unit scales</td><td><code>mu</code>, <code>lstar</code>, <code>tstar</code>, <code>km()</code>, <code>mps()</code>, <code>days()</code>, <code>nd_*()</code>, <code>pos1</code>, <code>pos2</code></td></tr>
+<tr><td><code>Trajectory</code></td><td>sampled path: times <code>t</code> and states <code>x</code> (N&times;6), nondimensional</td><td><code>r</code>, <code>v</code>, <code>r_km</code>, <code>t_days</code>, <code>final</code>, <code>jacobi()</code>, <code>frame</code></td></tr>
+<tr><td><code>PeriodicOrbit</code></td><td>one periodic orbit: start state and period</td><td><code>state_at(t)</code>, <code>trajectory()</code>, <code>stability_index()</code>, <code>perilune_apolune_km()</code>, <code>summary()</code></td></tr>
+<tr><td><code>Transfer</code></td><td>a two-burn transfer</td><td><code>dv1_mps</code>, <code>dv2_mps</code>, <code>total_mps</code>, <code>tof_days</code>, <code>trajectory()</code></td></tr>
+<tr><td><code>RpodPlan</code></td><td>burns and relative path of an approach</td><td><code>maneuvers</code>, <code>rel</code> (a <code>RelativeTrajectory</code>), <code>total_dv_mps</code>, <code>summary()</code></td></tr>
+</table>
+<h3>States and time</h3>
+<p>A <b>state</b> is six numbers <code>[x, y, z, vx, vy, vz]</code>: position and velocity in the rotating frame,
+nondimensional, measured from the barycentre. Time is nondimensional too; <code>t = 0</code> is an arbitrary epoch.
+Functions that need "where is the target at time t" accept a <code>PeriodicOrbit</code>, an initial state (6,) or any
+function <code>t &rarr; state</code>.</p>
+</section>
+
+<!-- ===================================================================== -->
+<section id="recipes">
+<h2>13. Recipes</h2>
+<h4>Get an orbit's state in km and km/s, Moon-centred</h4>
+<pre><code>x = nrho.state_at(0.0)
+r_km = S.km(x[:3] - S.pos2)        # Moon-centred position
+v_kms = S.kms(x[3:])               # rotating-frame velocity</code></pre>
+<h4>Bring in a state you got from somewhere else</h4>
+<pre><code># x_ec: Earth-centred, in the Earth-Moon-plane inertial frame, km and km/s, at toolkit time t (nondim)
+x_rot = frames.inertial_to_rotating(t, S.state_to_nd(x_ec), S, "earth")</code></pre>
+<h4>Other NRHO resonances</h4>
+<pre><code>nrho_41 = cl.nrho((4, 1))          # 4 laps per synodic month, period ~7.4 days</code></pre>
+<h4>A halo of a given size, then its whole family</h4>
+<pre><code>h = cl.halo(1, 20000.0, "north")    # L1, about 20,000 km out of plane
+fam = P.continue_arclength(h, 0.01, stop=lambda o: len(fam_list) &gt; 40, direction=(0, 1, 0))</code></pre>
+<h4>Transfer from your own orbit</h4>
+<pre><code>my_orbit = np.array([...6 numbers...])      # rotating-frame state at t = 0
+tr = cl.intercept(my_orbit, nrho, t_depart=0.0, tof=S.nd_time_days(5), seeds="all")</code></pre>
+<h4>Low lunar orbit as a starting point</h4>
+<pre><code>llo = targeting.keplerian_state_fn(1737.4 + 100, 0.0, np.radians(90), 0.0, 0.0, 0.0, S, center="moon")
+tr = cl.intercept(llo, nrho, 0.0, S.nd_time_days(3))</code></pre>
+<h4>A resonant orbit with a chosen shape</h4>
+<pre><code>orb = P.resonant(3, 1, e=0.6)            # more eccentric 3:1 (perigee closer to Earth)
+print(orb.perilune_apolune_km())         # closest / farthest from the Moon, km</code></pre>
+<h4>Colour a path by its speed (heat map)</h4>
+<pre><code>viz.plot_trajectories_3d(nrho.trajectory(3000), origin="moon",
+                         color_by="speed", speed_ref="moon", speed_scale="log")
+viz.interactive_3d([tr], "speed.html", origin="moon", color_by="speed")
+v = frames.speed_kms(traj.x, S, "moon")    # the numbers themselves, km/s</code></pre>
+<p><code>speed_ref</code> chooses what the speed is measured against: <code>"moon"</code> or <code>"earth"</code> (speed relative to
+that body in a non-rotating frame, which is what KSP calls orbital speed) or <code>"rotating"</code> (speed in the rotating frame, the one that
+appears in the Jacobi constant). Several trajectories share one colour scale and are labelled directly.</p>
+<h4>Plot in an inertial frame</h4>
+<pre><code>ti = frames.trajectory_to_inertial(traj, "earth")
+viz.plot_trajectories_2d(ti, "xy")</code></pre>
+<h4>A quick CW estimate for an Earth-orbit rendezvous</h4>
+<pre><code>n = np.sqrt(398600.4418 / 6778.0**3)          # rad/s for a 400 km orbit
+dv1, dv2 = R.cw_two_impulse([-1000, 0, 0, 0, 0, 0], [-100, 0, 0], 2700.0, n)   # metres, seconds</code></pre>
+</section>
+
+<!-- ===================================================================== -->
+<section id="gallery">
+<h2>14. Figure gallery: what the library draws</h2>
+<p>The interactive figures above use the browser. These are the library's own matplotlib outputs, produced by the
+scripts in <code>examples/</code>. All 2D/3D plot functions accept <code>origin=</code> ("barycenter", "earth", "moon") and
+<code>units=</code> ("km" or "nd"), and return the matplotlib axes so you can add to them.</p>
+<!--__IMG_FAMILIES_2D__-->
+<!--__IMG_SPEED__-->
+<!--__IMG_HALO_3D__-->
+<!--__IMG_ZVC__-->
+<!--__IMG_PORKCHOP__-->
+<!--__IMG_LEO__-->
+<!--__IMG_RPOD__-->
+<!--__IMG_ROS_RES__-->
+<!--__IMG_ROS_LUN__-->
+<!--__IMG_MANIFOLDS__-->
+<!--__IMG_FATEMAP__-->
+</section>
+
+<!-- ===================================================================== -->
+<section id="trouble">
+<h2>15. Troubleshooting</h2>
+<table>
+<tr><th>Message or symptom</th><th>What it means</th><th>What to do</th></tr>
+<tr><td><code>differential correction did not converge</code></td><td>the starting guess was too far from a real periodic orbit</td><td>start from a nearby converged orbit and walk to the one you want with <code>continue_to</code> or <code>continue_arclength</code></td></tr>
+<tr><td><code>Az below the halo bifurcation amplitude</code></td><td>halo orbits only exist above a minimum size</td><td>ask for a larger <code>az_km</code>, or use <code>lyapunov()</code> for small planar orbits</td></tr>
+<tr><td><code>no seed converged for this departure/TOF</code></td><td>no starting guess led to a solution</td><td>try a different time of flight, pass <code>v_guess=</code>, or use <code>optimize_transfer</code>, which picks good guesses for you</td></tr>
+<tr><td><code>shooting: stagnated</code></td><td>Newton's method stopped improving (common for trajectories grazing a body)</td><td>change the timing slightly; for long transfers, break the transfer into legs</td></tr>
+<tr><td><code>homotopy stalled ... may not exist</code> (from <code>resonant</code>)</td><td>that resonant orbit does not survive at the Moon's real mass for this eccentricity</td><td>try a different <code>e</code>, or a different p:q</td></tr>
+<tr><td><code>... is stable ... has no stable/unstable manifolds</code></td><td>you asked for manifolds of a stable orbit (e.g. a DRO)</td><td>nothing leaves a stable orbit on its own; use an unstable orbit</td></tr>
+<tr><td><code>control LOST</code> (station-keeping)</td><td>the tracking interval is too long compared with the e-folding time</td><td>track more often; aim for 0.5&ndash;2 e-folding times</td></tr>
+<tr><td><code>fate_map</code> hangs or errors on Windows</td><td>parallel workers re-import your script</td><td>put the call under <code>if __name__ == "__main__":</code>, or pass <code>workers=1</code></td></tr>
+<tr><td><code>ImpactError</code></td><td>a trial trajectory hit the Earth or Moon</td><td>usually handled internally; if you see it, the requested transfer passes through a body</td></tr>
+<tr><td>numbers look tiny (0.0003...)</td><td>you are looking at nondimensional units</td><td>convert with <code>S.km()</code>, <code>S.mps()</code>, <code>S.days()</code></td></tr>
+<tr><td>a porkchop has a dark island among cheap cells</td><td>warm start locked onto a pricier solution</td><td>re-solve that cell with <code>intercept(..., seeds="all")</code></td></tr>
+<tr><td>things are slow</td><td>pure-Python integration with the full sensitivity matrix</td><td>use fewer grid points or <code>n_points</code>; LEO departures are the slowest (many short steps near Earth)</td></tr>
+</table>
+</section>
+
+<!-- ===================================================================== -->
+<section id="limits">
+<h2>16. Limitations</h2>
+<ul>
+  <li><b>Idealised dynamics.</b> The CR3BP has no Sun, a perfectly circular lunar orbit and point-mass bodies.
+  Real NRHOs need a few cm/s to m/s per year of station-keeping that this model does not show, and
+  transfer costs can differ by tens of m/s from high-fidelity tools.</li>
+  <li><b>Impulsive burns.</b> Burns are instantaneous velocity changes. Long engine burns (low thrust, or big burns
+  with small engines) are not modelled.</li>
+  <li><b>Single shooting.</b> Very long or chaotic transfers may not converge; multiple shooting is planned.</li>
+  <li><b>LVLH definition.</b> The LVLH frame is built from the target's velocity in the rotating frame (see
+  <code>architecture.md</code>, ADR-4). Other tools may define it from the inertial velocity; the difference
+  is small near perilune but noticeable near apolune.</li>
+  <li><b>Hold points.</b> Waypoints are pass-through points with a burn, not station-keeping holds.</li>
+</ul>
+</section>
+
+<!-- ===================================================================== -->
+<section id="glossary">
+<h2>17. Glossary: KSP words and real words</h2>
+<table>
+<tr><th>Term</th><th>Meaning</th><th>KSP equivalent</th></tr>
+<tr><td>Apolune / perilune</td><td>farthest / closest point of an orbit around the Moon</td><td>Ap / Pe around the Mun</td></tr>
+<tr><td>Barycentre</td><td>centre of mass of Earth and Moon; origin of the rotating frame</td><td>none (Kerbin never moves)</td></tr>
+<tr><td>Cislunar</td><td>the space between the Earth and just beyond the Moon</td><td>Kerbin&ndash;Mun space</td></tr>
+<tr><td>CR3BP</td><td>circular restricted three-body problem: the toolkit's gravity model</td><td>not available (patched conics)</td></tr>
+<tr><td>Continuation</td><td>walking along a family of orbits by small, re-converged steps</td><td>&mdash;</td></tr>
+<tr><td>Differential correction</td><td>adjusting a guess until the orbit closes on itself</td><td>tweaking a maneuver node until the orbit lines up</td></tr>
+<tr><td>DRO</td><td>distant retrograde orbit: big, very stable loop around the Moon</td><td>&mdash;</td></tr>
+<tr><td>&Delta;v</td><td>velocity change of a burn</td><td>&Delta;v</td></tr>
+<tr><td>Homotopy</td><td>solving a hard problem by starting from an easy version (e.g. a massless Moon) and morphing it step by step</td><td>&mdash;</td></tr>
+<tr><td>Halo orbit</td><td>3D periodic orbit around L1 or L2</td><td>&mdash;</td></tr>
+<tr><td>Inertial frame</td><td>non-rotating reference frame</td><td>default map view</td></tr>
+<tr><td>Intercept / rendezvous</td><td>arrive at the target's position / also match its velocity</td><td>encounter / rendezvous</td></tr>
+<tr><td>Jacobi constant</td><td>conserved "energy" in the rotating frame (higher = less energy)</td><td>orbital energy</td></tr>
+<tr><td>Lagrange (libration) points</td><td>five balance points of the rotating frame</td><td>&mdash;</td></tr>
+<tr><td>Lambert's problem</td><td>find the orbit through two points in a given time</td><td>dragging a node for an encounter</td></tr>
+<tr><td>LVLH</td><td>local-vertical local-horizontal frame attached to the target</td><td>target-mode navball</td></tr>
+<tr><td>E-folding time</td><td>time for a small error to grow by a factor of e (2.7)</td><td>&mdash;</td></tr>
+<tr><td>Fate / lifetime</td><td>what a trajectory does first (leave via L1/L2, impact, stay) and when</td><td>&mdash;</td></tr>
+<tr><td>Floquet modes</td><td>the natural directions of small deviations from a periodic orbit; only the unstable one grows</td><td>&mdash;</td></tr>
+<tr><td>FTLE</td><td>finite-time Lyapunov exponent: how fast neighbouring trajectories separate</td><td>&mdash;</td></tr>
+<tr><td>Invariant manifold</td><td>tube of trajectories that leave (unstable) or approach (stable) an orbit with no burns</td><td>&mdash;</td></tr>
+<tr><td>Monodromy matrix</td><td>how small errors change over one full orbit</td><td>&mdash;</td></tr>
+<tr><td>NRHO</td><td>near-rectilinear halo orbit; Gateway's orbit</td><td>&mdash;</td></tr>
+<tr><td>p99 (99th percentile)</td><td>the value that 99% of cases stay below; used for statistical budgets</td><td>&mdash;</td></tr>
+<tr><td>Patched conics</td><td>one body's gravity at a time, stitched at SOI edges</td><td>how KSP works</td></tr>
+<tr><td>Porkchop plot</td><td>map of transfer cost versus departure and flight time</td><td>transfer window planner</td></tr>
+<tr><td>R-bar / V-bar / H-bar</td><td>LVLH axes: radial (toward the body), velocity, orbit normal</td><td>radial / prograde / normal</td></tr>
+<tr><td>Resonance (p:q)</td><td>p laps of the Earth per q laps of the Moon; the orbit repeats relative to the Moon</td><td>repeating ground track</td></tr>
+<tr><td>Rosette</td><td>flower-shaped path drawn by an orbit seen from a frame turning at a different rate</td><td>Spirograph pattern</td></tr>
+<tr><td>Rotating (synodic) frame</td><td>frame that turns with the Moon</td><td>&mdash;</td></tr>
+<tr><td>RPOD</td><td>rendezvous, proximity operations and docking</td><td>docking</td></tr>
+<tr><td>Shooting</td><td>guess, fly, measure the miss, correct, repeat</td><td>quicksave/quickload iteration</td></tr>
+<tr><td>SOI</td><td>sphere of influence; only meaningful for patched conics</td><td>SOI</td></tr>
+<tr><td>Stability index &nu;</td><td>1 = stable; larger = errors grow faster each orbit</td><td>&mdash;</td></tr>
+<tr><td>State / state vector</td><td>position plus velocity, six numbers</td><td>&mdash;</td></tr>
+<tr><td>State transition matrix (STM)</td><td>how a small change in the start state changes a later state</td><td>&mdash;</td></tr>
+<tr><td>Station-keeping</td><td>small burns that keep a spacecraft on an unstable orbit</td><td>&mdash;</td></tr>
+<tr><td>Synodic month</td><td>29.53 days, the cycle of lunar phases</td><td>&mdash;</td></tr>
+<tr><td>TLI</td><td>trans-lunar injection: the burn from Earth orbit toward the Moon</td><td>Mun transfer burn</td></tr>
+<tr><td>TCM</td><td>trajectory correction maneuver: small burn that fixes errors along a transfer</td><td>mid-course correction</td></tr>
+<tr><td>Time of flight (TOF)</td><td>how long a transfer takes</td><td>&mdash;</td></tr>
+</table>
+</section>
+
+<!-- ===================================================================== -->
+<section id="api">
+<h2>18. API reference</h2>
+<p>Generated from the source docstrings when this manual was built.</p>
+<!--__API__-->
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+const D = /*__DATA__*/null;
+const SYS = D.system, MU = SYS.mu, L = SYS.lstar, TSTAR = SYS.tstar, VSTAR = SYS.vstar;
+const RE = SYS.r1 / L, RM = SYS.r2 / L;
+const CFG = {displaylogo: false, responsive: true, modeBarButtonsToRemove: ["select2d", "lasso2d"]};
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 0) => Number(v).toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
+
+/* ------------------------------------------------------------------ theme */
+function tok() {
+  const cs = getComputedStyle(document.documentElement);
+  const g = (n) => cs.getPropertyValue(n).trim();
+  return {surface: g("--surface"), ink: g("--ink"), ink2: g("--ink2"), muted: g("--muted"),
+    grid: g("--grid"), axis: g("--axis"), earth: g("--earth"), moon: g("--moon"),
+    forbid: g("--forbid"), good: g("--good"), warning: g("--warning"), critical: g("--critical"),
+    s: [g("--s1"), g("--s2"), g("--s3"), g("--s4"), g("--s5"), g("--s6")],
+    seq: g("--seq").replace(/"/g, "").split(",")};
+}
+const charts = [];
+function register(fn) { charts.push(fn); fn(); }
+function redrawAll() { charts.forEach((f) => f()); }
+$("themeBtn").addEventListener("click", () => {
+  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
+  document.documentElement.dataset.theme = dark ? "light" : "dark";
+  redrawAll();
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redrawAll);
+
+function axis(t, title, extra = {}) {
+  return Object.assign({title: {text: title, font: {color: t.ink2, size: 13}}, gridcolor: t.grid,
+    zerolinecolor: t.axis, linecolor: t.axis, tickfont: {color: t.ink2, size: 11}}, extra);
+}
+function layout2d(t, xt, yt, extra = {}) {
+  return Object.assign({paper_bgcolor: t.surface, plot_bgcolor: t.surface,
+    font: {family: "system-ui, -apple-system, Segoe UI, sans-serif", color: t.ink, size: 12},
+    margin: {l: 64, r: 16, t: 30, b: 50}, xaxis: axis(t, xt), yaxis: axis(t, yt),
+    legend: {font: {color: t.ink}, bgcolor: "rgba(0,0,0,0)"}, hoverlabel: {font: {size: 12}}}, extra);
+}
+function layout3d(t, extra = {}, units = "km") {
+  const ax = (n) => ({title: {text: `${n} [${units}]`, font: {color: t.ink2, size: 12}},
+    gridcolor: t.grid, zerolinecolor: t.axis, backgroundcolor: t.surface, showbackground: true,
+    tickfont: {color: t.ink2, size: 10}});
+  return Object.assign({paper_bgcolor: t.surface, font: {color: t.ink, size: 12},
+    margin: {l: 0, r: 0, t: 10, b: 0}, legend: {font: {color: t.ink}, x: 0.01, y: 0.98, bgcolor: "rgba(0,0,0,0)"},
+    scene: {aspectmode: "data", xaxis: ax("x"), yaxis: ax("y"), zaxis: ax("z"),
+      camera: {eye: {x: 2.1, y: -2.1, z: 1.2}}}}, extra);
+}
+function sphere(cx, cy, cz, r, color, name) {
+  const n = 28, m = 14, X = [], Y = [], Z = [];
+  for (let i = 0; i <= m; i++) {
+    const v = Math.PI * i / m, rx = [], ry = [], rz = [];
+    for (let j = 0; j <= n; j++) {
+      const u = 2 * Math.PI * j / n;
+      rx.push(cx + r * Math.cos(u) * Math.sin(v)); ry.push(cy + r * Math.sin(u) * Math.sin(v)); rz.push(cz + r * Math.cos(v));
+    }
+    X.push(rx); Y.push(ry); Z.push(rz);
+  }
+  return {type: "surface", x: X, y: Y, z: Z, colorscale: [[0, color], [1, color]], showscale: false,
+    name, hovertemplate: name + "<extra></extra>", lighting: {ambient: 0.75, diffuse: 0.6, specular: 0.05}, showlegend: false};
+}
+function line3d(p, color, name, extra = {}) {
+  return Object.assign({type: "scatter3d", mode: "lines", x: p.x, y: p.y, z: p.z, name,
+    line: {color, width: 4}, hovertemplate: "x %{x:,.0f}<br>y %{y:,.0f}<br>z %{z:,.0f} km<extra>" + name + "</extra>"}, extra);
+}
+
+/* ---------------------------------------------------------- CR3BP physics */
+function rhs(y, out) {
+  const x = y[0], yy = y[1], z = y[2], vx = y[3], vy = y[4], vz = y[5];
+  const dx1 = x + MU, dx2 = x - 1 + MU;
+  const r1s = dx1 * dx1 + yy * yy + z * z, r2s = dx2 * dx2 + yy * yy + z * z;
+  const k1 = (1 - MU) / (r1s * Math.sqrt(r1s)), k2 = MU / (r2s * Math.sqrt(r2s));
+  out[0] = vx; out[1] = vy; out[2] = vz;
+  out[3] = 2 * vy + x - k1 * dx1 - k2 * dx2;
+  out[4] = -2 * vx + yy - (k1 + k2) * yy;
+  out[5] = -(k1 + k2) * z;
+  return out;
+}
+function jacobi(y) {
+  const r1 = Math.hypot(y[0] + MU, y[1], y[2]), r2 = Math.hypot(y[0] - 1 + MU, y[1], y[2]);
+  return y[0] * y[0] + y[1] * y[1] + 2 * (1 - MU) / r1 + 2 * MU / r2 - (y[3] * y[3] + y[4] * y[4] + y[5] * y[5]);
+}
+/* Dormand-Prince 5(4), adaptive. Returns {t, x, event}. event: "earth" | "moon" | "escape" | null */
+function propagate(x0, tf, opt = {}) {
+  const rtol = opt.rtol ?? 1e-10, atol = opt.atol ?? 1e-12, maxSteps = opt.maxSteps ?? 400000;
+  const escape = opt.escape ?? 4.0;
+  const dir = tf >= 0 ? 1 : -1;
+  let t = 0, h = dir * Math.min(1e-3, Math.abs(tf) || 1e-3), y = x0.slice(), steps = 0, event = null;
+  const T = [0], X = [y.slice()];
+  if (tf === 0) return {t: T, x: X, event};
+  const k = Array.from({length: 7}, () => new Float64Array(6)), tmp = new Float64Array(6), yn = new Float64Array(6);
+  rhs(y, k[0]);
+  const A = [[], [1/5], [3/40, 9/40], [44/45, -56/15, 32/9], [19372/6561, -25360/2187, 64448/6561, -212/729],
+    [9017/3168, -355/33, 46732/5247, 49/176, -5103/18656], [35/384, 0, 500/1113, 125/192, -2187/6784, 11/84]];
+  const E = [71/57600, 0, -71/16695, 71/1920, -17253/339200, 22/525, -1/40];
+  while (dir * (tf - t) > 1e-15 && steps < maxSteps) {
+    if (dir * (t + h - tf) > 0) h = tf - t;
+    for (let s = 1; s < 7; s++) {
+      for (let i = 0; i < 6; i++) { let acc = y[i]; for (let j = 0; j < s; j++) acc += h * A[s][j] * k[j][i]; tmp[i] = acc; }
+      rhs(tmp, k[s]);
+      if (s === 6) for (let i = 0; i < 6; i++) yn[i] = tmp[i];
+    }
+    let err = 0;
+    for (let i = 0; i < 6; i++) {
+      let e = 0; for (let j = 0; j < 7; j++) e += E[j] * k[j][i];
+      const sc = atol + rtol * Math.max(Math.abs(y[i]), Math.abs(yn[i]));
+      err = Math.max(err, Math.abs(h * e) / sc);
+    }
+    steps++;
+    if (err <= 1) {
+      t += h; y = Array.from(yn); for (let i = 0; i < 6; i++) k[0][i] = k[6][i];
+      T.push(t); X.push(y);
+      const d1 = Math.hypot(y[0] + MU, y[1], y[2]), d2 = Math.hypot(y[0] - 1 + MU, y[1], y[2]);
+      if (d1 < RE) { event = "earth"; break; }
+      if (d2 < RM) { event = "moon"; break; }
+      if (Math.hypot(y[0], y[1], y[2]) > escape) { event = "escape"; break; }
+    }
+    h *= Math.min(5, Math.max(0.2, 0.9 * Math.pow(Math.max(err, 1e-16), -0.2)));
+  }
+  return {t: T, x: X, event};
+}
+function thin(res, maxPts = 3000) {
+  const n = res.x.length; if (n <= maxPts) return res;
+  const step = n / maxPts, t = [], x = [];
+  for (let i = 0; i < maxPts; i++) { const j = Math.floor(i * step); t.push(res.t[j]); x.push(res.x[j]); }
+  t.push(res.t[n - 1]); x.push(res.x[n - 1]);
+  return {t, x, event: res.event};
+}
+/* frame conversions, nondim state -> km xyz arrays */
+function toView(res, view, t0 = 0) {
+  const X = [], Y = [], Z = [];
+  for (let i = 0; i < res.x.length; i++) {
+    const s = res.x[i], th = t0 + res.t[i];
+    let cx = 0;
+    if (view === "rotM" || view === "inM") cx = 1 - MU; else if (view === "rotE" || view === "inE") cx = -MU;
+    const rx = s[0] - cx, ry = s[1], rz = s[2];
+    if (view.startsWith("rot")) { X.push(rx * L); Y.push(ry * L); Z.push(rz * L); }
+    else { const c = Math.cos(th), sn = Math.sin(th); X.push((c * rx - sn * ry) * L); Y.push((sn * rx + c * ry) * L); Z.push(rz * L); }
+  }
+  return {x: X, y: Y, z: Z};
+}
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const norm = (a) => Math.hypot(a[0], a[1], a[2]);
+const unit = (a) => { const n = norm(a); return [a[0] / n, a[1] / n, a[2] / n]; };
+function burnAxes(x, body) {
+  const cx = body === "moon" ? 1 - MU : -MU;
+  const r = [x[0] - cx, x[1], x[2]];
+  const vin = [x[3] - r[1], x[4] + r[0], x[5]];           // v + omega x r (non-rotating, relative to body)
+  const pro = unit(vin), nrm = unit(cross(r, vin)), rad = unit(cross(pro, nrm));
+  return {pro, nrm, rad};
+}
+
+
+/* ------------------------------------------------- speed heat-map helpers */
+// Speed is a magnitude: one-hue sequential ramp. Light mode starts at step 250 so the
+// slow end still shows on a light surface; dark mode stops at step 600 for the same reason.
+function speedRamp() {
+  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
+  return dark ? ["#184f95", "#1c5cab", "#2a78d6", "#5598e7", "#86b6ef", "#cde2fb"]
+              : ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281", "#0d366b"];
+}
+function speedsOf(xs, ref) {  // nondim rotating states -> km/s
+  const cx = ref === "earth" ? -MU : 1 - MU;
+  return xs.map((s) => ref === "rot" ? Math.hypot(s[3], s[4], s[5]) * VSTAR
+    : Math.hypot(s[3] - s[1], s[4] + (s[0] - cx), s[5]) * VSTAR);
+}
+function speedOpt(prefix) {
+  const el = $(prefix + "Spd");
+  return el && el.value !== "off" ? {ref: el.value, log: $(prefix + "SpdLog").checked} : null;
+}
+function speedControl(prefix, anchorId, defRef) {
+  const ctl = document.getElementById(anchorId).closest(".figure").querySelector(".controls");
+  const lab = document.createElement("label");
+  lab.innerHTML = `Colour path by <select id="${prefix}Spd"><option value="off">\u2014 (plain)</option>` +
+    `<option value="moon">speed relative to Moon</option><option value="earth">speed relative to Earth</option>` +
+    `<option value="rot">speed in rotating frame</option></select>`;
+  const lg = document.createElement("label");
+  lg.innerHTML = `<input type="checkbox" id="${prefix}SpdLog" checked> log scale`;
+  ctl.appendChild(lab); ctl.appendChild(lg);
+  if (defRef) {  // put the most natural reference first in the list
+    const sel = $(prefix + "Spd"), opt = sel.querySelector(`option[value="${defRef}"]`);
+    sel.insertBefore(opt, sel.options[1]);
+  }
+  return [prefix + "Spd", prefix + "SpdLog"];
+}
+function speedStyle(t, vals, opt, range) {  // -> {color, colorscale, cmin, cmax, colorbar}
+  const ramp = speedRamp(), cs = ramp.map((c, k) => [k / (ramp.length - 1), c]);
+  let lo = range ? range[0] : Math.min(...vals), hi = range ? range[1] : Math.max(...vals);
+  const name = {moon: "relative to Moon", earth: "relative to Earth", rot: "in rotating frame"}[opt.ref];
+  const cb = {title: {text: `speed ${name} [km/s]`, side: "right", font: {color: t.ink2, size: 11}},
+    tickfont: {color: t.ink2, size: 10}, outlinecolor: t.grid, len: 0.75, thickness: 12};
+  if (opt.log) {
+    lo = Math.max(lo, 1e-3);
+    let ticks = [0.01, 0.02, 0.03, 0.05, 0.07, 0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1, 1.5, 2, 3, 5, 7, 10].filter((x) => x >= lo && x <= hi);
+    if (ticks.length < 3) ticks = [lo, Math.sqrt(lo * hi), hi].map((x) => +x.toPrecision(2));
+    cb.tickvals = ticks.map(Math.log10); cb.ticktext = ticks.map(String);
+    return {color: vals.map((v) => Math.log10(Math.max(v, 1e-3))), colorscale: cs, cmin: Math.log10(lo), cmax: Math.log10(hi), colorbar: cb};
+  }
+  return {color: vals, colorscale: cs, cmin: lo, cmax: hi, colorbar: cb};
+}
+function speedLine3d(p, vals, t, opt, name, width = 6, range) {
+  const st = speedStyle(t, vals, opt, range);
+  return {type: "scatter3d", mode: "lines", x: p.x, y: p.y, z: p.z, name, showlegend: false,
+    line: Object.assign({width, showscale: true}, st), customdata: vals,
+    hovertemplate: "x %{x:,.0f}<br>y %{y:,.0f}<br>z %{z:,.0f} km<br>speed %{customdata:.3f} km/s<extra>" + name + "</extra>"};
+}
+function speedMarkers2d(x, y, vals, t, opt, name, showscale = true, range) {
+  const st = speedStyle(t, vals, opt, range);
+  st.showscale = showscale;
+  return {type: "scattergl", mode: "markers", x, y, name, customdata: vals, showlegend: false,
+    marker: Object.assign({size: 3.5}, st), hovertemplate: "%{x:,.0f}, %{y:,.0f} km<br>speed %{customdata:.3f} km/s<extra></extra>"};
+}
+const SPD_CACHE = {};
+function cachedProp(key, x0, tf, n = 1600) {
+  if (!SPD_CACHE[key]) SPD_CACHE[key] = thin(propagate(x0, tf, {rtol: 1e-10, escape: 8}), n);
+  return SPD_CACHE[key];
+}
+
+/* ------------------------------------------------------------- Figure 1 */
+register(function figKepler() {
+  const t = tok(), d = D.leo;
+  // all three series span [departure, arrival + one NRHO period]; keep only the coast to arrival
+  const frac = d.tof / (d.tof + d.nrho_period);
+  const cut = (p) => { const n = Math.round((p.x.length - 1) * frac) + 1; return {x: p.x.slice(0, n), y: p.y.slice(0, n)}; };
+  const real = cut(d.cr3bp_in), kep = cut(d.kep_in), moon = cut(d.moon_in2);
+  const last = (p) => [p.x[p.x.length - 1], p.y[p.y.length - 1]];
+  const [rx, ry] = last(real), [kx, ky] = last(kep), [mx, my] = last(moon);
+  const miss = Math.hypot(kx - rx, ky - ry);
+  const tr = [
+    {type: "scatter", mode: "lines", x: real.x, y: real.y, name: "Earth + Moon gravity (CR3BP)",
+      line: {color: t.s[0], width: 2.5}, hovertemplate: "%{x:,.0f}, %{y:,.0f} km<extra>Earth + Moon</extra>"},
+    {type: "scatter", mode: "lines", x: kep.x, y: kep.y, name: "Earth gravity only (patched-conic style)",
+      line: {color: t.s[1], width: 2.5, dash: "dash"}, hovertemplate: "%{x:,.0f}, %{y:,.0f} km<extra>Earth only</extra>"},
+  ];
+  if ($("kepShowMoon").checked) tr.push({type: "scatter", mode: "lines", x: moon.x, y: moon.y, name: "Moon's path during the coast",
+    line: {color: t.moon, width: 1.5, dash: "dot"}, hoverinfo: "skip"});
+  tr.push({type: "scatter", mode: "markers+text", x: [0, mx], y: [0, my], text: ["Earth", "Moon at arrival"], textposition: ["bottom right", "top left"],
+    marker: {color: [t.earth, t.moon], size: [12, 9]}, textfont: {color: t.ink2}, showlegend: false, hoverinfo: "text"});
+  tr.push({type: "scatter", mode: "markers", x: [rx, kx], y: [ry, ky], showlegend: false,
+    marker: {color: [t.s[0], t.s[1]], size: 10, line: {color: t.surface, width: 2}},
+    text: ["Earth + Moon model: arrives at the NRHO", "Earth-only model: position at the same time"], hovertemplate: "%{text}<extra></extra>"});
+  const lay = layout2d(t, "x [km]", "y [km]", {yaxis: axis(t, "y [km]", {scaleanchor: "x"}),
+    legend: {x: 0.01, y: 0.99, font: {color: t.ink}, bgcolor: t.surface},
+    title: {text: "Whole coast (4.4 days)", font: {size: 14, color: t.ink}, x: 0.02}});
+  Plotly.react("fig-kepler", tr, lay, CFG);
+  const half = 30000, cx = (rx + kx) / 2, cy = (ry + ky) / 2;
+  const lz = layout2d(t, "x [km]", "y [km]", {showlegend: false,
+    title: {text: "Zoom: the last day, near the Moon", font: {size: 14, color: t.ink}, x: 0.02},
+    xaxis: axis(t, "x [km]", {range: [cx - half, cx + half]}),
+    yaxis: axis(t, "y [km]", {range: [cy - half, cy + half], scaleanchor: "x"}),
+    annotations: [{x: kx, y: ky, ax: 70, ay: 50, text: `${fmt(miss)} km apart<br>after ${(d.tof * TSTAR / 86400).toFixed(1)} days`,
+      font: {color: t.ink, size: 12}, arrowcolor: t.ink2, bgcolor: t.surface, bordercolor: t.grid}]});
+  const trz = tr.map((x) => Object.assign({}, x, x.mode === "markers+text" ? {textposition: ["bottom right", "bottom left"]} : {}));
+  Plotly.react("fig-kepler-zoom", trz, lz, CFG);
+});
+$("kepShowMoon").addEventListener("change", redrawAll);
+
+/* ------------------------------------------------------------- Figure 2 */
+const FR = {playing: false, raf: null};
+function frameDraw() {
+  const t = tok(), d = D.frames[$("frOrbit").value], c = $("frCenter").value;
+  const inP = c === "earth" ? d.in_earth : d.in_moon;
+  const i = Math.min(+$("frT").value, d.t_d.length - 1);
+  $("frTo").textContent = d.t_d[i].toFixed(1);
+  const rot = [
+    {type: "scatter", mode: "lines", x: d.rot.x, y: d.rot.y, name: "path", line: {color: t.s[0], width: 2},
+      hovertemplate: "%{x:,.0f}, %{y:,.0f} km<extra></extra>"},
+    {type: "scatter", mode: "markers", x: [0], y: [0], name: "Moon", marker: {color: t.moon, size: 12}, hoverinfo: "name"},
+    {type: "scatter", mode: "markers", x: [d.rot.x[i]], y: [d.rot.y[i]], name: "spacecraft",
+      marker: {color: t.s[1], size: 11, line: {color: t.surface, width: 2}}, hoverinfo: "name"},
+  ];
+  const lr = layout2d(t, "x [km]", "y [km]",
+    {title: {text: "Rotating frame (Moon-centred)", font: {size: 14, color: t.ink}, x: 0.02},
+     yaxis: axis(t, "y [km]", {scaleanchor: "x"}), xaxis: axis(t, "x [km], away from Earth"), showlegend: false});
+  const inn = [
+    {type: "scatter", mode: "lines", x: inP.x, y: inP.y, name: "path", line: {color: t.s[0], width: 2},
+      hovertemplate: "%{x:,.0f}, %{y:,.0f} km<extra></extra>"},
+  ];
+  if (c === "earth") {
+    inn.push({type: "scatter", mode: "lines", x: d.moon_earth.x, y: d.moon_earth.y, name: "Moon's path",
+      line: {color: t.moon, width: 1.5, dash: "dot"}, hoverinfo: "skip"});
+    inn.push({type: "scatter", mode: "markers", x: [0], y: [0], name: "Earth", marker: {color: t.earth, size: 12}, hoverinfo: "name"});
+    inn.push({type: "scatter", mode: "markers", x: [d.moon_earth.x[i]], y: [d.moon_earth.y[i]], name: "Moon",
+      marker: {color: t.moon, size: 10}, hoverinfo: "name"});
+  } else {
+    inn.push({type: "scatter", mode: "markers", x: [0], y: [0], name: "Moon", marker: {color: t.moon, size: 12}, hoverinfo: "name"});
+  }
+  inn.push({type: "scatter", mode: "markers", x: [inP.x[i]], y: [inP.y[i]], name: "spacecraft",
+    marker: {color: t.s[1], size: 11, line: {color: t.surface, width: 2}}, hoverinfo: "name"});
+  const li = layout2d(t, "x [km]", "y [km]", {title: {text: `Inertial frame (${c}-centred, not rotating)`, font: {size: 14, color: t.ink}, x: 0.02},
+    yaxis: axis(t, "y [km]", {scaleanchor: "x"}), showlegend: false});
+  Plotly.react("fig-frame-rot", rot, lr, CFG);
+  Plotly.react("fig-frame-in", inn, li, CFG);
+}
+register(frameDraw);
+["frOrbit", "frCenter"].forEach((id) => $(id).addEventListener("change", () => { $("frT").value = 0; frameDraw(); }));
+$("frT").addEventListener("input", frameDraw);
+$("frPlay").addEventListener("click", () => {
+  FR.playing = !FR.playing; $("frPlay").textContent = FR.playing ? "Pause" : "Play";
+  const step = () => {
+    if (!FR.playing) return;
+    const s = $("frT"); s.value = (+s.value + 1) % 500; frameDraw();
+    FR.raf = setTimeout(step, 40);
+  };
+  step();
+});
+
+/* ------------------------------------------------------------ units */
+(function units() {
+  $("uL").textContent = fmt(L) + " km";
+  $("uT").textContent = fmt(TSTAR) + " s = " + (TSTAR / 86400).toFixed(4) + " days";
+  $("uV").textContent = (VSTAR).toFixed(5) + " km/s";
+  $("uMu").textContent = MU.toFixed(10);
+  const upd = () => {
+    const v = parseFloat($("cvVal").value), k = $("cvKind").value, toPhys = $("cvDir").value === "nd2";
+    if (!isFinite(v)) { $("cvOut").textContent = ""; return; }
+    let s;
+    if (k === "L") s = toPhys ? `${fmt(v * L, 3)} km` : `${(v / L).toPrecision(8)} LU`;
+    else if (k === "T") s = toPhys ? `${fmt(v * TSTAR / 86400, 5)} days (${fmt(v * TSTAR / 3600, 3)} h)` : `${(v * 86400 / TSTAR).toPrecision(8)} TU (input in days)`;
+    else s = toPhys ? `${fmt(v * VSTAR * 1000, 4)} m/s` : `${(v / (VSTAR * 1000)).toPrecision(8)} VU (input in m/s)`;
+    $("cvOut").textContent = "= " + s;
+  };
+  ["cvVal", "cvKind", "cvDir"].forEach((id) => $(id).addEventListener("input", upd));
+  upd();
+})();
+
+/* ------------------------------------------------------------- Figure 3 */
+const ZVC = (() => {
+  const n = 281, xs = [], ys = [], U2 = [];
+  for (let i = 0; i < n; i++) xs.push(-1.4 + 2.8 * i / (n - 1));
+  for (let j = 0; j < n; j++) ys.push(-1.4 + 2.8 * j / (n - 1));
+  for (let j = 0; j < n; j++) {
+    const row = [];
+    for (let i = 0; i < n; i++) {
+      const x = xs[i], y = ys[j];
+      row.push(x * x + y * y + 2 * (1 - MU) / Math.hypot(x + MU, y) + 2 * MU / Math.hypot(x - 1 + MU, y));
+    }
+    U2.push(row);
+  }
+  return {xk: xs.map((v) => v * L), yk: ys.map((v) => v * L), U2};
+})();
+function zvcDraw() {
+  const t = tok(), C = +$("zvcC").value, Lc = SYS.lpoint_C;
+  $("zvcCo").textContent = C.toFixed(3);
+  const z = ZVC.U2.map((row) => row.map((u) => (u < C ? 1 : null)));
+  const open = ["L1", "L2", "L3", "L4"].filter((k) => C < Lc[k]);
+  const names = {L1: "L1 (Earth-Moon gate)", L2: "L2 (exit behind the Moon)", L3: "L3 (far side of Earth)", L4: "L4/L5"};
+  $("zvcMsg").textContent = open.length ? "Open: " + open.map((k) => names[k]).join(", ") : "All gates closed: trapped near Earth or near Moon";
+  const lp = Object.entries(SYS.lpoints);
+  const tr = [
+    {type: "heatmap", x: ZVC.xk, y: ZVC.yk, z, colorscale: [[0, t.forbid], [1, t.forbid]], showscale: false,
+      hoverinfo: "skip", name: "forbidden"},
+    {type: "scatter", mode: "markers+text", x: lp.map((p) => p[1][0] * L), y: lp.map((p) => p[1][1] * L),
+      text: lp.map((p) => p[0]), textposition: "top center", textfont: {color: t.ink},
+      marker: {symbol: "cross-thin", size: 11, line: {color: t.ink, width: 2}},
+      customdata: lp.map((p) => Lc[p[0]]), hovertemplate: "%{text}: gate opens below C = %{customdata:.4f}<extra></extra>", showlegend: false},
+    {type: "scatter", mode: "markers+text", x: [-MU * L, (1 - MU) * L], y: [0, 0], text: ["Earth", "Moon"],
+      textposition: "bottom center", textfont: {color: t.ink2}, marker: {color: [t.earth, t.moon], size: [12, 8]}, hoverinfo: "text", showlegend: false},
+  ];
+  const lay = layout2d(t, "x [km] (rotating frame, barycentre at 0)", "y [km]", {yaxis: axis(t, "y [km]", {scaleanchor: "x"})});
+  Plotly.react("fig-zvc", tr, lay, CFG);
+}
+register(zvcDraw);
+$("zvcC").addEventListener("input", zvcDraw);
+
+/* ------------------------------------------------------------- Figure 4 */
+const FAMKEYS = Object.keys(D.families);
+FAMKEYS.forEach((k) => { const o = document.createElement("option"); o.value = k; o.textContent = D.families[k].name; $("famSel").appendChild(o); });
+function famSetup() {
+  const f = D.families[$("famSel").value];
+  $("famIdx").max = f.members.length - 1;
+  if (+$("famIdx").value > f.members.length - 1) $("famIdx").value = 0;
+  let rows = "<table><tr><th>#</th><th>Period [d]</th><th>Perilune [km]</th><th>Apolune [km]</th><th>Stability ν</th><th>Jacobi C</th></tr>";
+  f.members.forEach((m, i) => { rows += `<tr><td>${i}</td><td class="num">${m.period_d.toFixed(3)}</td><td class="num">${fmt(m.rp)}</td><td class="num">${fmt(m.ra)}</td><td class="num">${m.nu.toFixed(2)}</td><td class="num">${m.C.toFixed(5)}</td></tr>`; });
+  $("famTable").innerHTML = rows + "</table>";
+}
+function famDraw() {
+  const t = tok(), f = D.families[$("famSel").value], i = +$("famIdx").value, m = f.members[i];
+  $("famIdxO").textContent = `${i + 1} / ${f.members.length}`;
+  const bx = [], by = [], bz = [];
+  f.members.forEach((o, j) => { if (j !== i) { bx.push(...o.path.x, null); by.push(...o.path.y, null); bz.push(...o.path.z, null); } });
+  const tr = [
+    {type: "scatter3d", mode: "lines", x: bx, y: by, z: bz, name: "other members", line: {color: t.muted, width: 1.5}, opacity: 0.35, hoverinfo: "skip"},
+    line3d(m.path, t.s[0], "selected orbit", {line: {color: t.s[0], width: 6}}),
+    sphere(0, 0, 0, SYS.r2, t.moon, "Moon"),
+  ];
+  const so = speedOpt("fam");
+  let spdTile = null;
+  if (so) {
+    const res = cachedProp(`fam-${$("famSel").value}-${i}`, m.state0, m.period);
+    const v = speedsOf(res.x, so.ref);
+    tr[1] = speedLine3d(toView(res, "rotM"), v, t, so, "selected orbit (speed)", 7);
+    spdTile = ["Speed range", `${Math.min(...v).toFixed(3)}&ndash;${Math.max(...v).toFixed(3)} <small>km/s</small>`];
+  }
+  const lps = ["L1", "L2"].map((k) => SYS.lpoints[k]);
+  tr.push({type: "scatter3d", mode: "markers+text", x: lps.map((p) => (p[0] - 1 + MU) * L), y: [0, 0], z: [0, 0], text: ["L1", "L2"],
+    marker: {size: 3, color: t.ink2}, textfont: {color: t.ink2}, name: "Lagrange points", hoverinfo: "text", showlegend: false});
+  const unstable = m.nu > 1.01;
+  $("famTiles").innerHTML = [
+    ["Period", `${m.period_d.toFixed(2)} <small>days</small>`],
+    ["Perilune radius", `${fmt(m.rp)} <small>km (alt ${fmt(m.rp - SYS.r2)} km)</small>`],
+    ["Apolune radius", `${fmt(m.ra)} <small>km</small>`],
+    ["Stability index ν", `${m.nu < 10 ? m.nu.toFixed(3) : fmt(m.nu)} <small>${unstable ? "unstable" : "stable"}</small>`],
+    ["Jacobi constant", m.C.toFixed(5)],
+  ].concat(spdTile ? [spdTile] : []).map(([k, v]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+  Plotly.react("fig-family", tr, layout3d(t, {uirevision: $("famSel").value}), CFG);
+  const per = f.members.map((o) => o.period_d), nu = f.members.map((o) => o.nu);
+  const st = [
+    {type: "scatter", mode: "lines+markers", x: per, y: nu, name: "family", line: {color: t.s[0], width: 2}, marker: {size: 5, color: t.s[0]},
+      hovertemplate: "period %{x:.2f} d<br>ν = %{y:.3f}<extra></extra>"},
+    {type: "scatter", mode: "markers", x: [m.period_d], y: [m.nu], name: "selected", marker: {size: 13, color: t.s[1], line: {color: t.surface, width: 2}},
+      hovertemplate: "selected: %{x:.2f} d, ν = %{y:.3f}<extra></extra>"},
+  ];
+  Plotly.react("fig-stab", st, layout2d(t, "period [days]", "stability index ν (log)", {yaxis: axis(t, "stability index ν (log scale)", {type: "log"}),
+    showlegend: false, margin: {l: 64, r: 16, t: 10, b: 46}}), CFG);
+}
+$("famSel").value = "l2s"; famSetup();
+speedControl("fam", "fig-family").forEach((id) => $(id).addEventListener("change", () => famDraw()));
+register(famDraw);
+$("famSel").addEventListener("change", () => { $("famIdx").value = 0; famSetup(); famDraw(); });
+$("famIdx").addEventListener("input", famDraw);
+
+/* ------------------------------------------------------------- Figure 5 */
+Object.entries(D.starts).forEach(([k, s]) => { const o = document.createElement("option"); o.value = k; o.textContent = s.label; $("sbStart").appendChild(o); });
+const PRESETS = {
+  nrho0: {start: "nrho", phase: 0, pro: 0, nrm: 0, rad: 0, dur: 120, body: "moon", view: "rotM"},
+  l1kick: {start: "l1h", phase: 0, pro: 1, nrm: 0, rad: 0, dur: 60, body: "moon", view: "rotM"},
+  drokick: {start: "dro", phase: 0, pro: 0, nrm: 0, rad: 20, dur: 120, body: "moon", view: "rotM"},
+  lloesc: {start: "llo", phase: 0, pro: 820, nrm: 0, rad: 0, dur: 20, body: "moon", view: "rotM"},
+  leotli: {start: "leo", phase: 0.3, pro: 3100, nrm: 0, rad: 0, dur: 12, body: "earth", view: "rotE"},
+};
+let sbTimer = null;
+function sbSchedule() { clearTimeout(sbTimer); sbTimer = setTimeout(sbDraw, 120); }
+function sbDraw() {
+  const t = tok(), st = D.starts[$("sbStart").value];
+  const ph = +$("sbPhase").value, dur = +$("sbDur").value, view = $("sbView").value, body = $("sbBody").value;
+  $("sbPhaseO").textContent = `${Math.round(ph * 100)}% of the orbit`;
+  $("sbDurO").textContent = `${dur} days`;
+  const tph = ph * st.period;
+  const base = propagate(st.state0, st.period, {rtol: 1e-10});
+  const x0 = propagate(st.state0, tph, {rtol: 1e-11}).x.slice(-1)[0];
+  const ax = burnAxes(x0, body);
+  const pro = +$("sbPro").value || 0, nrm = +$("sbNrm").value || 0, rad = +$("sbRad").value || 0;
+  const dvk = (pro * ax.pro[0] + nrm * ax.nrm[0] + rad * ax.rad[0]), dvy = (pro * ax.pro[1] + nrm * ax.nrm[1] + rad * ax.rad[1]),
+    dvz = (pro * ax.pro[2] + nrm * ax.nrm[2] + rad * ax.rad[2]);
+  const dvnd = 1 / (VSTAR * 1000);
+  const x1 = [x0[0], x0[1], x0[2], x0[3] + dvk * dvnd, x0[4] + dvy * dvnd, x0[5] + dvz * dvnd];
+  const tf = dur * 86400 / TSTAR;
+  const res = thin(propagate(x1, tf, {rtol: 1e-10, escape: 5}), 4000);
+  const baseV = toView(thin(base, 1500), view, 0);
+  const pathV = toView(res, view, tph);
+  const bp = toView({t: [0], x: [x0]}, view, tph);
+  const so = speedOpt("sb");
+  const tr = [
+    line3d(baseV, so ? t.muted : t.s[0], "starting orbit (1 period)", {line: {color: so ? t.muted : t.s[0], width: 3}}),
+    so ? speedLine3d(pathV, speedsOf(res.x, so.ref), t, so, "after the burn (speed)", 5)
+       : line3d(pathV, t.s[1], "after the burn", {line: {color: t.s[1], width: 4}}),
+    {type: "scatter3d", mode: "markers", x: bp.x, y: bp.y, z: bp.z, name: "burn point", marker: {size: 5, color: t.ink, symbol: "diamond"}},
+  ];
+  // bodies: Moon always in Moon-centred views; Earth when Earth-centred or far away
+  let maxR = 0; for (let i = 0; i < pathV.x.length; i++) maxR = Math.max(maxR, Math.hypot(pathV.x[i], pathV.y[i], pathV.z[i]));
+  if (view === "rotM" || view === "inM") {
+    tr.push(sphere(0, 0, 0, SYS.r2, t.moon, "Moon"));
+    if (maxR > 200000 && view === "rotM") tr.push(sphere(-L, 0, 0, SYS.r1, t.earth, "Earth"));
+  } else {
+    tr.push(sphere(0, 0, 0, SYS.r1, t.earth, "Earth"));
+    if (view === "rotE") tr.push(sphere(L, 0, 0, SYS.r2, t.moon, "Moon"));
+    else {
+      const mt = []; for (let i = 0; i <= 200; i++) mt.push(tph + tf * i / 200);
+      const mx = mt.map((a) => Math.cos(a) * L), my = mt.map((a) => Math.sin(a) * L);
+      tr.push({type: "scatter3d", mode: "lines", x: mx, y: my, z: mx.map(() => 0), name: "Moon's path", line: {color: t.moon, width: 2, dash: "dot"}, hoverinfo: "skip"});
+    }
+  }
+  // stats
+  let minMoon = Infinity, minEarth = Infinity;
+  res.x.forEach((s) => { minMoon = Math.min(minMoon, Math.hypot(s[0] - 1 + MU, s[1], s[2])); minEarth = Math.min(minEarth, Math.hypot(s[0] + MU, s[1], s[2])); });
+  const dvTot = Math.hypot(pro, nrm, rad);
+  const evt = res.event;
+  const outcome = evt === "moon" ? ["critical", "Impacts the Moon"] : evt === "earth" ? ["critical", "Hits the Earth"]
+    : evt === "escape" ? ["warning", "Leaves the Earth-Moon system"] : ["good", "Still flying at end"];
+  const tEnd = res.t[res.t.length - 1] * TSTAR / 86400;
+  $("sbTiles").innerHTML = [
+    ["Burn", `${fmt(dvTot, 1)} <small>m/s</small>`],
+    ["Jacobi C before / after", `${jacobi(x0).toFixed(4)} / ${jacobi(x1).toFixed(4)}`],
+    ["Closest to Moon", `${fmt((minMoon * L) - SYS.r2)} <small>km altitude</small>`],
+    ["Closest to Earth", `${fmt((minEarth * L) - SYS.r1)} <small>km altitude</small>`],
+    ["Outcome", `<span class="status"><span class="dot" style="background:${t[outcome[0]]}"></span>${outcome[1]}</span> <small>(${tEnd.toFixed(1)} d)</small>`],
+  ].map(([k, v]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+  Plotly.react("fig-sandbox", tr, layout3d(t, {uirevision: view + $("sbStart").value}), CFG);
+}
+register(sbDraw);
+speedControl("sb", "fig-sandbox").forEach((id) => $(id).addEventListener("change", sbSchedule));
+["sbStart", "sbBody", "sbView"].forEach((id) => $(id).addEventListener("change", sbSchedule));
+["sbPhase", "sbPro", "sbNrm", "sbRad", "sbDur"].forEach((id) => $(id).addEventListener("input", sbSchedule));
+document.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
+  const p = PRESETS[b.dataset.preset];
+  $("sbStart").value = p.start; $("sbPhase").value = p.phase; $("sbPro").value = p.pro; $("sbNrm").value = p.nrm;
+  $("sbRad").value = p.rad; $("sbDur").value = p.dur; $("sbBody").value = p.body; $("sbView").value = p.view; sbDraw();
+}));
+
+/* ------------------------------------------------------------- Figure 6 */
+const PC = {sel: D.porkchop.best.slice()};
+function pcDraw() {
+  const t = tok(), d = D.porkchop, [i, j] = PC.sel;
+  const steps = t.seq, cs = steps.map((c, k) => [k / (steps.length - 1), c]);
+  const tr = [
+    {type: "heatmap", x: d.dep_d, y: d.tof_d, z: d.total, colorscale: cs, zmin: 450, zmax: 2000,
+      colorbar: {title: {text: "total Δv [m/s]", font: {color: t.ink2}}, tickfont: {color: t.ink2}, outlinecolor: t.grid},
+      xgap: 1, ygap: 1, hovertemplate: "depart day %{x:.1f}<br>flight %{y:.2f} d<br>total %{z:,.0f} m/s<extra></extra>"},
+    {type: "scatter", mode: "markers", x: [d.dep_d[j]], y: [d.tof_d[i]], name: "selected", hoverinfo: "skip",
+      marker: {size: 14, color: "rgba(0,0,0,0)", line: {color: t.s[1], width: 3}}},
+  ];
+  Plotly.react("fig-porkchop", tr, layout2d(t, "departure time [days]", "time of flight [days]", {showlegend: false}), CFG);
+  const c = d.cells[i][j];
+  if (!c) return;
+  const res = propagate(c.x, c.tof, {rtol: 1e-11});
+  const arc = toView(thin(res, 1500), "rotM");
+  const n = arc.x.length - 1;
+  const tr3 = [
+    line3d(d.dro, t.s[0], "DRO"), line3d(d.nrho, t.s[2], "9:2 NRHO"),
+    line3d(arc, t.s[1], "transfer", {line: {color: t.s[1], width: 5}}),
+    {type: "scatter3d", mode: "markers+text", x: [arc.x[0], arc.x[n]], y: [arc.y[0], arc.y[n]], z: [arc.z[0], arc.z[n]],
+      text: ["dv1", "dv2"], textfont: {color: t.ink}, marker: {size: 5, color: t.ink}, name: "burns", hoverinfo: "text", showlegend: false},
+    sphere(0, 0, 0, SYS.r2, t.moon, "Moon"),
+  ];
+  Plotly.react("fig-pc3d", tr3, layout3d(t, {uirevision: "pc"}), CFG);
+  $("pcTiles").innerHTML = [
+    ["Depart", `day ${(c.td * TSTAR / 86400).toFixed(1)}`],
+    ["Time of flight", `${(c.tof * TSTAR / 86400).toFixed(2)} <small>days</small>`],
+    ["Δv<sub>1</sub> depart", `${fmt(c.dv1)} <small>m/s</small>`],
+    ["Δv<sub>2</sub> arrive", `${fmt(c.dv2)} <small>m/s</small>`],
+    ["Total", `${fmt(c.dv1 + c.dv2)} <small>m/s</small>` + (i === D.porkchop.best[0] && j === D.porkchop.best[1] ? " <small>(cheapest)</small>" : "")],
+  ].map(([k, v]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+}
+register(pcDraw);
+$("fig-porkchop").on("plotly_click", (ev) => {
+  const p = ev.points[0]; if (p.curveNumber !== 0) return;
+  PC.sel = [D.porkchop.tof_d.indexOf(p.y), D.porkchop.dep_d.indexOf(p.x)]; pcDraw();
+});
+
+/* ------------------------------------------------------------- Figure 7 */
+let leoTimer = null;
+function leoDraw() {
+  const t = tok(), d = D.leo, view = $("leoView").value, err = +$("leoErr").value;
+  $("leoErrO").textContent = (err > 0 ? "+" : "") + err.toFixed(1) + " m/s";
+  const tr = view === "rot"
+    ? [line3d(d.arc_rot, t.s[0], "planned transfer"), line3d(d.nrho_rot, t.s[2], "9:2 NRHO (after arrival)"),
+       sphere(0, 0, 0, SYS.r1, t.earth, "Earth"), sphere(L, 0, 0, SYS.r2, t.moon, "Moon")]
+    : [line3d(d.arc_in, t.s[0], "planned transfer"), line3d(d.nrho_in, t.s[2], "9:2 NRHO (after arrival)"),
+       line3d(d.moon_in, t.moon, "Moon's path", {line: {color: t.moon, width: 2, dash: "dot"}, hoverinfo: "skip"}),
+       sphere(0, 0, 0, SYS.r1, t.earth, "Earth")];
+  let miss = 0;
+  const dv = d.dv1, dvn = norm(dv), s = 1 + (err / (VSTAR * 1000)) / dvn;
+  if (err !== 0) {
+    const x1 = [...d.x_chaser.slice(0, 3), d.x_chaser[3] + dv[0] * s, d.x_chaser[4] + dv[1] * s, d.x_chaser[5] + dv[2] * s];
+    const res = propagate(x1, d.tof, {rtol: 1e-11});
+    const xf = res.x[res.x.length - 1], ta = d.target_arrive;
+    miss = Math.hypot(xf[0] - ta[0], xf[1] - ta[1], xf[2] - ta[2]) * L;
+    const pv = toView(thin(res, 2000), view === "rot" ? "rotE" : "inE", d.t_depart);
+    tr.splice(1, 0, line3d(pv, t.s[1], `TLI ${err > 0 ? "+" : ""}${err} m/s`, {line: {color: t.s[1], width: 4}}));
+    if (res.event) miss = NaN;
+  }
+  $("leoTiles").innerHTML = [
+    ["TLI burn", `${fmt(d.dv1_mps)} <small>m/s</small>`],
+    ["NRHO insertion", `${fmt(d.dv2_mps)} <small>m/s</small>`],
+    ["Time of flight", `${(d.tof * TSTAR / 86400).toFixed(2)} <small>days</small>`],
+    ["Miss at arrival", err === 0 ? "0 <small>km (as planned)</small>" : isNaN(miss) ? "impact" : `${fmt(miss)} <small>km</small>`],
+  ].map(([k, v]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+  Plotly.react("fig-leo", tr, layout3d(t, {uirevision: view}), CFG);
+}
+register(leoDraw);
+$("leoView").addEventListener("change", leoDraw);
+$("leoErr").addEventListener("input", () => { clearTimeout(leoTimer); leoTimer = setTimeout(leoDraw, 100); });
+
+/* ------------------------------------------------------------- Figure 8 */
+const NCW = Math.sqrt(SYS.gm1 / Math.pow(SYS.r1 + 400, 3));  // rad/s
+function cwPos(x0, z0, vx, vz, tt) {   // LVLH: x V-bar, z R-bar; metres, seconds
+  const n = NCW, s = Math.sin(n * tt), c = Math.cos(n * tt);
+  // Hill: xr = -z, ya = x ; vxr = -vz, vya = vx
+  const xr0 = -z0, ya0 = x0, vxr = -vz, vya = vx;
+  const xr = (4 - 3 * c) * xr0 + s / n * vxr + 2 * (1 - c) / n * vya;
+  const ya = 6 * (s - n * tt) * xr0 + ya0 - 2 * (1 - c) / n * vxr + (4 * s - 3 * n * tt) / n * vya;
+  return [ya, -xr];
+}
+function cwDraw() {
+  const t = tok(), x0 = +$("cwX0").value, vx = +$("cwVx").value, vz = +$("cwVz").value, N = +$("cwN").value;
+  $("cwX0o").textContent = `${x0} m`; $("cwVxo").textContent = `${vx.toFixed(2)} m/s`;
+  $("cwVzo").textContent = `${vz.toFixed(2)} m/s`; $("cwNo").textContent = `${N}`;
+  const T = 2 * Math.PI / NCW, X = [], Z = [], H = [];
+  for (let k = 0; k <= 600; k++) { const tt = N * T * k / 600; const p = cwPos(x0, 0, vx, vz, tt); X.push(p[0]); Z.push(p[1]); H.push(tt / 60); }
+  const ox = [], oz = [], ol = [];
+  for (let k = 1; k <= Math.floor(N); k++) { const p = cwPos(x0, 0, vx, vz, k * T); ox.push(p[0]); oz.push(p[1]); ol.push(`${k} orbit${k > 1 ? "s" : ""}`); }
+  const tr = [
+    {type: "scatter", mode: "lines", x: X, y: Z, customdata: H, name: "chaser path", line: {color: t.s[0], width: 2.5},
+      hovertemplate: "V-bar %{x:,.0f} m<br>R-bar %{y:,.0f} m<br>t = %{customdata:.0f} min<extra></extra>"},
+    {type: "scatter", mode: "markers+text", x: ox, y: oz, text: ol, textposition: "top center", textfont: {color: t.ink2, size: 11},
+      name: "after each orbit", marker: {size: 8, color: t.s[0], line: {color: t.surface, width: 2}}, hoverinfo: "text"},
+    {type: "scatter", mode: "markers+text", x: [x0], y: [0], text: ["start"], textposition: "bottom center", textfont: {color: t.ink2},
+      name: "start", marker: {size: 9, color: t.s[1]}, hoverinfo: "text"},
+    {type: "scatter", mode: "markers+text", x: [0], y: [0], text: ["target"], textposition: "bottom center", textfont: {color: t.ink},
+      name: "target", marker: {size: 11, color: t.ink, symbol: "square"}, hoverinfo: "text"},
+  ];
+  const lay = layout2d(t, "V-bar [m] (target's direction of travel →)", "R-bar [m] (down = toward Earth)", {
+    yaxis: axis(t, "R-bar [m] (down = toward Earth)", {autorange: "reversed", scaleanchor: "x"}), showlegend: false});
+  Plotly.react("fig-cw", tr, lay, CFG);
+  const end = cwPos(x0, 0, vx, vz, T);
+  $("cwMsg").textContent = `After one orbit (${(T / 60).toFixed(1)} min) the chaser is at V-bar ${fmt(end[0])} m, R-bar ${fmt(end[1])} m` +
+    (Math.abs(vx) > 0 ? `: it moved ${fmt(end[0] - x0)} m along V-bar, opposite-signed to the V-bar burn.` : ".");
+}
+register(cwDraw);
+["cwX0", "cwVx", "cwVz", "cwN"].forEach((id) => $(id).addEventListener("input", cwDraw));
+document.querySelectorAll("[data-cw]").forEach((b) => b.addEventListener("click", () => {
+  // a -V-bar burn of v moves the chaser forward by 6*pi*v/n per orbit, so this hop
+  // starting 1 km behind arrives at the target after exactly one orbit
+  const hop = -(1000 * NCW / (6 * Math.PI));
+  const P = {pro: [-1000, 0.5, 0, 2], retro: [-1000, -0.5, 0, 2], football: [-1000, 0, 0.5, 2],
+    hop: [-1000, Math.round(hop * 100) / 100, 0, 1]}[b.dataset.cw];
+  $("cwX0").value = P[0]; $("cwVx").value = P[1]; $("cwVz").value = P[2]; $("cwN").value = P[3]; cwDraw();
+}));
+
+/* ------------------------------------------------------------- Figure 9 */
+const RP = D.rpod;
+const rpShow = new Set();
+RP.aborts.forEach((a, k) => {
+  const l = document.createElement("label");
+  l.innerHTML = `<input type="checkbox" data-ab="${k}"> burn ${a.burn + 1} missed`;
+  $("rpAborts").appendChild(l);
+});
+document.querySelectorAll("[data-ab]").forEach((c) => c.addEventListener("change", () => {
+  c.checked ? rpShow.add(+c.dataset.ab) : rpShow.delete(+c.dataset.ab); rpDraw();
+}));
+function rpDraw() {
+  const t = tok(), zoom = $("rpZoom").value;
+  const n = RP.t_h.length, idx = Math.round(+$("rpT").value / 1000 * (n - 1));
+  const tNow = RP.t_h[idx];
+  $("rpTo").textContent = `${tNow.toFixed(2)} h`;
+  const tr = [];
+  // corridor (15 deg inside 200 m) and keep-out sphere
+  const ang = 15 * Math.PI / 180, R0 = 200;
+  tr.push({type: "scatter", mode: "lines", x: [0, -R0 * Math.cos(ang), -R0 * Math.cos(ang), 0], y: [0, R0 * Math.sin(ang), -R0 * Math.sin(ang), 0],
+    fill: "toself", fillcolor: t.s[2] + "33", line: {width: 0}, name: "approach corridor", hoverinfo: "name"});
+  const cx = [], cy = []; for (let k = 0; k <= 120; k++) { const a = 2 * Math.PI * k / 120; cx.push(R0 * Math.cos(a)); cy.push(R0 * Math.sin(a)); }
+  tr.push({type: "scatter", mode: "lines", x: cx, y: cy, name: "keep-out sphere (200 m)", line: {color: t.ink2, dash: "dot", width: 1.2}, hoverinfo: "name"});
+  [...rpShow].sort().forEach((k) => {
+    const a = RP.aborts[k];
+    tr.push({type: "scatter", mode: "lines", x: a.rho_m.x, y: a.rho_m.z, name: `drift if burn ${a.burn + 1} is missed (closest ${fmt(a.min_m, 1)} m)`,
+      line: {color: t.s[2 + (k % 4)], width: 1.8, dash: "dash"},
+      hovertemplate: "V-bar %{x:,.1f} m<br>R-bar %{y:,.1f} m<extra>missed burn</extra>"});
+  });
+  tr.push({type: "scatter", mode: "lines", x: RP.rho_m.x, y: RP.rho_m.z, customdata: RP.t_h, name: "planned approach",
+    line: {color: t.s[0], width: 2.5}, hovertemplate: "V-bar %{x:,.1f} m<br>R-bar %{y:,.1f} m<br>t = %{customdata:.2f} h<extra></extra>"});
+  const bi = RP.burns.map((b) => RP.t_h.reduce((best, v, k) => Math.abs(v - b.t_h) < Math.abs(RP.t_h[best] - b.t_h) ? k : best, 0));
+  tr.push({type: "scatter", mode: "markers", x: bi.map((k) => RP.rho_m.x[k]), y: bi.map((k) => RP.rho_m.z[k]), name: "burns",
+    marker: {symbol: "triangle-up", size: 11, color: t.s[0], line: {color: t.surface, width: 1.5}},
+    customdata: RP.burns.map((b, k) => `burn ${k + 1}: ${b.mag.toFixed(3)} m/s`), hovertemplate: "%{customdata}<extra></extra>"});
+  tr.push({type: "scatter", mode: "markers", x: [RP.rho_m.x[idx]], y: [RP.rho_m.z[idx]], name: "chaser now",
+    marker: {size: 13, color: t.s[1], line: {color: t.surface, width: 2}}, hoverinfo: "name"});
+  tr.push({type: "scatter", mode: "markers", x: [0], y: [0], name: "target", marker: {size: 12, color: t.ink, symbol: "square"}, hoverinfo: "name"});
+  const rng = zoom === "all" ? null : +zoom;
+  const xa = rng ? {range: [-rng * 1.05, rng * 0.3]} : {};
+  const ya = rng ? {range: [rng * 0.4, -rng * 0.4]} : {autorange: "reversed"};
+  const lay = layout2d(t, "V-bar [m]", "R-bar [m] (down = toward the Moon)", {
+    xaxis: axis(t, "V-bar [m] (target's direction of travel →)", xa),
+    yaxis: axis(t, "R-bar [m] (down = toward the Moon)", ya),
+    legend: {orientation: "h", x: 0, y: 1.02, yanchor: "bottom", font: {color: t.ink, size: 11}, bgcolor: "rgba(0,0,0,0)"},
+    margin: {l: 64, r: 16, t: 70, b: 50}});
+  Plotly.react("fig-rpod", tr, lay, CFG);
+  const rr = [
+    {type: "scatter", mode: "lines", x: RP.t_h, y: RP.range_m.map((v) => Math.max(v, 0.1)), name: "range", line: {color: t.s[0], width: 2},
+      hovertemplate: "t = %{x:.2f} h<br>range %{y:,.1f} m<extra></extra>"},
+    {type: "scatter", mode: "markers", x: [tNow], y: [Math.max(RP.range_m[idx], 0.1)], name: "now", marker: {size: 11, color: t.s[1], line: {color: t.surface, width: 2}}, hoverinfo: "skip"},
+  ];
+  Plotly.react("fig-range", rr, layout2d(t, "time [h]", "range [m] (log)", {yaxis: axis(t, "range to target [m] (log)", {type: "log"}),
+    showlegend: false, margin: {l: 64, r: 16, t: 10, b: 46},
+    shapes: [{type: "line", xref: "paper", x0: 0, x1: 1, y0: 200, y1: 200, line: {color: t.ink2, dash: "dot", width: 1}}],
+    annotations: [{xref: "paper", x: 0.005, y: Math.log10(200), yref: "y", text: "keep-out sphere", showarrow: false, yanchor: "bottom", xanchor: "left", font: {color: t.ink2, size: 11}}]}), CFG);
+  $("rpTiles").innerHTML = [
+    ["Total Δv", `${RP.total.toFixed(3)} <small>m/s</small>`],
+    ["Burns", `${RP.burns.length}`],
+    ["Range now", `${fmt(RP.range_m[idx], RP.range_m[idx] < 100 ? 1 : 0)} <small>m</small>`],
+    ["Docking speed", `3.0 <small>cm/s</small>`],
+  ].map(([k, v]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div></div>`).join("");
+}
+(function rpTable() {
+  let h = "<table><tr><th>Burn</th><th>Time [h]</th><th>V-bar [m/s]</th><th>−H-bar [m/s]</th><th>R-bar [m/s]</th><th>|Δv| [m/s]</th><th>Purpose</th><th>If this burn is missed: closest approach</th></tr>";
+  RP.burns.forEach((b, k) => {
+    const ab = RP.aborts.find((a) => a.burn === k);   // drift that starts after burn k
+    const sx = ab ? (ab.min_m < 200 ? `<span class="status"><span class="dot" style="background:var(--critical)"></span>${fmt(ab.min_m, 1)} m (inside keep-out)</span>`
+      : `<span class="status"><span class="dot" style="background:var(--good)"></span>${fmt(ab.min_m, 0)} m (safe)</span>`) : "—";
+    h += `<tr><td>${k + 1}</td><td class="num">${b.t_h.toFixed(2)}</td>${b.dv.map((v) => `<td class="num">${v.toFixed(3)}</td>`).join("")}<td class="num">${b.mag.toFixed(3)}</td><td>${b.label.replace("->", "→")}</td><td>${sx}</td></tr>`;
+  });
+  $("rpTable").innerHTML = h + "</table><p class='muted' style='font-size:13px'>“If missed” is the closest approach during 24 h of drift if this burn (and every later one) does not happen, so the chaser coasts on from the previous burn. Missing burn 1 leaves the chaser parked 20 km away.</p>";
+})();
+register(rpDraw);
+["rpZoom", "rpT"].forEach((id) => $(id).addEventListener("input", rpDraw));
+/* ------------------------------------------------------------ Figure 10 */
+const RS = D.rosettes, RSR = RS.resonant;
+RSR.forEach((r, k) => { const o = document.createElement("option"); o.value = k;
+  o.textContent = `${r.key} ${r.p > r.q ? "interior" : "exterior"}${r.note ? " — " + r.note : ""}`; $("rsSel").appendChild(o); });
+const RSP = {playing: false, guessCache: {}};
+function rsGuess(k) {
+  if (!RSP.guessCache[k]) {
+    const r = RSR[k], res = thin(propagate(r.guess0, 2 * Math.PI * r.q, {rtol: 1e-10, escape: 6}), 2500);
+    RSP.guessCache[k] = {path: toView(res, "rotE"), event: res.event};
+  }
+  return RSP.guessCache[k];
+}
+function rsDraw() {
+  const t = tok(), k = +$("rsSel").value, r = RSR[k];
+  const n = r.t_d.length, upto = Math.max(2, Math.round(+$("rsT").value / 1000 * (n - 1)) + 1), i = upto - 1;
+  $("rsTo").textContent = `${r.t_d[i].toFixed(1)} of ${r.period_d.toFixed(1)} days`;
+  const sl = (a) => a.slice(0, upto);
+  const rot = [];
+  if ($("rsGuess").checked) {
+    const g = rsGuess(k);
+    rot.push({type: "scatter", mode: "lines", x: g.path.x, y: g.path.y, name: "uncorrected Keplerian guess",
+      line: {color: t.s[1], width: 1.5, dash: "dash"}, hoverinfo: "skip"});
+  }
+  const so = speedOpt("rs");
+  let sres = null, sv = null, su = 0, range = null;
+  if (so) {
+    sres = cachedProp(`rs-${k}`, r.state0, r.period, 3000);
+    sv = speedsOf(sres.x, so.ref);
+    su = Math.max(2, Math.round(+$("rsT").value / 1000 * (sv.length - 1)) + 1);
+    range = [Math.min(...sv), Math.max(...sv)];
+    const pr = toView(sres, "rotE");
+    rot.push(speedMarkers2d(pr.x.slice(0, su), pr.y.slice(0, su), sv.slice(0, su), t, so, `${r.key} (speed)`, true, range));
+  }
+  if (!so) rot.push({type: "scatter", mode: "lines", x: sl(r.rot.x), y: sl(r.rot.y), name: `${r.key} periodic orbit`,
+      line: {color: t.s[0], width: 2.2}, customdata: sl(r.t_d), hovertemplate: "%{x:,.0f}, %{y:,.0f} km<br>day %{customdata:.1f}<extra></extra>"},
+    {type: "scatter", mode: "markers+text", x: [0, L], y: [0, 0], text: ["Earth", "Moon"], textposition: "bottom center",
+      marker: {color: [t.earth, t.moon], size: [12, 8]}, textfont: {color: t.ink2}, hoverinfo: "text", showlegend: false},
+    {type: "scatter", mode: "markers", x: [r.rot.x[i]], y: [r.rot.y[i]], name: "spacecraft", showlegend: false,
+      marker: {size: 11, color: t.s[1], line: {color: t.surface, width: 2}}, hoverinfo: "skip"});
+  const inn = [
+    {type: "scatter", mode: "lines", x: r.moon.x, y: r.moon.y, name: "Moon's path", line: {color: t.moon, width: 1.2, dash: "dot"}, hoverinfo: "skip"},
+    so ? (() => { const pi = toView(sres, "inE", 0); return speedMarkers2d(pi.x.slice(0, su), pi.y.slice(0, su), sv.slice(0, su), t, so, "spacecraft (speed)", false, range); })()
+       : {type: "scatter", mode: "lines", x: sl(r.inr.x), y: sl(r.inr.y), name: "spacecraft path", line: {color: t.s[0], width: 2.2},
+      customdata: sl(r.t_d), hovertemplate: "%{x:,.0f}, %{y:,.0f} km<br>day %{customdata:.1f}<extra></extra>"},
+    {type: "scatter", mode: "markers+text", x: [0], y: [0], text: ["Earth"], textposition: "bottom center", textfont: {color: t.ink2},
+      marker: {color: t.earth, size: 12}, hoverinfo: "text", showlegend: false},
+    {type: "scatter", mode: "markers", x: [r.moon.x[i]], y: [r.moon.y[i]], name: "Moon", marker: {color: t.moon, size: 10}, hoverinfo: "name", showlegend: false},
+    {type: "scatter", mode: "markers", x: [r.inr.x[i]], y: [r.inr.y[i]], name: "spacecraft", showlegend: false,
+      marker: {size: 11, color: t.s[1], line: {color: t.surface, width: 2}}, hoverinfo: "skip"},
+  ];
+  const absMax = (arrs) => arrs.reduce((m, a) => a.reduce((mm, v) => Math.max(mm, Math.abs(v)), m), 0);
+  const lim = 1.08 * Math.max(absMax([r.rot.x, r.rot.y]), L);
+  const sq = (title, lm) => layout2d(t, "x [km]", "y [km]", {title: {text: title, font: {size: 14, color: t.ink}, x: 0.02},
+    xaxis: axis(t, "x [km]", {range: [-lm, lm]}), yaxis: axis(t, "y [km]", {range: [-lm, lm], scaleanchor: "x"}),
+    legend: {x: 0.01, y: 0.01, yanchor: "bottom", font: {color: t.ink, size: 11}, bgcolor: t.surface}, showlegend: true});
+  Plotly.react("fig-ros-rot", rot, sq("Rotating frame: the rosette", lim), CFG);
+  const limI = 1.08 * Math.max(absMax([r.inr.x, r.inr.y]), L);
+  Plotly.react("fig-ros-in", inn, sq("Inertial frame: (nearly) an ellipse", limI), CFG);
+  const stable = r.nu < 1.01;
+  let gtxt = "";
+  if ($("rsGuess").checked) {
+    const g = rsGuess(k), gx = g.path.x, gy = g.path.y, m = gx.length - 1;
+    const drift = Math.hypot(gx[m] - r.rot.x[0], gy[m] - r.rot.y[0]);
+    gtxt = g.event ? (g.event === "escape" ? "escapes" : `hits the ${g.event}`) : `${fmt(drift)} <small>km</small>`;
+  }
+  $("rsTiles").innerHTML = [
+    ["Lobes / perigees per period", `${r.p}`],
+    ["Period", `${r.period_d.toFixed(2)} <small>days (${(r.period_d / 27.32).toFixed(2)} months)</small>`],
+    ["Perigee / apogee", `${fmt(r.perigee)} / ${fmt(r.apogee)} <small>km</small>`],
+    ["Closest to Moon", `${fmt(r.min_moon)} <small>km</small>`],
+    ["Stability index ν", `${r.nu < 10 ? r.nu.toFixed(2) : fmt(r.nu)} <small>${stable ? "stable" : "unstable"}</small>`],
+  ].concat($("rsGuess").checked ? [["Guess misses its start by", gtxt]] : [])
+   .map(([a, b]) => `<div class="tile"><div class="k">${a}</div><div class="v">${b}</div></div>`).join("");
+}
+(function rsTable() {
+  let h = "<table><tr><th>p:q</th><th>Type</th><th>Guess e</th><th>Period [d]</th><th>Perigee [km]</th><th>Apogee [km]</th><th>Closest to Moon [km]</th><th>Stability ν</th><th>Jacobi C</th><th>Note</th></tr>";
+  RSR.forEach((r) => { h += `<tr><td>${r.key}</td><td>${r.p > r.q ? "interior" : "exterior"}</td><td class="num">${r.e}</td><td class="num">${r.period_d.toFixed(2)}</td><td class="num">${fmt(r.perigee)}</td><td class="num">${fmt(r.apogee)}</td><td class="num">${fmt(r.min_moon)}</td><td class="num">${r.nu < 10 ? r.nu.toFixed(2) : fmt(r.nu)}</td><td class="num">${r.C.toFixed(4)}</td><td>${r.note}</td></tr>`; });
+  $("rsTable").innerHTML = h + "</table>";
+})();
+register(rsDraw);
+speedControl("rs", "fig-ros-rot", "earth").forEach((id) => $(id).addEventListener("change", rsDraw));
+$("rsSel").addEventListener("change", () => { $("rsT").value = 1000; rsDraw(); });
+$("rsGuess").addEventListener("change", rsDraw);
+$("rsT").addEventListener("input", rsDraw);
+$("rsPlay").addEventListener("click", () => {
+  RSP.playing = !RSP.playing; $("rsPlay").textContent = RSP.playing ? "Pause" : "Play";
+  if (RSP.playing && +$("rsT").value >= 1000) $("rsT").value = 0;
+  const step = () => {
+    if (!RSP.playing) return;
+    const s = $("rsT"); s.value = Math.min(1000, +s.value + 4); rsDraw();
+    if (+s.value >= 1000) { RSP.playing = false; $("rsPlay").textContent = "Play"; return; }
+    setTimeout(step, 30);
+  };
+  step();
+});
+
+/* ------------------------------------------------------------ Figure 11 */
+const LR = RS.lunar;
+Object.entries(LR).forEach(([k, v]) => { const o = document.createElement("option"); o.value = k; o.textContent = v.label; $("lrSel").appendChild(o); });
+function lrDraw() {
+  const t = tok(), d = LR[$("lrSel").value];
+  $("lrN").max = d.revs;
+  const n = Math.min(+$("lrN").value, d.revs), m = n * d.per_rev + 1;
+  $("lrNo").textContent = `${n} (${d.t_d[m - 1].toFixed(1)} days)`;
+  const sl = (p) => ({x: p.x.slice(0, m), y: p.y.slice(0, m), z: p.z.slice(0, m)});
+  const so = speedOpt("lr"), st = D.starts[$("lrSel").value];
+  let rotTr = line3d(d.rot, t.s[0], "one period (rotating)"), inTr = line3d(sl(d.inr), t.s[0], `${n} revolutions (inertial)`, {line: {color: t.s[0], width: 3}});
+  if (so && st) {
+    const r1 = cachedProp(`lr1-${$("lrSel").value}`, st.state0, st.period, 1200);
+    const rN = cachedProp(`lrN-${$("lrSel").value}`, st.state0, st.period * d.revs, 300 * d.revs);
+    const vN = speedsOf(rN.x, so.ref), range = [Math.min(...vN), Math.max(...vN)];
+    const cut = Math.round(rN.x.length * n / d.revs);
+    const pN = toView({t: rN.t.slice(0, cut), x: rN.x.slice(0, cut)}, "inM", 0);
+    rotTr = speedLine3d(toView(r1, "rotM"), speedsOf(r1.x, so.ref), t, so, "one period (speed)", 6, range);
+    inTr = speedLine3d(pN, vN.slice(0, cut), t, so, `${n} revolutions (speed)`, 4, range);
+  }
+  Plotly.react("fig-lr-rot", [rotTr, sphere(0, 0, 0, SYS.r2, t.moon, "Moon")],
+    layout3d(t, {uirevision: "lr-rot" + $("lrSel").value, showlegend: true}), CFG);
+  Plotly.react("fig-lr-in", [inTr, sphere(0, 0, 0, SYS.r2, t.moon, "Moon")],
+    layout3d(t, {uirevision: "lr-in" + $("lrSel").value, showlegend: true}), CFG);
+}
+register(lrDraw);
+speedControl("lr", "fig-lr-rot").forEach((id) => $(id).addEventListener("change", lrDraw));
+$("lrSel").addEventListener("change", () => { $("lrN").value = Math.min(9, LR[$("lrSel").value].revs); lrDraw(); });
+$("lrN").addEventListener("input", lrDraw);
+/* ============================================== Section 11: transient & budgets */
+const TR = D.transient;
+const lam = (nu) => nu + Math.sqrt(Math.max(nu * nu - 1, 0));
+const interp = (x, xs, ys) => {
+  if (x <= xs[0]) return ys[0];
+  for (let i = 1; i < xs.length; i++) if (x <= xs[i]) { const f = (x - xs[i - 1]) / (xs[i] - xs[i - 1]); return ys[i - 1] + f * (ys[i] - ys[i - 1]); }
+  return ys[ys.length - 1];
+};
+const tileHtml = (rows) => rows.map(([a, b]) => `<div class="tile"><div class="k">${a}</div><div class="v">${b}</div></div>`).join("");
+// fate colours: three outcomes on the first three categorical slots, captured dark neutral, forbidden light neutral
+function fateColor(t, kind) {
+  return {exit_L1: t.s[0], exit_L2: t.s[1], impact_moon: t.s[2], impact_earth: t.s[2], impact: t.s[2], captured: t.ink2, forbidden: t.forbid}[kind];
+}
+const FATE_TXT = {exit_L1: "leaves via L1 (toward Earth)", exit_L2: "leaves via L2 (outward)", impact: "impacts Moon/Earth",
+  impact_moon: "impacts the Moon", impact_earth: "impacts the Earth", captured: "still captured", forbidden: "forbidden at this energy"};
+
+/* ------------------------------------------------------------ Figure 12 */
+register(function efoldDraw() {
+  const t = tok(), tr = [];
+  [["l2s", 0], ["l1n", 1], ["lyap", 2]].forEach(([k, c]) => {
+    const f = D.families[k], xs = [], ys = [];
+    f.members.forEach((m) => { const l = lam(m.nu); if (l > 1.001) { xs.push(m.period_d); ys.push(m.period_d / Math.log(l)); } });
+    tr.push({type: "scatter", mode: "lines+markers", x: xs, y: ys, name: f.name, line: {color: t.s[c], width: 2}, marker: {size: 5, color: t.s[c]},
+      hovertemplate: "period %{x:.2f} d<br>e-folding %{y:.2f} d<extra>" + f.name + "</extra>"});
+  });
+  Plotly.react("fig-efold", tr, layout2d(t, "orbit period [days]", "e-folding time [days] (log)", {
+    yaxis: axis(t, "e-folding time [days] (log scale)", {type: "log"}), legend: {x: 0.01, y: 0.99, font: {color: t.ink}, bgcolor: t.surface},
+    margin: {l: 64, r: 16, t: 10, b: 46}}), CFG);
+});
+
+/* ------------------------------------------------------------ Figure 13 */
+Object.entries(TR.tubes).forEach(([k, v]) => { const o = document.createElement("option"); o.value = k; o.textContent = v.label; $("mfOrbit").appendChild(o); });
+function mfDraw() {
+  const t = tok(), rec = TR.tubes[$("mfOrbit").value], kind = $("mfKind").value, br = $("mfBranch").value, day = +$("mfDay").value;
+  const plane = $("mfPlane").value, a = plane[0], b = plane[1];
+  $("mfDayO").textContent = `${day} d`;
+  const branches = br === "both" ? ["interior", "exterior"] : [br];
+  const groups = {}, counts = {exit_L1: 0, exit_L2: 0, impact: 0, captured: 0};
+  branches.forEach((bb) => {
+    const tb = rec.tubes[`${kind}-${bb}`];
+    tb.paths.forEach((p, i) => {
+      let fk = tb.fates[i]; if (fk.startsWith("impact")) fk = "impact";
+      counts[fk]++;
+      const n = Math.min(p.x.length, Math.floor(day / 30 * 219) + 1);
+      const g = groups[fk] || (groups[fk] = {u: [], v: []});
+      g.u.push(...p[a].slice(0, n), null); g.v.push(...p[b].slice(0, n), null);
+    });
+  });
+  const tr = ["exit_L1", "exit_L2", "impact", "captured"].filter((k) => groups[k]).map((k) =>
+    ({type: "scatter", mode: "lines", x: groups[k].u, y: groups[k].v, name: FATE_TXT[k],
+      line: {color: fateColor(t, k), width: 1}, opacity: 0.85, hoverinfo: "name"}));
+  tr.push({type: "scatter", mode: "lines", x: rec.orbit[a], y: rec.orbit[b], name: rec.label, line: {color: t.ink, width: 3}, hoverinfo: "name"});
+  const bodies = [[0, "Moon", t.moon, 9]];
+  if (plane === "xy" || plane === "xz") bodies.push([-L, "Earth", t.earth, 12]);
+  tr.push({type: "scatter", mode: "markers+text", x: bodies.map((q) => q[0]), y: bodies.map(() => 0), text: bodies.map((q) => q[1]),
+    textposition: "bottom center", textfont: {color: t.ink2}, marker: {color: bodies.map((q) => q[2]), size: bodies.map((q) => q[3])},
+    showlegend: false, hoverinfo: "text"});
+  const lp = ["L1", "L2"].map((k) => (SYS.lpoints[k][0] - 1 + MU) * L);
+  tr.push({type: "scatter", mode: "markers+text", x: lp, y: [0, 0], text: ["L1", "L2"], textposition: "top center",
+    textfont: {color: t.ink2}, marker: {symbol: "cross-thin", size: 9, line: {color: t.ink2, width: 1.5}}, showlegend: false, hoverinfo: "text"});
+  Plotly.react("fig-manifold", tr, layout2d(t, `${a} [km] (Moon-centred, rotating)`, `${b} [km]`, {
+    yaxis: axis(t, `${b} [km]`, {scaleanchor: "x"}), legend: {orientation: "h", x: 0, y: 1.02, yanchor: "bottom", font: {color: t.ink, size: 11}},
+    margin: {l: 70, r: 16, t: 40, b: 50}}), CFG);
+  const tot = Object.values(counts).reduce((x, y) => x + y, 0);
+  $("mfTiles").innerHTML = tileHtml([
+    ["E-folding time", `${rec.efold_d.toFixed(2)} <small>days</small>`],
+    ...["exit_L1", "exit_L2", "impact", "captured"].map((k) =>
+      [`<span class="status"><span class="dot" style="background:${fateColor(t, k)}"></span>${FATE_TXT[k]}</span>`, `${counts[k]} <small>of ${tot}</small>`]),
+  ]);
+}
+register(mfDraw);
+["mfOrbit", "mfKind", "mfBranch", "mfPlane"].forEach((id) => $(id).addEventListener("change", mfDraw));
+$("mfDay").addEventListener("input", mfDraw);
+
+/* ------------------------------------------------------------ Figure 14 */
+const FM = TR.fatemap, FM_SEL = {i: 20, j: 25};
+const FCODE = (c) => (c < 0 ? 0 : c === 0 ? 1 : c === 1 ? 2 : c === 2 ? 3 : 4);  // -> forbidden, captured, L1, L2, impact
+const FKEYS = ["forbidden", "captured", "exit_L1", "exit_L2", "impact"];
+function fmState(dkm, C, sense) {
+  const x = 1 - MU + dkm / L, r1 = Math.abs(x + MU), r2 = Math.abs(x - 1 + MU);
+  const v2 = x * x + 2 * (1 - MU) / r1 + 2 * MU / r2 - C;
+  if (v2 < 0) return null;
+  let vy = Math.sqrt(v2) * Math.sign(dkm); if (sense === "retrograde") vy = -vy;
+  return [x, 0, 0, 0, vy, 0];
+}
+function fmDraw() {
+  const t = tok(), kind = $("fmKind").value, sense = $("fmSense").value, m = FM.maps[sense];
+  const dk = FM.d_km.map((v) => v / 1000), C = FM.C;
+  const text = m.code.map((row, i) => row.map((c, j) => c < 0 ? "forbidden at this energy" :
+    `${FATE_TXT[FM.fates[c]]}<br>lifetime ${m.life_d[i][j]} d<br>FTLE ${m.ftle[i][j].toFixed(2)} /day`));
+  let tr;
+  if (kind === "fate") {
+    const z = m.code.map((row) => row.map(FCODE)), cols = FKEYS.map((k) => fateColor(t, k));
+    const cs = []; cols.forEach((c, k) => { cs.push([k / 5, c], [(k + 1) / 5, c]); });
+    tr = [{type: "heatmap", x: dk, y: C, z, zmin: -0.5, zmax: 4.5, colorscale: cs, showscale: false, text, hovertemplate: "d %{x:.1f} thousand km, C %{y:.3f}<br>%{text}<extra></extra>"}];
+    FKEYS.forEach((k, n) => tr.push({type: "scatter", mode: "markers", x: [null], y: [null], name: FATE_TXT[k], marker: {symbol: "square", size: 12, color: cols[n]}}));
+  } else {
+    const src = kind === "life" ? m.life_d : m.ftle;
+    const z = src.map((row, i) => row.map((v, j) => (m.code[i][j] < 0 ? null : v)));
+    const cs = t.seq.map((c, k) => [k / (t.seq.length - 1), c]);
+    tr = [{type: "heatmap", x: dk, y: C, z, colorscale: cs, text, hovertemplate: "d %{x:.1f} thousand km, C %{y:.3f}<br>%{text}<extra></extra>",
+      colorbar: {title: {text: kind === "life" ? "lifetime [d]" : "FTLE [1/day]", font: {color: t.ink2}}, tickfont: {color: t.ink2}, outlinecolor: t.grid}}];
+  }
+  tr.push({type: "scatter", mode: "markers", x: [dk[FM_SEL.j]], y: [C[FM_SEL.i]], showlegend: false, hoverinfo: "skip",
+    marker: {size: 13, color: "rgba(0,0,0,0)", line: {color: t.ink, width: 2.5}}});
+  Plotly.react("fig-fatemap", tr, layout2d(t, "start distance from Moon [thousand km] (negative = Earth side)", "Jacobi constant C", {
+    legend: {orientation: "h", x: 0, y: 1.02, yanchor: "bottom", font: {color: t.ink, size: 11}}, margin: {l: 64, r: 16, t: 60, b: 50}}), CFG);
+  fmPath();
+  const fr = m.fractions;
+  $("fmTiles").innerHTML = tileHtml([
+    ["Still captured after 60 d", `${(fr.captured * 100).toFixed(0)}<small>%</small>`],
+    ["Leave via L1", `${(fr.exit_L1 * 100).toFixed(0)}<small>%</small>`],
+    ["Leave via L2", `${(fr.exit_L2 * 100).toFixed(0)}<small>%</small>`],
+    ["Impact", `${((fr.impact_moon + fr.impact_earth) * 100).toFixed(0)}<small>%</small>`],
+  ]);
+}
+function fmPath() {
+  const t = tok(), sense = $("fmSense").value, m = FM.maps[sense], i = FM_SEL.i, j = FM_SEL.j;
+  const dkm = FM.d_km[j], C = FM.C[i], x0 = fmState(dkm, C, sense);
+  const lay = layout2d(t, "x [km] (Moon-centred, rotating)", "y [km]", {yaxis: axis(t, "y [km]", {scaleanchor: "x"}), showlegend: false,
+    title: {text: x0 ? `d = ${fmt(dkm)} km, C = ${C.toFixed(3)}: ${FATE_TXT[FM.fates[m.code[i][j]]]}` : "forbidden start", font: {size: 13, color: t.ink}, x: 0.02}});
+  if (!x0) { Plotly.react("fig-fatepath", [], lay, CFG); return; }
+  const res = thin(propagate(x0, FM.horizon_d * 86400 / TSTAR, {rtol: 1e-10, escape: 3}), 3000);
+  const p = toView(res, "rotM"), m1 = (SYS.lpoints.L1[0] - 1 + MU) * L - FM.gate_margin_km, m2 = (SYS.lpoints.L2[0] - 1 + MU) * L + FM.gate_margin_km;
+  let ext = 0; p.y.forEach((v) => { ext = Math.max(ext, Math.abs(v)); });
+  ext = Math.max(ext, 120000);
+  const days = res.t.map((v) => v * TSTAR / 86400);
+  const tr = [
+    {type: "scatter", mode: "lines", x: [m1, m1], y: [-ext, ext], line: {color: t.s[0], dash: "dash", width: 1.2}, hoverinfo: "skip"},
+    {type: "scatter", mode: "lines", x: [m2, m2], y: [-ext, ext], line: {color: t.s[1], dash: "dash", width: 1.2}, hoverinfo: "skip"},
+    {type: "scatter", mode: "lines", x: p.x, y: p.y, customdata: days, line: {color: t.s[0], width: 1.6},
+      hovertemplate: "%{x:,.0f}, %{y:,.0f} km<br>day %{customdata:.1f}<extra></extra>"},
+    {type: "scatter", mode: "markers+text", x: [0, p.x[0]], y: [0, 0], text: ["Moon", "start"], textposition: ["bottom center", "top center"], textfont: {color: t.ink2},
+      marker: {color: [t.moon, t.s[1]], size: [10, 9]}, hoverinfo: "text"},
+  ];
+  lay.annotations = [{x: m1, y: ext, text: "L1 exit", showarrow: false, yanchor: "bottom", font: {color: t.ink2, size: 11}},
+    {x: m2, y: ext, text: "L2 exit", showarrow: false, yanchor: "bottom", font: {color: t.ink2, size: 11}}];
+  Plotly.react("fig-fatepath", tr, lay, CFG);
+}
+register(fmDraw);
+["fmKind", "fmSense"].forEach((id) => $(id).addEventListener("change", fmDraw));
+$("fig-fatemap").on("plotly_click", (ev) => {
+  const p = ev.points[0]; if (p.curveNumber !== 0) return;
+  FM_SEL.j = FM.d_km.findIndex((v) => Math.abs(v / 1000 - p.x) < 1e-6); FM_SEL.i = FM.C.findIndex((v) => Math.abs(v - p.y) < 1e-9);
+  fmDraw();
+});
+
+/* ------------------------------------------------------------ Figure 15 */
+function fbDraw() {
+  const t = tok(), d = D.porkchop, metric = $("fbMetric").value;
+  const z = d.cells.map((row) => row.map((c) => (c ? (metric === "dv1" ? c.dv1 : metric === "vrel" ? c.dv2 : c.dv1 + c.dv2) : null)));
+  let bi = 0, bj = 0, bv = Infinity;
+  z.forEach((row, i) => row.forEach((v, j) => { if (v !== null && v < bv) { bv = v; bi = i; bj = j; } }));
+  const cs = t.seq.map((c, k) => [k / (t.seq.length - 1), c]);
+  const label = {dv1: "departure Δv [m/s]", vrel: "relative speed [m/s]", tot: "total Δv [m/s]"}[metric];
+  const tr = [{type: "heatmap", x: d.dep_d, y: d.tof_d, z, colorscale: cs, xgap: 1, ygap: 1, zmax: metric === "dv1" ? 800 : 2000,
+      colorbar: {title: {text: label, font: {color: t.ink2}}, tickfont: {color: t.ink2}, outlinecolor: t.grid},
+      hovertemplate: "depart day %{x:.1f}<br>flight %{y:.2f} d<br>%{z:,.0f} m/s<extra></extra>"},
+    {type: "scatter", mode: "markers+text", x: [d.dep_d[bj]], y: [d.tof_d[bi]], text: [`min ${fmt(bv)}`], textposition: "top center",
+      textfont: {color: t.ink}, marker: {size: 13, color: "rgba(0,0,0,0)", line: {color: t.s[1], width: 3}}, hoverinfo: "skip"}];
+  Plotly.react("fig-fbgrid", tr, layout2d(t, "departure time [days]", "time of flight [days]", {showlegend: false}), CFG);
+  const sw = TR.flyby.sweep, rt = sw.map((s, k) => {
+    const keep = s.t_h.map((v, i) => (Math.abs(v) <= 1 ? i : -1)).filter((i) => i >= 0);
+    return {type: "scatter", mode: "lines", x: keep.map((i) => s.t_h[i] * 60), y: keep.map((i) => Math.max(s.range_km[i], 0.05)),
+      name: `aim ${s.miss} km`, line: {color: t.s[k], width: 2}, hovertemplate: "%{x:.1f} min<br>%{y:,.1f} km<extra>aim " + s.miss + " km</extra>"};
+  });
+  Plotly.react("fig-fbrange", rt, layout2d(t, "minutes from closest approach", "range [km] (log)", {
+    yaxis: axis(t, "range to target [km] (log)", {type: "log"}), legend: {x: 0.5, xanchor: "center", y: 0.99, font: {color: t.ink}, bgcolor: t.surface}}), CFG);
+  let h = "<table><tr><th>Aimed miss [km]</th><th>True closest approach [km]</th><th>Departure Δv [m/s]</th><th>Relative speed [m/s]</th><th>Seconds within 100 km</th></tr>";
+  sw.forEach((s) => {
+    const inside = s.range_km.filter((r) => r <= 100).length, dt = (s.t_h[1] - s.t_h[0]) * 3600;
+    h += `<tr><td class="num">${s.miss}</td><td class="num">${s.ca.toFixed(2)}</td><td class="num">${s.dv1.toFixed(2)}</td><td class="num">${fmt(s.vrel, 1)}</td><td class="num">${fmt(inside * dt)}</td></tr>`;
+  });
+  const r = TR.flyby.return;
+  $("fbTable").innerHTML = h + `</table><p class="muted" style="font-size:13px">Getting home: after the 25 km flyby the cheapest return to the DRO found
+    (waiting ${r.wait_d.toFixed(0)} d, ${r.tof_d.toFixed(0)}-day transfer) costs ${fmt(r.dv1, 1)} + ${fmt(r.dv2, 1)} m/s. The flyby itself was cheap; undoing its
+    1 km/s of relative speed is not.</p>`;
+}
+register(fbDraw);
+$("fbMetric").addEventListener("change", fbDraw);
+
+/* ------------------------------------------------------------ Figure 16 */
+function tcDraw() {
+  const t = tok(), leg = $("tcLeg").value, k = +$("tcScale").value, d = TR.tcm[leg];
+  $("tcScaleLabel").textContent = leg === "leo" ? "Injection error per axis" : "Execution error ×";
+  $("tcScaleO").textContent = leg === "leo" ? `${k.toFixed(1)} m/s` : `${k.toFixed(1)} (= ${(k).toFixed(1)}% magnitude, ${(0.5 * k).toFixed(2)}° pointing)`;
+  const sc = (a) => a.map((v) => v * k);
+  const tr = [
+    {type: "scatter", mode: "lines", x: d.t_d, y: sc(d.mean), name: "mean", line: {color: t.s[0], width: 2}},
+    {type: "scatter", mode: "lines", x: d.t_d, y: sc(d.p99), name: "99th percentile", line: {color: t.s[1], width: 2.5}},
+    {type: "scatter", mode: "lines", x: d.t_d, y: sc(d.tot99), name: "p99 incl. change in arrival burn", line: {color: t.s[2], width: 2, dash: "dash"}},
+  ];
+  Plotly.react("fig-tcm", tr, layout2d(t, "TCM time after departure [days]", "TCM Δv [m/s] (log)", {
+    yaxis: axis(t, "TCM Δv [m/s] (log scale)", {type: "log"}), legend: {x: 0.01, y: 0.99, font: {color: t.ink}, bgcolor: t.surface},
+    hovermode: "x unified"}), CFG);
+  const L0 = TR.tcm.leo;
+  const hist = [{type: "histogram", x: L0.mc_total, nbinsx: 40, marker: {color: t.s[0], line: {color: t.surface, width: 1}}, name: "Monte Carlo runs",
+    hovertemplate: "%{x} m/s: %{y} runs<extra></extra>"}];
+  Plotly.react("fig-tcmmc", hist, layout2d(t, "total statistical Δv per run [m/s]", "runs", {showlegend: false,
+    shapes: [{type: "line", x0: L0.lin_single_05_tot99, x1: L0.lin_single_05_tot99, yref: "paper", y0: 0, y1: 1, line: {color: t.s[1], width: 2, dash: "dash"}},
+             {type: "line", x0: L0.mc_p99, x1: L0.mc_p99, yref: "paper", y0: 0, y1: 1, line: {color: t.ink, width: 2}}],
+    annotations: [{x: L0.lin_single_05_tot99, yref: "paper", y: 0.95, text: `linear p99 ${L0.lin_single_05_tot99.toFixed(1)}`, showarrow: false, xanchor: "right", font: {color: t.ink2, size: 11}},
+                  {x: L0.mc_p99, yref: "paper", y: 0.85, text: `Monte Carlo p99 ${L0.mc_p99.toFixed(1)}`, showarrow: false, xanchor: "left", font: {color: t.ink, size: 11}}],
+    title: {text: "LEO → NRHO, 1 m/s per axis, TCMs at day 0.5 and 3", font: {size: 13, color: t.ink}, x: 0.02}}), CFG);
+  const at = (day) => interp(day, d.t_d, d.p99) * k;
+  $("tcTiles").innerHTML = tileHtml([
+    ["Miss if never corrected (p99)", `${fmt(d.miss99_km * k)} <small>km</small>`],
+    ["TCM p99 at 6 h", `${at(0.25).toFixed(1)} <small>m/s</small>`],
+    ["at 1 day", `${at(1).toFixed(1)} <small>m/s</small>`],
+    ["at 2 days", `${at(2).toFixed(1)} <small>m/s</small>`],
+    ["Waiting 2 d instead of 6 h costs", `×${(at(2) / at(0.25)).toFixed(1)}`],
+  ]);
+}
+register(tcDraw);
+$("tcLeg").addEventListener("change", tcDraw);
+$("tcScale").addEventListener("input", tcDraw);
+
+/* ------------------------------------------------------------ Figure 17 */
+const SKO = [...new Set(TR.sk.map((r) => r.orbit))];
+TR.sk.filter((r) => r.hist).forEach((r, k) => { const o = document.createElement("option"); o.value = k; o.textContent = `${r.orbit}, every ${r.interval_d} d`; $("skHist").appendChild(o); });
+function skDraw() {
+  const t = tok(), tr = [];
+  SKO.filter((o) => !o.startsWith("DRO")).forEach((o, c) => {
+    const rows = TR.sk.filter((r) => r.orbit === o), ok = rows.filter((r) => r.mean !== null), lost = rows.filter((r) => r.mean === null);
+    tr.push({type: "scatter", mode: "lines+markers", x: ok.map((r) => r.interval_d), y: ok.map((r) => r.mean), name: o,
+      error_y: {type: "data", symmetric: false, array: ok.map((r) => r.p95 - r.mean), arrayminus: ok.map(() => 0), color: t.s[c], thickness: 1.5, width: 4},
+      line: {color: t.s[c], width: 2}, marker: {size: 7, color: t.s[c]},
+      customdata: ok.map((r) => [r.p95, r.burns_per_yr, r.maxdev_p95]),
+      hovertemplate: "every %{x} d: %{y:.2f} m/s/yr mean, %{customdata[0]:.2f} p95<br>%{customdata[1]:.0f} burns/yr, max deviation %{customdata[2]:.0f} km<extra>" + o + "</extra>"});
+    if (lost.length) tr.push({type: "scatter", mode: "markers", x: lost.map((r) => r.interval_d), y: lost.map(() => 40), name: `${o}: control lost`,
+      marker: {symbol: "x-thin", size: 12, line: {color: t.s[c], width: 3}}, hovertemplate: "every %{x} d: control lost<extra>" + o + "</extra>"});
+  });
+  const dro = TR.sk.find((r) => r.orbit.startsWith("DRO"));
+  Plotly.react("fig-sk", tr, layout2d(t, "tracking interval [days]", "station-keeping [m/s per year] (log)", {
+    yaxis: axis(t, "station-keeping [m/s per year] (log scale)", {type: "log"}),
+    legend: {orientation: "h", x: 0, y: 1.02, yanchor: "bottom", font: {color: t.ink, size: 11}}, margin: {l: 64, r: 16, t: 60, b: 50},
+    annotations: dro ? [{xref: "paper", yref: "paper", x: 0.99, y: 0.02, xanchor: "right", showarrow: false,
+      text: `DRO (stable): ${dro.mean.toFixed(2)} m/s/yr, no burns`, font: {color: t.ink2, size: 11}}] : []}), CFG);
+  const r = TR.sk.filter((x) => x.hist)[+$("skHist").value || 0];
+  const h = r.hist, ymax = Math.max(...h.dev_km);
+  Plotly.react("fig-skhist", [
+    {type: "scatter", mode: "lines", x: h.t_d, y: h.dev_km, name: "deviation", line: {color: t.s[0], width: 1.8}, hovertemplate: "day %{x:.1f}: %{y:.1f} km<extra></extra>"},
+    {type: "scatter", mode: "markers", x: h.burn_d, y: h.burn_d.map(() => ymax * 1.05), name: "burns", marker: {symbol: "triangle-down", size: 8, color: t.s[1]},
+      hovertemplate: "burn on day %{x:.1f}<extra></extra>"}],
+    layout2d(t, "days", "distance from the orbit's path [km]", {showlegend: true, legend: {x: 0.01, y: 0.99, font: {color: t.ink}, bgcolor: t.surface},
+      title: {text: `${r.orbit}, tracking every ${r.interval_d} d (one run)`, font: {size: 13, color: t.ink}, x: 0.02}}), CFG);
+}
+register(skDraw);
+$("skHist").addEventListener("change", skDraw);
+
+/* ------------------------------------------------------------ Figure 18 */
+TR.sk.filter((r) => r.orbit.startsWith("9:2") && r.mean !== null).forEach((r) => {
+  const o = document.createElement("option"); o.value = r.interval_d; o.textContent = `${r.interval_d} days`; if (r.interval_d === 6.56) o.selected = true; $("bgSkInt").appendChild(o);
+});
+TR.flyby.sweep.forEach((s) => { const o = document.createElement("option"); o.value = s.miss; o.textContent = `${s.miss} km`; if (s.miss === 25) o.selected = true; $("bgMiss").appendChild(o); });
+function bgDraw() {
+  const t = tok(), scen = $("bgScen").value, mar = +$("bgMar").value / 100;
+  $("bgCtlA").style.display = scen === "A" ? "" : "none"; $("bgCtlB").style.display = scen === "B" ? "" : "none";
+  $("bgMarO").textContent = `${(mar * 100).toFixed(0)}%`;
+  const items = [];
+  if (scen === "A") {
+    const sig = +$("bgSig").value, day = +$("bgTcmA").value, yrs = +$("bgYrs").value, iv = +$("bgSkInt").value;
+    $("bgSigO").textContent = `${sig.toFixed(1)} m/s`; $("bgYrsO").textContent = `${yrs}`;
+    const sk = TR.sk.find((r) => r.orbit.startsWith("9:2") && r.interval_d === iv);
+    items.push(["Trans-lunar injection (from LEO)", "deterministic", D.leo.dv1_mps, ""],
+      ["NRHO insertion", "deterministic", D.leo.dv2_mps, ""],
+      ["TCM", "statistical", interp(day, TR.tcm.leo.t_d, TR.tcm.leo.tot99) * sig, `p99, ${sig.toFixed(1)} m/s/axis injection error, TCM at day ${day}`],
+      ["NRHO station-keeping", "station-keeping", sk.p95 * yrs, `p95 ${sk.p95.toFixed(2)} m/s/yr × ${yrs} yr, tracking every ${iv} d`]);
+  } else {
+    const k = +$("bgExe").value, day = +$("bgTcmB").value, yrs = +$("bgYrsB").value, miss = +$("bgMiss").value;
+    $("bgExeO").textContent = `${k.toFixed(2)}`; $("bgYrsBO").textContent = `${yrs}`;
+    const s = TR.flyby.sweep.find((x) => x.miss === miss), r = TR.flyby.return, dro = TR.sk.find((x) => x.orbit.startsWith("DRO"));
+    items.push([`Outbound flyby departure (miss ${miss} km, passes at ${fmt(s.vrel)} m/s)`, "deterministic", s.dv1, ""],
+      ["Return departure", "deterministic", r.dv1, ""], ["Return arrival (DRO insertion)", "deterministic", r.dv2, ""],
+      ["Outbound TCM", "statistical", interp(day, TR.tcm.outbound.t_d, TR.tcm.outbound.tot99) * k, `p99, TCM at day ${day}`],
+      ["Return TCM", "statistical", interp(day, TR.tcm.return.t_d, TR.tcm.return.tot99) * k, `p99, TCM at day ${day}`],
+      ["DRO station-keeping", "station-keeping", dro.mean * yrs, "stable orbit: none needed"]);
+  }
+  const cats = ["deterministic", "statistical", "station-keeping"], sub = {};
+  cats.forEach((c) => { sub[c] = items.filter((i) => i[1] === c).reduce((a, i) => a + i[2], 0); });
+  sub.margin = mar * (sub.deterministic + sub.statistical + sub["station-keeping"]);
+  const total = sub.deterministic + sub.statistical + sub["station-keeping"] + sub.margin;
+  const colors = {deterministic: t.s[0], statistical: t.s[1], "station-keeping": t.s[2], margin: t.muted};
+  const tr = ["deterministic", "statistical", "station-keeping", "margin"].map((c) => ({type: "bar", orientation: "h", y: ["Δv"], x: [sub[c]], name: c,
+    marker: {color: colors[c], line: {color: t.surface, width: 2}}, hovertemplate: `${c}: %{x:,.1f} m/s<extra></extra>`}));
+  Plotly.react("fig-budget", tr, layout2d(t, "Δv [m/s]", "", {barmode: "stack", showlegend: true, margin: {l: 40, r: 16, t: 36, b: 46},
+    legend: {orientation: "h", x: 0, y: 1.05, yanchor: "bottom", font: {color: t.ink}, traceorder: "normal"}, yaxis: axis(t, "", {showticklabels: false})}), CFG);
+  $("bgTiles").innerHTML = tileHtml([["Total", `${fmt(total)} <small>m/s</small>`], ...["deterministic", "statistical", "station-keeping", "margin"].map((c) =>
+    [`<span class="status"><span class="dot" style="background:${colors[c]}"></span>${c}</span>`, `${fmt(sub[c], 1)} <small>m/s</small>`])]);
+  let h = "<table><tr><th>Item</th><th>Category</th><th>Δv [m/s]</th><th>Basis</th></tr>";
+  items.forEach((i) => { h += `<tr><td>${i[0]}</td><td>${i[1]}</td><td class="num">${fmt(i[2], 1)}</td><td>${i[3]}</td></tr>`; });
+  h += `<tr><td>Margin</td><td>margin</td><td class="num">${fmt(sub.margin, 1)}</td><td>${(mar * 100).toFixed(0)}% of the above</td></tr>`;
+  $("bgTable").innerHTML = h + `<tr><th>Total</th><th></th><th class="num">${fmt(total, 1)}</th><th></th></tr></table>`;
+}
+register(bgDraw);
+["bgScen", "bgTcmA", "bgSkInt", "bgTcmB", "bgMiss"].forEach((id) => $(id).addEventListener("change", bgDraw));
+["bgSig", "bgYrs", "bgExe", "bgYrsB", "bgMar"].forEach((id) => $(id).addEventListener("input", bgDraw));
+</script>
+</body>
+</html>
