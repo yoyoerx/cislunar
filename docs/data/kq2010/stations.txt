@@ -1,0 +1,14 @@
+# MPC observatory codes (https://www.minorplanetcenter.net/iau/lists/ObsCodes.html)
+# code  east_lon_deg  rho_cos_phi  rho_sin_phi  name
+291  248.40005  0.849476  +0.526475  LPL/Spacewatch II
+587    9.22918  0.697459  +0.714479  Sormano
+651  249.41916  0.852069  +0.522123  Grasslands Observatory, Tucson
+703  249.26736  0.845311  +0.533211  University of Arizona Catalina Sky Survey
+926  249.12090  0.853940  +0.519020  Tenagra II Observatory, Nogales
+E10  149.07085  0.855632  -0.516198  Siding Spring-Faulkes Telescope South
+E12  149.06420  0.855630  -0.516210  Siding Spring Survey
+F65  203.74250  0.936239  +0.351538  Haleakala-Faulkes Telescope North
+G96  249.21128  0.845107  +0.533611  University of Arizona Mt. Lemmon Survey
+H01  252.81067  0.830474  +0.556096  Magdalena Ridge Observatory, Socorro
+J13  342.12080  0.877630  +0.478510  La Palma-Liverpool Telescope
+J95  358.55301  0.624152  +0.778715  Great Shefford

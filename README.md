@@ -5,7 +5,7 @@ computing intercepts, rendezvous and RPOD approach sequences. The dynamics model
 is the Earth-Moon circular restricted three-body problem (CR3BP).
 See [architecture.md](architecture.md) for design and decisions.
 
-**Read online:** [user manual](https://yoyoerx.github.io/cislunar/manual.html) · [servicing base-station case study](https://yoyoerx.github.io/cislunar/case_study_base_stations.html) · [orbit determination from real astrometry: the Chang'e 5-T1 stage's lunar impact](https://yoyoerx.github.io/cislunar/case_study_change5t1.html) · [TESS: a stable resonant orbit from survey sightings](https://yoyoerx.github.io/cislunar/case_study_tess.html) · [rock or rocket? 2020 SO vs 2024 PT5](https://yoyoerx.github.io/cislunar/case_study_rock_or_rocket.html)
+**Read online:** [user manual](https://yoyoerx.github.io/cislunar/manual.html) · [servicing base-station case study](https://yoyoerx.github.io/cislunar/case_study_base_stations.html) · [orbit determination from real astrometry: the Chang'e 5-T1 stage's lunar impact](https://yoyoerx.github.io/cislunar/case_study_change5t1.html) · [TESS: a stable resonant orbit from survey sightings](https://yoyoerx.github.io/cislunar/case_study_tess.html) · [rock or rocket? 2020 SO vs 2024 PT5](https://yoyoerx.github.io/cislunar/case_study_rock_or_rocket.html) · [who launched 2010 KQ? an unidentified rocket stage](https://yoyoerx.github.io/cislunar/case_study_2010kq.html)
 
 ## Install
 
@@ -167,6 +167,14 @@ mini-moon) with the same pipeline and measures the sunlight push on each: C_r A/
 (Find_Orb: 0.0126), about 100 times that of 2024 PT5 (0.00013 +/- 0.00002, a ~10 m rock). It adds an angles-only
 range-scan IOD (`astrometry.range_scan_iod`) for objects where Gauss's method fails. Rebuild with
 `python docs/build_case_study_rock.py --rebuild` (~17 min). Data: `docs/data/rock_or_rocket/`.
+
+A fourth study, `docs/case_study_2010kq.html`, takes on an object nobody has identified: 2010 KQ, deleted from the asteroid
+catalogue in 2010 as an artificial object. The 2010 astrometry gives C_r A/m = 0.0077 +/- 0.0011 m^2/kg (Gray: 0.0077); the
+Tisserand parameter rules out Luna 1's stage; a cloud of 280 orbit clones run back to Sputnik (planets + relativity) and
+forward-flown models of each suspect stage point to the Proton Blok-D of a 1974 Soviet lunar launch (Luna 22 or Luna 23)
+and make Luna 4 very unlikely. Every clone returns in January 2036 and is captured again. It adds planets and relativity
+to `NBodyDynamics`, `close_approaches`, and an N-body Lambert solver (`ephemeris.shoot_velocity`). Rebuild with
+`python docs/build_case_study_kq.py --rebuild` (~5 h on 7 cores, resumable). Data: `docs/data/kq2010/`.
 
 ## Tests
 

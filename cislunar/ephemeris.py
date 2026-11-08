@@ -5,12 +5,14 @@ Moon and Sun (see architecture.md, ADR-27/28):
 
 * :class:`Ephemeris` - JPL Horizons geocentric ICRF vector tables, fetched once,
   cached as JSON and Hermite-interpolated.
-* time scales: UTC <-> TT/TDB Julian dates (leap seconds 2012-2026).
+* time scales: UTC <-> TT/TDB Julian dates (leap seconds 1972-2026).
 * Earth orientation: GMST/GAST, IAU-1976 precession, leading IAU-1980 nutation
   terms -> :func:`station_j2000` for MPC observatory parallax constants.
 * :func:`selenographic` - IAU (WGCCRE 2009) lunar rotation model.
 * :class:`NBodyDynamics` - Earth-centred J2000 point-mass Earth + Moon + Sun
-  (+ Earth J2) with state-transition matrix and Moon/Earth impact events.
+  (+ Earth J2, optional planets and solar radiation pressure) with
+  state-transition matrix, Moon/Earth impact events and a close-approach finder
+  for long (decades) propagations.
 * :class:`CR3BPInFrame` - the CR3BP aligned with the real Moon at an epoch, but
   exposing states in the same Earth-centred J2000 frame, so a CR3BP fit and an
   ephemeris fit of the same data can be compared like for like.
@@ -21,6 +23,7 @@ and measure time t from a reference TDB Julian date ``jd0``; they plug into
 """
 from __future__ import annotations
 
+import gzip
 import json
 from pathlib import Path
 from urllib.parse import urlencode
@@ -41,8 +44,17 @@ OMEGA_EARTH = 7.292115855e-5  # rad/s
 JD_J2000 = 2451545.0
 ARCSEC = np.pi / 648000.0
 HORIZONS_URL = "https://ssd.jpl.nasa.gov/api/horizons.api"
-# (first UTC JD the offset applies, TAI-UTC seconds)
-_LEAP = [(2456109.5, 35.0), (2457204.5, 36.0), (2457754.5, 37.0)]
+# (first UTC JD the offset applies, TAI-UTC seconds), 1972 Jan 1 onward (IERS Bulletin C)
+_LEAP = [(2441317.5, 10.0), (2441499.5, 11.0), (2441683.5, 12.0), (2442048.5, 13.0), (2442413.5, 14.0),
+         (2442778.5, 15.0), (2443144.5, 16.0), (2443509.5, 17.0), (2443874.5, 18.0), (2444239.5, 19.0),
+         (2444786.5, 20.0), (2445151.5, 21.0), (2445516.5, 22.0), (2446247.5, 23.0), (2447161.5, 24.0),
+         (2447892.5, 25.0), (2448257.5, 26.0), (2448804.5, 27.0), (2449169.5, 28.0), (2449534.5, 29.0),
+         (2450083.5, 30.0), (2450630.5, 31.0), (2451179.5, 32.0), (2453736.5, 33.0), (2454832.5, 34.0),
+         (2456109.5, 35.0), (2457204.5, 36.0), (2457754.5, 37.0)]
+# planetary GM [km^3/s^2] (DE440; system values for planets with moons) and Horizons IDs
+PLANETS = {"mercury": (22031.868551, "199"), "venus": (324858.592, "299"), "mars": (42828.375816, "4"),
+           "jupiter": (126712764.1, "5"), "saturn": (37940584.8418, "6"), "uranus": (5794556.4, "7"),
+           "neptune": (6836527.10058, "8")}
 
 
 # ---------------------------------------------------------------------------
@@ -60,8 +72,11 @@ def jd_from_calendar(year: int, month: int, day: float) -> float:
 
 
 def tai_minus_utc(jd_utc: float) -> float:
+    """TAI - UTC [s]. Before 1972 UTC used variable-length seconds; there the 1972
+    value (10 s) is returned, good to a few seconds, which is ample for dating
+    events decades back but not for reducing pre-1972 astrometry."""
     if jd_utc < _LEAP[0][0]:
-        raise ValueError("leap-second table starts 2012-07-01; extend ephemeris._LEAP")
+        return _LEAP[0][1]
     return [s for j, s in _LEAP if jd_utc >= j][-1]
 
 
@@ -234,23 +249,40 @@ class Ephemeris:
                    source=f"JPL Horizons {start} to {stop} step {step}, geocentric ICRF, TDB")
 
     def save(self, path) -> None:
+        """Write as JSON (gzip-compressed if the name ends in .gz)."""
         d = {"source": self.source,
              "tables": {k: {"jd_tdb": j.tolist(), "r_km": r.tolist(), "v_kms": v.tolist()}
                         for k, (j, r, v) in self.tables.items()}}
-        Path(path).write_text(json.dumps(d), encoding="utf-8")
+        text = json.dumps(d)
+        if str(path).endswith(".gz"):
+            with gzip.open(path, "wt", encoding="utf-8") as f:
+                f.write(text)
+        else:
+            Path(path).write_text(text, encoding="utf-8")
 
     @classmethod
     def load(cls, path) -> "Ephemeris":
-        d = json.loads(Path(path).read_text(encoding="utf-8"))
+        if str(path).endswith(".gz"):
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                d = json.loads(f.read())
+        else:
+            d = json.loads(Path(path).read_text(encoding="utf-8"))
         return cls({k: (v["jd_tdb"], v["r_km"], v["v_kms"]) for k, v in d["tables"].items()}, d["source"])
 
+    def merged(self, other: "Ephemeris") -> "Ephemeris":
+        """A new Ephemeris holding this one's tables plus ``other``'s (other wins on clashes)."""
+        return Ephemeris({**self.tables, **other.tables}, f"{self.source}; {other.source}")
+
     @classmethod
-    def cached(cls, path, start: str, stop: str, step: str = "1h") -> "Ephemeris":
-        """Load from ``path`` if present, else fetch from Horizons and save there."""
+    def cached(cls, path, start: str, stop: str, step: str = "1h", bodies=None) -> "Ephemeris":
+        """Load from ``path`` if present, else fetch from Horizons and save there.
+
+        ``bodies`` maps table names to Horizons IDs (default Moon and Sun; planets
+        are in :data:`PLANETS`, e.g. ``{"venus": "299"}``)."""
         p = Path(path)
         if p.exists():
             return cls.load(p)
-        eph = cls.fetch(start, stop, step)
+        eph = cls.fetch(start, stop, step, bodies)
         p.parent.mkdir(parents=True, exist_ok=True)
         eph.save(p)
         return eph
@@ -318,6 +350,13 @@ class NBodyDynamics:
     optional cannonball solar radiation pressure (``amr`` = C_r A/m in m^2/kg;
     no shadowing; left out of the STM partials).
 
+    ``planets`` names extra point-mass perturbers from :data:`PLANETS` (their
+    geocentric tables must be in ``eph``); needed for heliocentric arcs of years.
+    The Earth-centred frame stays exact for distant objects: every perturber's
+    pull on the Earth is subtracted (the indirect term). ``gr`` adds the Sun's
+    leading general-relativity term (Schwarzschild, PPN beta = gamma = 1), worth
+    ~1e4 km over a decade for an object near 1 AU.
+
     States are nondimensional (system L*, V*) J2000 Earth-centred; t is
     nondimensional time since TDB Julian date ``jd0``.
     """
@@ -325,7 +364,7 @@ class NBodyDynamics:
     frame = "J2000 Earth-centred"
 
     def __init__(self, eph: Ephemeris, jd0: float, system: System = EARTH_MOON, sun: bool = True,
-                 moon: bool = True, j2: bool = True, amr: float = 0.0):
+                 moon: bool = True, j2: bool = True, amr: float = 0.0, planets=(), gr: bool = False):
         self.eph, self.jd0, self.system = eph, float(jd0), system
         gm = system.gm1 + system.gm2
         self.mu_e = system.gm1 / gm
@@ -334,9 +373,14 @@ class NBodyDynamics:
             self.bodies.append(("moon", system.gm2 / gm))
         if sun:
             self.bodies.append(("sun", GM_SUN / gm))
+        for name in planets:
+            self.bodies.append((name, PLANETS[name][0] / gm))
         self.j2 = j2
         # solar radiation pressure: amr = C_r * area / mass [m^2/kg]; cannonball, no shadow
         self.amr = float(amr)
+        self.gr = bool(gr)
+        self._c2 = (C_KMS / system.vstar) ** 2
+        self._mu_sun = GM_SUN / gm
         acc_1au = SOLAR_PRESSURE_1AU * self.amr / 1000.0  # km/s^2 at 1 AU
         self._srp = acc_1au / (system.lstar / system.tstar**2) * (AU_KM / system.lstar) ** 2
         self.re = R_EARTH / system.lstar
@@ -356,7 +400,8 @@ class NBodyDynamics:
     def _perturbers(self, t):
         return [(mu, self.body_state(name, t)[:3]) for name, mu in self.bodies]
 
-    def accel(self, t, r):
+    def accel(self, t, r, v=None):
+        """Acceleration at position r (the relativity term needs the velocity v)."""
         rn = np.linalg.norm(r)
         a = -self.mu_e * r / rn**3
         if self.j2:
@@ -368,7 +413,21 @@ class NBodyDynamics:
             a = a + mu * (d / np.linalg.norm(d) ** 3 - rk / np.linalg.norm(rk) ** 3)
         if self.amr:
             a = a + self._srp_accel(t, r)
+        if self.gr and v is not None:
+            a = a + self._gr_accel(t, r, v)
         return a
+
+    def _gr_accel(self, t, r, v):
+        """Sun's Schwarzschild term on the object minus the same term on the Earth
+        (the Earth-centred frame accelerates with the Earth; leaving the Earth's
+        ~1.8e-13 km/s^2 term out forces ~1-year orbits resonantly)."""
+        sun = self.body_state("sun", t)
+        mu, c2 = self._mu_sun, self._c2
+
+        def term(rh, vh):
+            rn = np.linalg.norm(rh)
+            return mu / (c2 * rn**3) * ((4 * mu / rn - vh @ vh) * rh + 4 * (rh @ vh) * vh)
+        return term(r - sun[:3], v - sun[3:]) - term(-sun[:3], -sun[3:])
 
     def _srp_accel(self, t, r):
         d = r - self.body_state("sun", t)[:3]
@@ -381,6 +440,8 @@ class NBodyDynamics:
         a = -self.mu_e * r / rn**3
         if self.amr:
             a = a + self._srp_accel(t, r)
+        if self.gr:
+            a = a + self._gr_accel(t, r, v)
         if self.j2:
             z2 = (r[2] / rn) ** 2
             k = -1.5 * J2_EARTH * self.mu_e * self.re**2 / rn**5
@@ -449,6 +510,92 @@ class NBodyDynamics:
                     break
         t = np.linspace(t0, t_end, n_points)
         return t, sol.sol(t).T, impact
+
+
+    def close_approaches(self, x0, t0: float, t1: float, r_max_km=5.0e6, body="earth",
+                         rtol: float = 1e-10, max_step_days: float | None = None, times=None):
+        """Propagate from t0 to t1 (either direction; no STM) and list every local
+        minimum of the distance to ``body`` closer than ``r_max_km``.
+
+        ``body`` is "earth", a table name such as "moon", or a tuple of them (then
+        ``r_max_km`` may be a matching tuple). Returns (approaches, x1, impact):
+        approaches is a list of dicts with body, t, jd_tdb, r_km and the state x
+        at each minimum, in time order of the integration; x1 is the final state;
+        impact is None or {"body", "jd_tdb"} if the run hit the Earth or Moon.
+        With ``times`` (nondim, inside [t0, t1]) the second item is instead the
+        array of states at those times (rows of NaN past an impact).
+        """
+        bodies = (body,) if isinstance(body, str) else tuple(body)
+        limits = (r_max_km,) * len(bodies) if np.isscalar(r_max_km) else tuple(r_max_km)
+
+        def rel(name, t, y):
+            if name == "earth":
+                return y[:3], y[3:6]
+            b = self.body_state(name, t)
+            return y[:3] - b[:3], y[3:6] - b[3:]
+
+        def make(name):
+            def rdot(t, y, *a):
+                r, v = rel(name, t, y)
+                return float(np.dot(r, v))
+            # r.v crosses zero upward (in time) at a minimum; integrating backwards
+            # the solver sees it crossing downward
+            rdot.direction = 1.0 if t1 > t0 else -1.0
+            return rdot
+        evs = [make(n) for n in bodies]
+        imp = self._events()
+        kw = {}
+        if max_step_days:
+            kw["max_step"] = float(self.system.nd_time_days(max_step_days))
+        if times is not None:
+            times = np.asarray(times, float)
+            order = np.argsort(times) if t1 > t0 else np.argsort(-times)
+            kw["t_eval"] = times[order]
+        sol = solve_ivp(self._rhs, (t0, t1), np.asarray(x0, float), method="DOP853", rtol=rtol,
+                        atol=rtol * 1e-2, args=(False,), events=evs + imp, **kw)
+        out = []
+        for name, lim, tes, yes in zip(bodies, limits, sol.t_events, sol.y_events):
+            for te, ye in zip(tes, yes):
+                r = self.system.km(np.linalg.norm(rel(name, te, ye)[0]))
+                if r < lim:
+                    out.append({"body": name, "t": float(te), "jd_tdb": float(self.jd(te)), "r_km": float(r),
+                                "x": ye.copy()})
+        out.sort(key=lambda c: c["t"], reverse=t1 < t0)
+        impact = None
+        if sol.status == 1:
+            for ev, te in zip(imp, sol.t_events[len(bodies):]):
+                if len(te):
+                    impact = {"body": ev.__name__.replace("hit_", ""), "jd_tdb": float(self.jd(te[0]))}
+        if times is None:
+            return out, sol.y[:, -1].copy(), impact
+        X = np.full((len(times), 6), np.nan)
+        Y = np.asarray(sol.y, float).reshape(6, -1)  # empty if an impact came before the first sample
+        X[order[:Y.shape[1]]] = Y.T
+        return out, X, impact
+
+
+def shoot_velocity(dyn, r0, v_guess, t0: float, t1: float, r_target, tol_km: float = 0.1, max_iter: int = 30):
+    """Velocity at (r0, t0) whose trajectory under ``dyn`` reaches r_target at t1
+    (Newton iteration on the state-transition matrix; an N-body Lambert solver).
+
+    r0, v_guess, r_target are nondimensional (dyn units). Returns (v0, miss_km).
+    Use dynamics without the target body's gravity when aiming at a point near it.
+    """
+    r0 = np.asarray(r0, float)
+    v = np.asarray(v_guess, float).copy()
+    target = np.asarray(r_target, float)
+    miss = np.inf
+    for _ in range(max_iter):
+        (x1, phi), = dyn.propagate_many(np.concatenate((r0, v)), t0, [t1], with_stm=True)
+        d = x1[:3] - target
+        miss = float(dyn.system.km(np.linalg.norm(d)))
+        if miss < tol_km:
+            break
+        dv = np.linalg.solve(phi[:3, 3:], -d)
+        step = np.linalg.norm(dv)
+        lim = 0.2 * np.linalg.norm(v)
+        v = v + (dv if step < lim else dv * lim / step)
+    return v, miss
 
 
 class CR3BPInFrame:

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case study: who launched 2010 KQ?</title>
+<style>/*__CSS__*/
+.small { font-size: 13px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.src { font-size: 13px; color: var(--ink2); }
+td.yes { color: var(--s3); font-weight: 600; } td.no { color: var(--critical); font-weight: 600; } td.maybe { color: var(--ink2); font-weight: 600; }
+</style>
+<script>/*__PLOTLY__*/</script>
+</head>
+<body>
+<header class="top">
+  <span class="brand">cislunar</span><span class="ver">case study &middot; who launched 2010 KQ? &middot; v__VERSION__</span>
+  <button id="themeBtn" type="button">Toggle dark mode</button>
+</header>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+<ol>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#mystery">The mystery</a></li>
+  <li><a href="#data">The observations</a></li>
+  <li><a href="#fit">The 2010 orbit</a></li>
+  <li><a href="#model">A model good for 50 years</a></li>
+  <li><a href="#1975">Back to 1975</a></li>
+  <li><a href="#luna1">Suspect: Luna 1</a></li>
+  <li><a href="#cloud">A cloud of possible pasts</a></li>
+  <li><a href="#suspects">Flying the suspects forward</a></li>
+  <li><a href="#verdict">Verdict</a></li>
+  <li><a href="#future">When it comes back</a></li>
+  <li><a href="#limits">Limits</a></li>
+  <li><a href="#reproduce">Reproduce it</a></li>
+</ol>
+</nav>
+<main>
+
+<section id="summary">
+<h1>Who launched 2010 KQ? Tracing an unidentified rocket stage back to its launch</h1>
+<p class="lede">In May 2010 a survey telescope found a faint object a few metres across, circling the Sun on an orbit almost identical to the
+Earth's. Sunlight pushed it around too easily for a rock, and its colours matched weathered white paint. The Minor Planet Center deleted it from
+the asteroid catalogue as artificial. Sixteen years later nobody has said for certain which launch it came from. This case study takes the public
+2010 observations, rebuilds the orbit with the <code>cislunar</code> toolkit, runs hundreds of possible orbits back to the start of the space age,
+and puts each published suspect on trial.</p>
+<div class="callout"><span class="tag">Headline results</span><div id="headline"></div></div>
+</section>
+
+<section id="mystery">
+<h2>1. The mystery</h2>
+<p>2010 KQ was found by the Catalina Sky Survey on 2010 May 16, five days before it passed 490,000 km from the Earth. Its orbit around the
+Sun had a period of 1.04 years, an eccentricity below 0.01 and an inclination of 0.07&deg;, which is suspicious: a natural object on such an
+orbit would collide with the Earth within a few thousand years. JPL's Paul Chodas and Project Pluto's Bill Gray traced it back to a close pass by the
+Earth in the spring of 1975. Infrared spectra by S.&nbsp;J. Bus and filter colours by Richard Miles did not match any asteroid type; Miles found
+they matched white titanium-dioxide paint aged by sunlight, as measured on NASA's Long Duration Exposure Facility. In early July 2010 Miles's own
+astrometry showed that purely gravitational orbits no longer fitted, and the Minor Planet Center deleted the "asteroid" (MPEC 2010-N23).</p>
+<p>Two candidate launches were then tried and discarded, and three remained:</p>
+<div id="suspectTable"></div>
+<p>Miles concluded (2011) that it is "highly likely" the final stage of a Soviet Moon probe, from Luna 1, Luna 4 or Luna 23, and could not narrow
+it further. Wikipedia's Luna 23 article now says it is "believed to be" that mission's rocket. This study asks whether the orbit itself can say
+which.</p>
+<p class="src">Sources: <a href="https://www.projectpluto.com/pluto/mpecs/rk.htm">Project Pluto pseudo-MPEC for 2010 KQ = RK252A5</a> (Gray, 2010, with the
+astrometry); R. Miles, <a href="https://articles.adsabs.harvard.edu/pdf/2011JBAA..121..350M">J. Br. Astron. Assoc. 121, 350 (2011)</a>; launch facts
+from Wikipedia (Luna 1, 4, 22, 23; Blok D). Everything outside sections 3&ndash;11 is from published reports, not from this analysis.</p>
+</section>
+
+<section id="data">
+<h2>2. The observations</h2>
+<p id="dataText"></p>
+<div class="figure">
+  <div class="ftitle">Figure 1. Who observed 2010 KQ, and when</div>
+  <div class="fsub">Each dot is one position measurement, by observatory. Perigee (closest approach) was on May 21.</div>
+  <div id="fig-timeline" class="plot short"></div>
+</div>
+</section>
+
+<section id="fit">
+<h2>3. The 2010 orbit</h2>
+<p id="fitText"></p>
+<div class="figure">
+  <div class="ftitle">Figure 2. How hard does sunlight push?</div>
+  <div class="fsub">The orbit is refitted with the sunlight push held at each value; the lower the curve, the better the fit. The parabola's minimum is
+  the measurement, and where it rises by 1 is the 1&sigma; range.</div>
+  <div id="fig-profile" class="plot short"></div>
+</div>
+<div id="fitTable"></div>
+</section>
+
+<section id="model">
+<h2>4. A model good for 50 years</h2>
+<p>Running an orbit back 35 years is a different job from fitting 5 weeks of data: the planets matter, and so does a subtle effect of relativity. Before
+trusting any of it, the same code was run backwards from 2010 for two natural asteroids whose orbits JPL knows well from decades of data, and
+compared with JPL's positions.</p>
+<div class="figure">
+  <div class="ftitle">Figure 3. Error of the backward run against JPL, without and with relativity</div>
+  <div class="fsub">3753 Cruithne and 1991 VG, run back from 2010 June 1 with all eight planets. Log scale. 1991 VG passed 460,000 km from the
+  Earth in December 1991, which amplifies earlier errors, so its curve stops there.</div>
+  <div id="fig-valid" class="plot short"></div>
+</div>
+<p id="validText"></p>
+</section>
+
+<section id="1975">
+<h2>5. Back to 1975</h2>
+<p id="encText"></p>
+<div class="figure">
+  <div class="ftitle">Figure 4. The 1975 close approach, for hundreds of orbits that all fit the 2010 data</div>
+  <div class="fsub">Each dot is one "clone": an orbit drawn at random from the fit's uncertainty, including the uncertainty in the sunlight push (colour).
+  Boxes: Gray's two published solutions (June 2010, from the same data as here; July 2010, adding Miles's later observations).</div>
+  <div id="fig-enc" class="plot short"></div>
+</div>
+</section>
+
+<section id="luna1">
+<h2>6. Suspect: Luna 1 (1959)</h2>
+<p id="luna1Text"></p>
+<div class="figure">
+  <div class="ftitle">Figure 5. A quantity that close encounters cannot change</div>
+  <div class="fsub">The Tisserand parameter of 2010 KQ's orbit relative to the Earth, year by year, back to 1958 (nominal orbit). The line is Luna 1's
+  stage. A pass by the Earth leaves this number almost unchanged; a value of exactly 3 means "barely moving relative to the Earth".</div>
+  <div id="fig-tiss" class="plot short"></div>
+</div>
+</section>
+
+<section id="cloud">
+<h2>7. A cloud of possible pasts</h2>
+<p id="cloudText1"></p>
+<div class="tiles" id="cloudTiles"></div>
+<div class="figure">
+  <div class="ftitle">Figure 6. Where was 2010 KQ? The whole cloud, 1957&ndash;2010</div>
+  <div class="fsub">Share of clones bound to the Earth (inside its sphere of influence, on a closed orbit), in orbit around the Sun, or not yet
+  launched (their backward run reached the ground).</div>
+  <div id="fig-frac" class="plot short"></div>
+</div>
+<div class="figure">
+  <div class="ftitle">Figure 7. Before the 1975 escape: distance from the Earth for a few clones</div>
+  <div class="fsub">Some clones arrive from solar orbit for a single pass; others loop around the Earth for months; some of those trace back to the ground.
+  The dotted black line is a simulated suspect stage, flown forward from its launch, that ends up where 2010 KQ did (section 8).
+  Log scale; the dashed line is the edge of the Earth's sphere of influence (1.5 million km).</div>
+  <div id="fig-examples" class="plot short"></div>
+</div>
+<p id="cloudText2"></p>
+</section>
+
+<section id="suspects">
+<h2>8. Flying the suspects forward</h2>
+<p id="susText1"></p>
+<div id="susRefTable"></div>
+<div class="figure">
+  <div class="ftitle">Figure 8. What happens to each suspect's stage after it passes the Moon</div>
+  <div class="fsub">Each dot is one simulated stage: lunar miss distance against the date it finally left the Earth's sphere of influence. Stages
+  that hit the Moon or the Earth, or never left before 1976, sit at the top or bottom. The band is when 2010 KQ left.</div>
+  <div id="fig-sus" class="plot tall"></div>
+</div>
+<div class="figure">
+  <div class="ftitle">Figure 9. Orbits around the Sun after escaping: suspects against 2010 KQ</div>
+  <div class="fsub">Semi-major axis and eccentricity on 1976 January 1 for every simulated stage that had escaped by then, and for the 2010 KQ clones.</div>
+  <div id="fig-ae" class="plot short"></div>
+</div>
+<p id="susText2"></p>
+</section>
+
+<section id="verdict">
+<h2>9. Verdict</h2>
+<div id="verdictTable"></div>
+<p id="verdictText"></p>
+</section>
+
+<section id="future">
+<h2>10. When it comes back</h2>
+<p id="futureText"></p>
+<div class="figure">
+  <div class="ftitle">Figure 10. The next close approach, for clones run forward from 2010</div>
+  <div class="fsub">Closest approach to the Earth between 2011 and 2049, against date. Colour: sunlight push.</div>
+  <div id="fig-future" class="plot short"></div>
+</div>
+</section>
+
+<section id="limits">
+<h2>11. Limits</h2>
+<ul id="limitsList"></ul>
+</section>
+
+<section id="reproduce">
+<h2>12. Reproduce it</h2>
+<pre><code>python docs/data/kq2010/fetch_data.py         # once: astrometry, stations, JPL tables (results are committed)
+python docs/build_case_study_kq.py --rebuild     # about 4 hours on 7 cores, offline, resumable</code></pre>
+<p>Data with sources and fetch dates: <code>docs/data/kq2010/</code>. New toolkit pieces used here: planets and relativity in
+<code>ephemeris.NBodyDynamics</code> (<code>planets=</code>, <code>gr=True</code>), <code>NBodyDynamics.close_approaches</code>,
+<code>ephemeris.shoot_velocity</code> (an N-body Lambert solver), leap seconds back to 1972 and compressed ephemeris tables. The suspect simulator is
+<code>docs/kq_suspects.py</code>.</p>
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+const D = /*__DATA__*/null;
+const CFG = {displaylogo: false, responsive: true, modeBarButtonsToRemove: ["select2d", "lasso2d"]};
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 0) => Number(v).toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
+function tok() {
+  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim();
+  return {surface: g("--surface"), ink: g("--ink"), ink2: g("--ink2"), muted: g("--muted"), grid: g("--grid"), axis: g("--axis"),
+    earth: g("--earth"), moon: g("--moon"), s: [g("--s1"), g("--s2"), g("--s3"), g("--s4"), g("--s5"), g("--s6")], critical: g("--critical")};
+}
+const charts = [];
+function register(fn) { charts.push(fn); fn(); }
+$("themeBtn").addEventListener("click", () => {
+  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
+  document.documentElement.dataset.theme = dark ? "light" : "dark"; charts.forEach((f) => f());
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => charts.forEach((f) => f()));
+function axis(t, title, extra = {}) {
+  return Object.assign({title: {text: title, font: {color: t.ink2, size: 13}}, gridcolor: t.grid, zerolinecolor: t.axis,
+    linecolor: t.axis, tickfont: {color: t.ink2, size: 11}}, extra);
+}
+function layout2d(t, xt, yt, extra = {}) {
+  return Object.assign({paper_bgcolor: t.surface, plot_bgcolor: t.surface, font: {family: "system-ui, -apple-system, Segoe UI, sans-serif", color: t.ink, size: 12},
+    margin: {l: 64, r: 16, t: 20, b: 50}, xaxis: axis(t, xt), yaxis: axis(t, yt), legend: {font: {color: t.ink}, bgcolor: "rgba(0,0,0,0)"}}, extra);
+}
+const tileHtml = (rows) => rows.map(([a, b]) => `<div class="tile"><div class="k">${a}</div><div class="v">${b}</div></div>`).join("");
+const table = (head, rows, num = []) => `<table><thead><tr>${head.map((h, i) => `<th${num.includes(i) ? ' class="num"' : ""}>${h}</th>`).join("")}</tr></thead><tbody>` +
+  rows.map((r) => `<tr>${r.map((c, i) => `<td${num.includes(i) ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+const pct = (x) => `${fmt(100 * x, x < 0.1 ? 1 : 0)}%`;
+const median = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : NaN; };
+const AMR = D.fit.amr, AMRS = D.fit.amr_sigma, REF = D.ref, G1 = REF.gray_2010_06_25, G2 = REF.gray_2010_07_06;
+const ROWS = D.back.rows, N = ROWS.length;
+const count = (f) => ROWS.filter(f).length;
+const SUS = D.suspects, META = D.suspect_meta;
+const SUSKEYS = Object.keys(SUS);
+const ESC = D.kq.escape.filter((x) => x).sort();
+const KQ76 = D.kq.el76_stats;
+const amrScale = (t) => [[0, t.s[0]], [0.5, t.s[4]], [1, t.s[1]]];
+
+/*__TEXTS__*/
+
+register(function timeline() {
+  const t = tok(), R = D.fit.resid, st = [...new Set(R.st)].sort();
+  Plotly.react("fig-timeline", [{type: "scatter", mode: "markers", x: R.t_d.map((d) => new Date(Date.parse(D.fit.first_utc + "T00:00:00Z") + d * 864e5).toISOString().slice(0, 16)),
+    y: R.st, marker: {color: t.s[0], size: 6, opacity: 0.7}, hovertemplate: "%{y}: %{x}<extra></extra>"}],
+    layout2d(t, "date (2010)", "observatory code", {showlegend: false, yaxis: axis(t, "observatory code", {categoryorder: "array", categoryarray: st}),
+      shapes: [{type: "line", x0: "2010-05-21 07:15", x1: "2010-05-21 07:15", yref: "paper", y0: 0, y1: 1, line: {color: t.ink2, dash: "dash", width: 1}}]}), CFG);
+});
+register(function profile() {
+  const t = tok(), c0 = Math.min(...D.profile.map((p) => p.chi2));
+  Plotly.react("fig-profile", [{type: "scatter", mode: "lines+markers", x: D.profile.map((p) => p.amr), y: D.profile.map((p) => p.chi2 - c0),
+    line: {color: t.s[1], width: 2}, hovertemplate: "C<sub>r</sub>A/m %{x}: Δχ² %{y:.1f}<extra></extra>"}],
+    layout2d(t, "C<sub>r</sub>A/m held fixed [m²/kg]", "Δχ² (worse fit →)", {showlegend: false,
+      shapes: [{type: "rect", x0: AMR - AMRS, x1: AMR + AMRS, yref: "paper", y0: 0, y1: 1, fillcolor: t.s[1], opacity: 0.15, line: {width: 0}}]}), CFG);
+});
+register(function valid() {
+  const t = tok(), tr = [];
+  D.validation.forEach((v) => {
+    const i = v.label.startsWith("1991") ? 0 : 1;
+    const keep = v.date.map((d, k) => !(i === 0 && d < "1992-01-01") ? k : -1).filter((k) => k >= 0);
+    tr.push({type: "scatter", mode: "lines+markers", name: `${v.label}, ${v.gr ? "with" : "without"} relativity`, x: keep.map((k) => v.date[k]),
+      y: keep.map((k) => Math.max(v.err_km[k], 1)), line: {color: t.s[i], width: 2, dash: v.gr ? "solid" : "dot"}, marker: {size: 5}});
+  });
+  Plotly.react("fig-valid", tr, layout2d(t, "date", "error against JPL [km]", {yaxis: axis(t, "error against JPL [km]", {type: "log"}),
+    legend: {x: 0.01, y: 0.01, yanchor: "bottom", font: {color: t.ink}}}), CFG);
+});
+register(function enc() {
+  const t = tok(), ok = ROWS.filter((r) => r.enc_date);
+  const box = (g, c) => ({type: "rect", x0: new Date(Date.parse(g.date + "T00:00:00Z") - g.date_sigma_days * 864e5).toISOString().slice(0, 10),
+    x1: new Date(Date.parse(g.date + "T00:00:00Z") + g.date_sigma_days * 864e5).toISOString().slice(0, 10),
+    y0: (g.r_km - g.r_sigma_km) / 1e3, y1: (g.r_km + g.r_sigma_km) / 1e3, line: {color: c, width: 2}, fillcolor: "rgba(0,0,0,0)"});
+  Plotly.react("fig-enc", [{type: "scatter", mode: "markers", x: ok.map((r) => r.enc_date), y: ok.map((r) => r.enc_r_km / 1e3),
+    marker: {color: ok.map((r) => r.amr), colorscale: amrScale(t), size: 7, opacity: 0.8, colorbar: {title: {text: "C<sub>r</sub>A/m", font: {color: t.ink2}}, tickfont: {color: t.ink2}}},
+    customdata: ok.map((r) => [r.amr, r.cat]), hovertemplate: "%{x}: %{y:.0f} thousand km<br>C<sub>r</sub>A/m %{customdata[0]:.4f}<extra></extra>"}],
+    layout2d(t, "date of closest approach (1975)", "distance [thousand km]", {showlegend: false, yaxis: axis(t, "distance [thousand km]", {type: "log"}),
+      shapes: [box(G1.encounter_1975, t.ink2), box(G2.encounter_1975, t.critical)],
+      annotations: [{x: G1.encounter_1975.date, y: Math.log10((G1.encounter_1975.r_km + G1.encounter_1975.r_sigma_km) / 1e3), text: "Gray, June 2010", showarrow: false, yanchor: "bottom", font: {size: 11, color: t.ink2}},
+        {x: G2.encounter_1975.date, y: Math.log10((G2.encounter_1975.r_km - G2.encounter_1975.r_sigma_km) / 1e3), text: "Gray, July 2010", showarrow: false, yanchor: "top", font: {size: 11, color: t.critical}}]}), CFG);
+});
+register(function tiss() {
+  const t = tok(), T = D.tisserand;
+  Plotly.react("fig-tiss", [{type: "scatter", mode: "lines+markers", name: "2010 KQ (nominal orbit)", x: T.date, y: T.T, line: {color: t.s[1], width: 2}, marker: {size: 4}}],
+    layout2d(t, "date", "Tisserand parameter w.r.t. the Earth", {legend: {x: 0.01, y: 0.5, font: {color: t.ink}},
+      yaxis: axis(t, "Tisserand parameter w.r.t. the Earth", {range: [2.988, 3.002]}),
+      shapes: [{type: "line", xref: "paper", x0: 0, x1: 1, y0: D.luna1_T, y1: D.luna1_T, line: {color: t.critical, dash: "dash", width: 2}}],
+      annotations: [{xref: "paper", x: 0.99, y: D.luna1_T, text: "Luna 1 stage (0.978 × 1.318 AU)", showarrow: false, xanchor: "right", yanchor: "bottom", font: {size: 11, color: t.critical}}]}), CFG);
+});
+register(function frac() {
+  const t = tok(), F = D.back.frac;
+  const tr = [["bound", "bound to the Earth", t.s[1]], ["ground", "not yet launched", t.muted], ["solar", "in orbit around the Sun", t.s[0]]].map(([k, name, c]) => ({
+    type: "scatter", mode: "lines", stackgroup: "one", name, x: F.date, y: F[k], line: {color: c, width: 0.5}, fillcolor: c, hovertemplate: `${name}: %{y:.1%}<extra></extra>`}));
+  const lines = Object.entries(D.candidates).filter(([k]) => k !== "helios1").map(([k, d]) => ({type: "line", x0: d, x1: d, yref: "paper", y0: 0, y1: 1, line: {color: t.ink, width: 1, dash: "dot"}}));
+  const ann = Object.entries(D.candidates).filter(([k]) => k !== "helios1").map(([k, d], i) => ({x: d, yref: "paper", y: 1.02, text: k.replace("luna", "Luna "), showarrow: false,
+    xanchor: k === "luna22" ? "right" : k === "luna23" ? "left" : "center", font: {size: 10, color: t.ink2}}));
+  Plotly.react("fig-frac", tr, layout2d(t, "date (drag to zoom; double-click for 1957–2010)", "share of clones", {yaxis: axis(t, "share of clones", {range: [0, 1], tickformat: ".0%"}),
+    xaxis: axis(t, "date (drag to zoom; double-click for 1957–2010)", {range: ["1957-10-01", "1976-07-01"]}),
+    legend: {orientation: "h", y: -0.25, font: {color: t.ink}}, shapes: lines, annotations: ann, margin: {l: 64, r: 16, t: 40, b: 70}}), CFG);
+});
+register(function examples() {
+  const t = tok(), col = {solar: t.s[0], launch1974: t.s[1], bound1957: t.s[2], moon: t.s[3]};
+  const kname = (k) => k.startsWith("launch") ? "traces to the ground" : k === "solar" ? "from solar orbit" : k === "bound1957" ? "bound to the Earth since before 1957" : k;
+  const tr = D.back.examples.map((e) => ({type: "scatter", mode: "lines", name: `clone ${e.i}: ${kname(e.kind)} (A/m ${fmt(e.amr, 4)})`,
+    x: e.date, y: e.r_km.map((v) => v === null ? null : v / 1e6), line: {color: col[e.kind] || t.s[4], width: 1.5}}));
+  (D.suspect_matches || []).forEach((m) => tr.push({type: "scatter", mode: "lines", name: `simulated ${META[m.key].label} stage (variant ${m.n}) that reproduces 2010 KQ`,
+    x: m.date, y: m.r_km.map((v) => v === null ? null : v / 1e6), line: {color: t.ink, width: 2.5, dash: "dot"}}));
+  Plotly.react("fig-examples", tr, layout2d(t, "date", "distance from Earth [million km]", {yaxis: axis(t, "distance from Earth [million km]", {type: "log"}),
+    legend: {orientation: "h", y: -0.32, font: {color: t.ink}}, margin: {l: 64, r: 16, t: 20, b: 120},
+    shapes: [{type: "line", xref: "paper", x0: 0, x1: 1, y0: D.r_hill_km / 1e6, y1: D.r_hill_km / 1e6, line: {color: t.ink2, dash: "dash", width: 1}}]}), CFG);
+});
+register(function sus() {
+  const t = tok(), tr = [];
+  SUSKEYS.forEach((k, i) => {
+    const rows = SUS[k];
+    const y = rows.map((r) => r.escape ? r.escape : r.impact ? "1962-01-01" : "1976-06-01");
+    tr.push({type: "scatter", mode: "markers", name: META[k].label, x: rows.map((r) => r.moon_pass ? r.moon_pass.r_km / 1e3 : null), y,
+      marker: {color: t.s[[2, 3, 1][i % 3]], size: 6, opacity: 0.75, symbol: rows.map((r) => r.match ? "star" : r.impact ? "x" : "circle")},
+      customdata: rows.map((r) => [r.impact ? `(hit the ${r.impact})` : "", r.impact ? "" : (r.escape || "not before 1976")]), hovertemplate: `${META[k].label}<br>Moon at %{x:.0f} thousand km<br>left: %{customdata[1]} %{customdata[0]}<extra></extra>`});
+  });
+  Plotly.react("fig-sus", tr, layout2d(t, "closest approach to the Moon [thousand km]", "date the stage left the Earth's sphere of influence", {
+    legend: {orientation: "h", y: -0.18, font: {color: t.ink}}, margin: {l: 80, r: 16, t: 20, b: 80},
+    yaxis: axis(t, "date the stage left the Earth's sphere of influence", {range: ["1961-06-01", "1977-01-01"]}),
+    shapes: ESC.length ? [{type: "rect", xref: "paper", x0: 0, x1: 1, y0: ESC[Math.floor(ESC.length * 0.05)], y1: ESC[Math.floor(ESC.length * 0.95)], fillcolor: t.s[1], opacity: 0.35, line: {width: 0}}] : [],
+    annotations: [{xref: "paper", x: 1, y: "1976-06-01", text: "still bound at the end of 1975", showarrow: false, xanchor: "right", yanchor: "bottom", font: {size: 11, color: t.ink2}},
+      {xref: "paper", x: 1, y: "1962-01-01", text: "hit the Earth (×) or the Moon", showarrow: false, xanchor: "right", yanchor: "bottom", font: {size: 11, color: t.ink2}},
+      {xref: "paper", x: 0, y: ESC.length ? ESC[Math.floor(ESC.length * 0.5)] : "1975-05-15", text: "2010 KQ left (May 1975)", showarrow: false, xanchor: "left", yanchor: "bottom", font: {size: 11, color: t.s[1]}}]}), CFG);
+});
+register(function ae() {
+  const t = tok(), tr = [{type: "scatter", mode: "markers", name: "2010 KQ clones", x: D.kq.el76.map((d) => d.a), y: D.kq.el76.map((d) => d.e), marker: {color: t.s[1], size: 5, opacity: 0.5}}];
+  SUSKEYS.forEach((k, i) => {
+    const rows = SUS[k].filter((r) => r.el76);
+    tr.push({type: "scatter", mode: "markers", name: META[k].label, x: rows.map((r) => r.el76.a), y: rows.map((r) => r.el76.e),
+      marker: {color: t.s[[2, 3, 0][i % 3]], size: 7, symbol: rows.map((r) => r.match ? "star" : "circle-open")}});
+  });
+  Plotly.react("fig-ae", tr, layout2d(t, "semi-major axis [AU]", "eccentricity", {legend: {orientation: "h", y: -0.25, font: {color: t.ink}}, margin: {l: 64, r: 16, t: 20, b: 80}}), CFG);
+});
+register(function future() {
+  const t = tok(), F = D.forward.filter((r) => r.closest_date);
+  Plotly.react("fig-future", [{type: "scatter", mode: "markers", x: F.map((r) => r.closest_date), y: F.map((r) => r.closest_r_km / 1e3),
+    marker: {color: F.map((r) => r.amr), colorscale: amrScale(t), size: 7, opacity: 0.8, symbol: F.map((r) => r.impact ? "x" : "circle"),
+      colorbar: {title: {text: "C<sub>r</sub>A/m", font: {color: t.ink2}}, tickfont: {color: t.ink2}}},
+    hovertemplate: "%{x}: %{y:.0f} thousand km<extra></extra>"}],
+    layout2d(t, "date", "closest distance [thousand km]", {showlegend: false, yaxis: axis(t, "closest distance [thousand km]", {type: "log"}),
+      shapes: [{type: "line", xref: "paper", x0: 0, x1: 1, y0: 384.4, y1: 384.4, line: {color: t.moon, dash: "dot", width: 1}}],
+      annotations: [{xref: "paper", x: 0.01, y: Math.log10(384.4), text: "Moon's distance", showarrow: false, xanchor: "left", yanchor: "bottom", font: {size: 11, color: t.ink2}}]}), CFG);
+});
+</script>
+</body>
+</html>

@@ -154,3 +154,54 @@ def test_range_scan_iod_recovers_distant_object(real):
     sols = A.range_scan_iod(recs, st, dyn, ranges_km=np.geomspace(3e5, 3e6, 6), top=1)
     f, _, _ = sols[0]
     assert S.km(np.linalg.norm(f.x[:3] - x_true[:3])) < 5000.0  # angles over 2 days; light-time ignored in truth
+
+
+KQ = Path(__file__).parents[1] / "docs" / "data" / "kq2010"
+
+
+def test_leap_seconds_back_to_1972():
+    assert E.tai_minus_utc(E.jd_from_calendar(2010, 5, 16.0)) == 34.0
+    assert E.tai_minus_utc(E.jd_from_calendar(1975, 4, 20.0)) == 14.0
+    assert E.tai_minus_utc(E.jd_from_calendar(1963, 4, 2.0)) == 10.0  # pre-1972 approximation
+
+
+def test_gzip_ephemeris_round_trip(tmp_path, real):
+    eph = real[2]
+    p = tmp_path / "e.json.gz"
+    eph.save(p)
+    back = E.Ephemeris.load(p)
+    jd = eph.tables["moon"][0][10] + 0.37
+    assert np.allclose(back.state("moon", jd)[0], eph.state("moon", jd)[0])
+
+
+def test_relativity_term_is_relative_to_the_earth(real):
+    """The Earth-centred frame needs the Sun's GR pull on the object minus that on the Earth:
+    zero for an object riding with the Earth, ~1.8e-13 km/s^2 one AU-scale away."""
+    eph = real[2]
+    dyn = E.NBodyDynamics(eph, eph.tables["sun"][0][5], gr=True)
+    assert np.linalg.norm(dyn._gr_accel(0.0, np.zeros(3), np.zeros(3))) < 1e-25
+    sun = dyn.body_state("sun", 0.0)
+    far = dyn._gr_accel(0.0, 2 * sun[:3], 2 * sun[3:]) * S.lstar / S.tstar**2  # object across the Sun
+    assert 3.0e-13 < np.linalg.norm(far) < 4.5e-13
+
+
+def test_close_approach_finds_2010kq_perigee():
+    """Fit the 2010 KQ arc (sunlight pressure fixed at the published 0.0077 m^2/kg) and recover
+    the perigee that Find_Orb reports: 2010 May 21.30 TT at 492,283 km."""
+    recs = sorted(A.parse(KQ / "astrometry.txt"), key=lambda r: r.jd_utc)
+    st = A.load_stations(KQ / "stations.txt")
+    eph = E.Ephemeris.load(KQ / "ephemeris_2010.json")
+    dyn = E.NBodyDynamics(eph, E.utc_to_tdb(recs[0].jd_utc), amr=0.0077)
+    obs = A.to_observations(recs, st, dyn)
+    first = [r for r in recs if r.jd_utc - recs[0].jd_utc < 2.2]
+    jdm, r, v = min(A.gauss_iod([first[0], first[len(first) // 2], first[-1]], st),
+                    key=lambda g: abs(np.linalg.norm(g[1]) - 5.5e5))
+    x = dyn.propagate_many(S.state_to_nd(np.concatenate((r, v))), float(dyn.t_of_jd(E.utc_to_tdb(jdm))), [0.0],
+                           with_stm=False)[0][0]
+    f = od.fit([o for o, rr in zip(obs, recs) if rr.jd_utc - recs[0].jd_utc < 2.2], x, 0.0, S, dynamics=dyn)
+    f = od.fit(obs, f.x, 0.0, S, dynamics=dyn, max_iter=60)
+    t_end = float(dyn.t_of_jd(E.utc_to_tdb(recs[-1].jd_utc)))
+    ca, _, imp = dyn.close_approaches(f.x, 0.0, t_end, r_max_km=1e6)
+    assert imp is None and len(ca) == 1
+    assert ca[0]["jd_tdb"] - 2400000.5 == pytest.approx(55337.301886, abs=0.05)
+    assert ca[0]["r_km"] == pytest.approx(492283, abs=1500)

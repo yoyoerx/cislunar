@@ -73,7 +73,7 @@ high-fidelity sequential navigation filters (an EKF/UKF may follow `od.py`).
 | `budget.py` | `DeltaVBudget`: deterministic / statistical / station-keeping / margin line items, built from `Transfer`, `TcmResult` and `StationKeepingResult` objects, with totals and a printable table. |
 | `servicing.py` | Servicing-architecture case study: orbit *nodes* (periodic CR3BP orbits, or Keplerian orbits about Earth/Moon with free phase/RAAN and an optional inclination range), phase-free minimum-Delta-v transfers between nodes (Lambert scan over node parameters and TOF -> CR3BP shooting -> Nelder-Mead), analytic two-body transfers between Earth orbits, co-orbital phasing allowances, a parallel cost-matrix builder, and campaign economics (Delta-v ledger and rocket-equation propellant / IMLEO for direct vs station-based architectures). |
 | `od.py` | Orbit determination and identification from sparse observations: observation models (position, velocity, angles, range, range-rate, direction of travel, angle rates from streaks) seen from an observer (Earth/Moon centre, ground site, spacecraft) in rotating / inertial / equatorial axes; initial orbit determination (pos+vel, CR3BP Lambert between fixes); weighted batch least squares (Levenberg-Marquardt, STM partials, optional prior) with covariance; a periodic-orbit *catalogue* (Lyapunov, halo/NRHO, DRO families, cached) used to generate hypotheses when the data cannot determine all six state components; nearest periodic orbit with stability index and insertion Delta-v; covariance prediction and fate Monte Carlo. |
-| `ephemeris.py` | Real-world dynamics for working with actual observations: JPL Horizons vector tables (Moon, Sun) fetched once and cached as JSON, Hermite-interpolated; time scales (UTC/TT/TDB, JD); Earth orientation (GMST/GAST, IAU-1976 precession, leading IAU-1980 nutation terms) for station positions in J2000; the IAU lunar rotation model (selenographic coordinates); `NBodyDynamics` - Earth-centred J2000 point-mass Earth+Moon+Sun (+ Earth J2) with STM, Moon-impact events; `CR3BPInFrame` - the CR3BP aligned to the real Moon at an epoch, exposed in the same J2000 frame for like-for-like comparison. |
+| `ephemeris.py` | Real-world dynamics for working with actual observations: JPL Horizons vector tables (Moon, Sun) fetched once and cached as JSON, Hermite-interpolated; time scales (UTC/TT/TDB, JD); Earth orientation (GMST/GAST, IAU-1976 precession, leading IAU-1980 nutation terms) for station positions in J2000; the IAU lunar rotation model (selenographic coordinates); `NBodyDynamics` - Earth-centred J2000 point-mass Earth+Moon+Sun (+ Earth J2, optional planets, solar radiation pressure and relativity) with STM, Moon/Earth-impact events and a close-approach finder; `CR3BPInFrame` - the CR3BP aligned to the real Moon at an epoch, exposed in the same J2000 frame for like-for-like comparison. |
 | `astrometry.py` | MPC 80-column and Find_Orb high-precision astrometry parsing, MPC observatory codes (parallax constants) as `od.Observer`s, conversion to `od` angle observations with light-time, Gauss angles-only initial orbit determination, and a parallel range-scan IOD (trial distances at both ends of a short arc, each refined in the full force model) for objects far from Earth where Gauss's two-body assumption fails; `mpc_stations` pulls parallax constants from the MPC list. |
 | `viz/plot2d.py` | Matplotlib 2D: trajectories projected on any plane, primaries and L-points, zero-velocity curves, porkchop contours, LVLH relative plots (V-bar / R-bar). |
 | `viz/plot3d.py` | Matplotlib 3D with to-scale Earth/Moon spheres and equal aspect; optional plotly interactive HTML export. |
@@ -257,7 +257,7 @@ Conversion to km, km/s, days happens only at the edges (inputs/outputs, plots).
   Earth-centred J2000 with the same nondimensional units (L*, T*), so `od`'s scaling, priors and reporting carry over.
   Moon/Sun come from JPL Horizons tables (cached in the repo so builds are reproducible offline); STM partials ignore J2
   (negligible). Solar radiation pressure is an optional cannonball term (C_r A/m, no shadow); the Chang'e case study
-  shows it dominates a 6-week lunar-impact forecast yet is unobservable from a 5-day arc. Not modelled: shadow, relativity.
+  shows it dominates a 6-week lunar-impact forecast yet is unobservable from a 5-day arc. Not modelled: shadow (relativity: ADR-31).
 * **ADR-28 Astrometric measurement model.** MPC positions are astrometric (J2000, light-time included, no aberration):
   the model is the geometric topocentric direction to the target at t - rho/c (first-order back-step along the velocity,
   two iterations). Stations come from MPC parallax constants rotated by GAST, nutation (leading terms, ~0.5" error) and
@@ -269,6 +269,21 @@ Conversion to km, km/s, days happens only at the edges (inputs/outputs, plots).
   orbit on a grid of fixed values and fitting a parabola to chi-square (simpler than adding a 7th estimated parameter, and it
   shows the whole likelihood). Outliers are rejected at 5x the robust scatter (min 3"), re-done at the best value. Hollow
   hardware (~0.01-0.02 m^2/kg) and rock (~3e-5 to 2e-4) differ ~100x, so a months-long arc separates them decisively.
+* **ADR-31 Decades-long heliocentric runs in the Earth-centred frame.** Tracing a near-Earth object back 50 years needs
+  the planets and relativity, but switching frames would fork the fitting code, so `NBodyDynamics` stays Earth-centred and
+  gains optional point-mass planets (`planets=`, Horizons system barycentres, indirect terms included) and the Sun's
+  Schwarzschild term (`gr=True`). The frame accelerates with the Earth, so the Earth's own relativistic acceleration
+  (~1.8e-13 km/s^2, outward) must be subtracted too: leaving it out forces ~1-year orbits resonantly and cost 1e5 km over
+  18 years in the validation against JPL (3753 Cruithne: 107,000 km -> 1,800 km; 1991 VG: 554 km at its 1991 pass after
+  18 years). `close_approaches` finds every minimum of Earth/Moon distance with an r.v = 0 event and can sample states
+  on a grid in the same run. Long tables are stored gzip-compressed (`Ephemeris.save/load` on `.gz`). Leap seconds go
+  back to 1972; earlier UTC is approximated by TAI-UTC = 10 s (only used to date events).
+* **ADR-32 Chaotic back-tracing reported as a clone cloud.** A slow, bound Earth pass amplifies orbit uncertainty
+  by orders of magnitude, so a single back-integrated orbit cannot date a launch. The 2010 KQ study instead draws a cloud
+  of clones from the fit (C_r A/m from its profile; state from the covariance at that value), runs each back to Sputnik
+  in parallel (one JSON line per clone, resumable), and reports statistics: encounter dates, the fraction bound to the
+  Earth over time, and the dates on which backward runs reach the Earth's surface (a launch, read forwards). Candidate
+  launches are tested with conserved quantities (the Tisserand parameter w.r.t. the Earth) and with the cloud.
 * **ADR-11 Performance.** Pure numpy/scipy; the STM right-hand side is hand-expanded
   (~24 us/call). Trial trajectories that hit a primary are stopped by an event.
   numba is a possible future accelerator (not installed on the dev machine).
@@ -321,6 +336,8 @@ cislunar/
 - [x] Phase 6h -- real-data OD case study: Chang'e 5-T1 stage lunar impact (`ephemeris.py`, `astrometry.py`)
 - [x] Phase 6i -- second real-data OD case study: TESS stable 2:1 lunar-resonant orbit vs NASA truth (`docs/case_study_tess.html`)
 - [x] Phase 6j -- rock-or-rocket case study (2020 SO vs 2024 PT5), range-scan IOD, MPC station loader
+- [x] Phase 6k -- unidentified-object case study: 2010 KQ = RK252A5 (planets + GR, close-approach finder, clone cloud,
+      N-body Lambert `shoot_velocity`, forward-flown suspect stages; points to a 1974 Luna 22/23 Blok-D; 72 tests passing)
 - [ ] Phase 9 -- additional families (axial, vertical, butterfly); quasi-periodic tori
 
 ## 8. Open questions

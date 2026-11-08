@@ -6,3 +6,4 @@ build/
 dist/
 .venv/
 docs/_cache/*.log
+docs/_cache/raw/
