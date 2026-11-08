@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case study: TESS, a stable resonant orbit, from sky-survey sightings</title>
+<style>/*__CSS__*/
+.small { font-size: 13px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.src { font-size: 13px; color: var(--ink2); }
+</style>
+<script>/*__PLOTLY__*/</script>
+</head>
+<body>
+<header class="top">
+  <span class="brand">cislunar</span><span class="ver">case study &middot; a stable orbit from survey sightings &middot; v__VERSION__</span>
+  <button id="themeBtn" type="button">Toggle dark mode</button>
+</header>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+<ol>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#object">The spacecraft and its orbit</a></li>
+  <li><a href="#data">The sightings</a></li>
+  <li><a href="#truth">Checking the telescopes</a></li>
+  <li><a href="#night">One night is not enough</a></li>
+  <li><a href="#arc">Three nights, two months</a></li>
+  <li><a href="#pred">How good is the orbit?</a></li>
+  <li><a href="#coast">Is TESS just coasting?</a></li>
+  <li><a href="#stable">Why the orbit is stable</a></li>
+  <li><a href="#compare">Two case studies side by side</a></li>
+  <li><a href="#limits">Limits</a></li>
+  <li><a href="#reproduce">Reproduce it</a></li>
+</ol>
+</nav>
+<main>
+
+<section id="summary">
+<h1>TESS: a stable lunar-resonant orbit, recovered from sky-survey sightings</h1>
+<p class="lede">NASA's planet-hunting telescope TESS flies a high, elongated orbit locked in step with the Moon: on average, two orbits for each lunar month.
+Asteroid surveys keep spotting it as an unidentified moving object. This case study fits an orbit to 20 of those survey sightings from late 2020
+with the <code>cislunar</code> toolkit. NASA's own tracked trajectory then grades each step: the fit, the predictions, and the stability analysis.</p>
+<div class="callout"><span class="tag">Headline results</span><div id="headline"></div></div>
+<div class="callout warn"><span class="tag">How this differs from the Chang'e case study</span>
+The <a href="case_study_change5t1.html">Chang'e 5-T1 case study</a> had five days of dense tracking of a dead rocket stage on a doomed orbit, and only
+one point of truth: the crater. Here the data are sparse, three short visits spread over two months, but the truth is known at every instant.
+The orbit is also built to survive, not to crash.</div>
+</section>
+
+<section id="object">
+<h2>1. The spacecraft and its orbit</h2>
+<p>TESS (Transiting Exoplanet Survey Satellite, launched 18 April 2018) needed a stable orbit that stays far from Earth for most of the time, with a
+close pass every couple of weeks to send data home. It uses a <b>P/2 lunar-resonant orbit</b>: an average period of half a lunar month, about 13.7 days, with
+perigee near 100,000 km and apogee near 400,000 km. The orbit is phased so that TESS is at apogee when the Moon is about 90&deg; away. The Moon's
+pulls then roughly cancel over each lunar month instead of building up. NASA expected the orbit to stay stable for decades without station-keeping. The Sun and Moon make the instantaneous period swing around the
+average: in late 2020 it was about 14.1&ndash;14.4 days.</p>
+<p>In the language of this toolkit, TESS flies close to a <b>2:1 resonant periodic orbit</b> of the Earth&ndash;Moon three-body problem, one of the
+"rosettes" in the user manual. Section 8 puts the two side by side.</p>
+<p class="src">Sources: <a href="https://projectpluto.com/pluto/mpecs/18038a.htm">Project Pluto pseudo-MPEC for 2018-038A</a> (astrometry and Find_Orb
+orbit); NASA's trajectory from <a href="https://ssd.jpl.nasa.gov/horizons/">JPL Horizons</a> (target &minus;95); observatory constants from
+<a href="https://www.minorplanetcenter.net/iau/lists/ObsCodes.html">MPC</a>.</p>
+</section>
+
+<section id="data">
+<h2>2. The sightings</h2>
+<p>The 134 sightings come mostly from the Catalina Sky Survey and the Mt. Lemmon Survey in Arizona. These are asteroid hunters that photograph the
+sky every clear night. TESS shows up in their images as a magnitude-17 moving dot and gets reported as a possible near-Earth asteroid, which
+explains labels like <code>ZR38AE8</code> in the data file. The sightings are bursts of 3&ndash;4 frames, a few nights a month at best.</p>
+<div id="stationTable"></div>
+<div class="figure">
+  <div class="ftitle">Figure 1. When TESS was seen, and by whom</div>
+  <div class="fsub">Each dot is one sighting. The shaded band marks the late-2020 arc used for the fit: 24 September, 8 October and 20 November.</div>
+  <div id="fig-timeline" class="plot short"></div>
+</div>
+</section>
+
+<section id="truth">
+<h2>3. Checking the telescopes against NASA</h2>
+<p>Since NASA's trajectory is known, we can first ask how accurate the sightings are. Each one is compared with where NASA's trajectory says TESS
+should have appeared from that observatory, using the same light-time model as the fit:</p>
+<div class="figure">
+  <div class="ftitle">Figure 2. Each sighting compared with NASA's trajectory</div>
+  <div class="fsub">Offset in arcseconds (1&Prime; is 0.8&ndash;1.9&nbsp;km at TESS's distance at the time). Circles are right ascension, diamonds
+  declination.</div>
+  <div id="fig-truthres" class="plot short"></div>
+</div>
+<p id="truthText"></p>
+</section>
+
+<section id="night">
+<h2>4. One night is not enough</h2>
+<p>Suppose only the last night, 20 November 2020, were available: <span id="nightText"></span></p>
+<div class="tiles" id="nightTiles"></div>
+<p>A single night gives position and direction of motion well, but distance and speed poorly. The orbital period is then uncertain by hours.
+After four orbits (two months back to September) the predicted position can be tens of thousands of kilometres off, much too far to say
+which faint dot in an old image was TESS. Section 6 shows this curve.</p>
+</section>
+
+<section id="arc">
+<h2>5. Three nights, two months</h2>
+<p>Adding the sightings from 24 September and 8 October links three visits four orbits apart. The orbital period is then pinned down to seconds.
+Over two months <b>sunlight pressure</b> also becomes measurable. TESS's solar panels and sunshade are large for its mass, so sunlight pushes
+noticeably on the orbit. The fit was repeated for a range of sunlight-pressure values (<i>C<sub>r</sub>A/m</i>, reflectivity &times; area &divide;
+mass):</p>
+<div class="figure">
+  <div class="ftitle">Figure 3. Sunlight pressure measured from the sightings</div>
+  <div class="fsub">How well the orbit fits the 20 sightings (&chi;&sup2;; lower is better, and a rise of 1 is one standard deviation) for each assumed
+  sunlight pressure. The dashed line is Find_Orb's independent estimate from the same data.</div>
+  <div id="fig-srp" class="plot short"></div>
+</div>
+<p id="srpText"></p>
+<div id="elemTable"></div>
+</section>
+
+<section id="pred">
+<h2>6. How good is the orbit?</h2>
+<div class="figure">
+  <div class="ftitle">Figure 4. Distance from NASA's trajectory, April 2020 to January 2021</div>
+  <div class="fsub">How far the fitted orbit is from where TESS actually was, day by day (log scale). The shaded band is the late-2020 arc.
+  Outside it, the orbit is a prediction, backward or forward.</div>
+  <div id="fig-pred" class="plot"></div>
+</div>
+<p id="predText"></p>
+</section>
+
+<section id="coast">
+<h2>7. Is TESS just coasting?</h2>
+<p>A natural object would coast, so one unpowered trajectory could match its whole path. A spacecraft occasionally fires thrusters: TESS uses them
+to unload momentum from its reaction wheels. To check, an unpowered trajectory was fitted to each 10-day stretch of NASA's own trajectory:</p>
+<div class="figure">
+  <div class="ftitle">Figure 5. How well one unpowered arc matches 10 days of NASA's trajectory</div>
+  <div class="fsub">RMS mismatch in km for 10-day windows starting on each date. A few km is the level at which this toolkit's force model and NASA's
+  differ. Windows well above that contain something the model doesn't have.</div>
+  <div id="fig-coast" class="plot short"></div>
+</div>
+<p id="coastText"></p>
+</section>
+
+<section id="stable">
+<h2>8. Why the orbit is stable</h2>
+<p><b>The three-body picture.</b> In a frame that rotates with the Moon, a 2:1 resonant orbit traces a closed two-lobed curve. The toolkit computes it
+as a periodic orbit of the Earth&ndash;Moon CR3BP (<code>periodic.resonant(2, 1, e)</code>). Its stability index is <b id="nuText"></b>, where 1 means
+<i>linearly stable</i>: small nudges stay small instead of growing. TESS's real path, from NASA's trajectory, follows the same pattern:</p>
+<div class="figure">
+  <div class="ftitle">Figure 6. TESS in the Earth&ndash;Moon rotating frame</div>
+  <div class="fsub">Earth at the origin, Moon fixed on the right (the frame turns with the Moon and is rescaled to its mean distance). Grey: the CR3BP 2:1
+  resonant periodic orbit with TESS's eccentricity. Blue: TESS from 24 September to 18 November 2020. The real orbit is tilted and perturbed by the
+  Sun, so it wanders around the ideal curve, but it never strays far.</div>
+  <div id="fig-rot" class="plot"></div>
+</div>
+<p><b>Ten years ahead.</b> The fitted state was propagated for ten years with Earth, Moon, Sun and sunlight pressure, together with NASA's own state
+and twelve samples drawn from the fit's uncertainty:</p>
+<div class="figure">
+  <div class="ftitle">Figure 7. Perigee and apogee for ten years</div>
+  <div class="fsub">One dot per orbit. Blue is the fitted orbit, grey the twelve uncertainty samples, and orange circles are NASA's 20 November 2020 state
+  run through the same model. They lie almost exactly on top of each other: the orbit's slow ten-year breathing doesn't depend on the details of the
+  starting state. No thruster firings are included.</div>
+  <div id="fig-long" class="plot"></div>
+</div>
+<div class="figure">
+  <div class="ftitle">Figure 8. The resonance lock: angle between TESS and the Moon at each apogee</div>
+  <div class="fsub">For a P/2 orbit phased like TESS's this stays near 90&deg;, so the Moon never lines up with apogee and the perturbations average out.
+  If the lock broke, this angle would sweep through 0&deg;&ndash;180&deg;.</div>
+  <div id="fig-angle" class="plot short"></div>
+</div>
+<p id="longText"></p>
+</section>
+
+<section id="compare">
+<h2>9. Two case studies side by side</h2>
+<div id="compareTable"></div>
+</section>
+
+<section id="limits">
+<h2>10. Limits</h2>
+<ul>
+<li>The fit assumes TESS coasts between 24 September and 20 November. Section 7 suggests NASA's trajectory contains small events in that span. They
+cost the fit some accuracy, and the reported uncertainty does not include them.</li>
+<li>Sunlight pressure is modelled as a uniform push away from the Sun (a "cannonball"). TESS keeps its sunshade toward the Sun, so this is a reasonable
+first approximation. Earth-shadow passages are not modelled.</li>
+<li>The ten-year runs show the natural, unpowered behaviour. Real operations add small thruster firings, and NASA has adjusted TESS's orbit.</li>
+<li>The CR3BP picture is planar and circular. It explains why the orbit is stable but not every wiggle of the real path.</li>
+</ul>
+</section>
+
+<section id="reproduce">
+<h2>11. Reproduce it</h2>
+<pre><code>python docs/build_case_study_tess.py --rebuild   # about 10 minutes on 7 cores, offline</code></pre>
+<p>Data, with sources and fetch dates: <code>docs/data/tess/</code>: <code>astrometry.txt</code>, <code>stations.txt</code>,
+<code>reference.json</code> (Find_Orb orbit), Moon/Sun tables (2018&ndash;2021 at 3&nbsp;h, 2020&ndash;2031 at 12&nbsp;h), and NASA's TESS
+trajectory (<code>truth_tess_horizons.json</code>, used only for checking).</p>
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+const D = /*__DATA__*/null;
+const CFG = {displaylogo: false, responsive: true, modeBarButtonsToRemove: ["select2d", "lasso2d"]};
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 0) => Number(v).toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
+function tok() {
+  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim();
+  return {surface: g("--surface"), ink: g("--ink"), ink2: g("--ink2"), muted: g("--muted"), grid: g("--grid"), axis: g("--axis"),
+    earth: g("--earth"), moon: g("--moon"), s: [g("--s1"), g("--s2"), g("--s3"), g("--s4"), g("--s5"), g("--s6")], critical: g("--critical")};
+}
+const charts = [];
+function register(fn) { charts.push(fn); fn(); }
+$("themeBtn").addEventListener("click", () => {
+  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
+  document.documentElement.dataset.theme = dark ? "light" : "dark"; charts.forEach((f) => f());
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => charts.forEach((f) => f()));
+function axis(t, title, extra = {}) {
+  return Object.assign({title: {text: title, font: {color: t.ink2, size: 13}}, gridcolor: t.grid, zerolinecolor: t.axis,
+    linecolor: t.axis, tickfont: {color: t.ink2, size: 11}}, extra);
+}
+function layout2d(t, xt, yt, extra = {}) {
+  return Object.assign({paper_bgcolor: t.surface, plot_bgcolor: t.surface, font: {family: "system-ui, -apple-system, Segoe UI, sans-serif", color: t.ink, size: 12},
+    margin: {l: 64, r: 16, t: 20, b: 50}, xaxis: axis(t, xt), yaxis: axis(t, yt), legend: {font: {color: t.ink}, bgcolor: "rgba(0,0,0,0)"}}, extra);
+}
+const tileHtml = (rows) => rows.map(([a, b]) => `<div class="tile"><div class="k">${a}</div><div class="v">${b}</div></div>`).join("");
+const table = (head, rows, num = []) => `<table><thead><tr>${head.map((h, i) => `<th${num.includes(i) ? ' class="num"' : ""}>${h}</th>`).join("")}</tr></thead><tbody>` +
+  rows.map((r) => `<tr>${r.map((c, i) => `<td${num.includes(i) ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+const rms = (a) => Math.sqrt(a.reduce((s, v) => s + v * v, 0) / a.length);
+const median = (a) => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; };
+
+const REF = D.reference.find_orb_elements_late_2020, O = D.obs, AR = D.arc, N1 = D.night;
+// stations: the two Arizona surveys, then everyone else
+const GROUP = (s) => s === "703" ? 0 : s === "G96" ? 1 : 2;
+const GNAME = ["703 Catalina Sky Survey", "G96 Mt. Lemmon Survey", "5 other observatories"];
+const dIdx = (pred) => O.st.map((s, i) => pred(s, i) ? i : -1).filter((i) => i >= 0);
+const predAt = (curve, date) => curve[D.pred.date.indexOf(date)];
+
+(function texts() {
+  const L = D.longterm, all = [L.fit, ...L.samples];
+  const minPeri = Math.min(...all.flatMap((r) => r.peri_km)), maxApo = Math.max(...all.flatMap((r) => r.apo_km));
+  const angAll = all.flatMap((r) => r.moon_angle);
+  const errArc = D.pred.three.filter((_, i) => D.pred.date[i] >= "2020-09-24" && D.pred.date[i] <= "2020-11-20");
+  $("headline").innerHTML = `<ul>
+  <li><b>Survey sightings vs NASA:</b> typical offset ${fmt(median(O.dra.map((v, i) => Math.hypot(v, O.ddec[i]))), 1)}&Prime; (a few km at TESS's distance).</li>
+  <li><b>One night</b> (20 Nov 2020): position off by ${fmt(N1.err_km)} km; period ${fmt(N1.elements.period_d, 2)} d against the true ${fmt(N1.truth_elements.period_d, 2)} d.</li>
+  <li><b>Three nights over two months:</b> fitted to ${fmt(AR.rms_arcsec, 2)}&Prime;, sunlight pressure measured as ${fmt(AR.amr, 4)} &plusmn; ${fmt(AR.amr_sigma, 4)} m&sup2;/kg
+  (Find_Orb: ${fmt(REF.amr_m2_per_kg, 4)} &plusmn; ${fmt(REF.amr_sigma, 4)}). The orbit stays within ${fmt(Math.max(...errArc))} km of NASA's trajectory across the arc
+  (tens of km near apogee; the peaks are timing errors at perigee). Predicted two months forward, it is off by ${fmt(predAt(D.pred.three, "2021-01-20") ?? 0)} km.</li>
+  <li><b>Stable:</b> the matching CR3BP 2:1 resonant orbit has stability index ${fmt(D.cr3bp.nu, 3)} (1 = linearly stable). In ${L.years}-year runs, every sample stays
+  between ${fmt(minPeri)} and ${fmt(maxApo)} km from Earth, with the Moon ${fmt(Math.min(...angAll))}&ndash;${fmt(Math.max(...angAll))}&deg; from TESS at every apogee.</li></ul>`;
+  $("stationTable").innerHTML = table(["Code", "Observatory", "Sightings", "First", "Last"],
+    Object.entries(D.stations).sort((a, b) => b[1].n - a[1].n).map(([k, v]) => [k, v.name, v.n, v.first, v.last]), [2]);
+  const byS = {};
+  O.st.forEach((s, i) => (byS[s] = byS[s] || []).push(i));
+  const aug = dIdx((s, i) => O.date[i].startsWith("2018-08"));
+  const rest = dIdx((s, i) => !O.date[i].startsWith("2018-08"));
+  $("truthText").innerHTML = `Apart from August 2018, the sightings scatter by ${fmt(rms(rest.map((i) => O.dra[i])), 1)}&Prime; in RA and ${fmt(rms(rest.map((i) => O.ddec[i])), 1)}&Prime;
+    in Dec around NASA's trajectory. On 24&ndash;25 August 2018, two unrelated observatories (Palomar ZTF and Great Shefford, England) both sit about
+    ${fmt(Math.abs(aug.reduce((s, i) => s + O.dra[i], 0) / aug.length), 1)}&Prime; off in RA, the same way. Agreement between independent telescopes points to
+    NASA's early-mission trajectory, not the telescopes. A slight Dec offset of about +1&Prime; shared by most sites may also belong to the trajectory: 1&Prime; is
+    0.8&ndash;1.9 km here.`;
+  $("nightText").innerHTML = `${N1.n} sightings from ${N1.stations.join(", ")} over ${fmt(N1.span_h, 1)} hours. Gauss's method gives a first orbit
+    ${fmt(N1.gauss_r_km)} km from Earth, and the least-squares fit refines it.`;
+  $("nightTiles").innerHTML = tileHtml([["Position error vs NASA", `${fmt(N1.err_km)} <small>km</small>`], ["Velocity error", `${fmt(N1.err_mps, 1)} <small>m/s</small>`],
+    ["Fitted period", `${fmt(N1.elements.period_d, 2)} <small>d</small>`], ["True period", `${fmt(N1.truth_elements.period_d, 2)} <small>d</small>`],
+    ["Stated 1&sigma;", `${fmt(N1.sigma_km)} <small>km</small>`]]);
+  $("srpText").innerHTML = `The best fit is at <i>C<sub>r</sub>A/m</i> = <b>${fmt(AR.amr, 4)} &plusmn; ${fmt(AR.amr_sigma, 4)}</b> m&sup2;/kg, against Find_Orb's
+    ${fmt(REF.amr_m2_per_kg, 4)} &plusmn; ${fmt(REF.amr_sigma, 4)}. TESS has a mass of about 360 kg and several square metres of solar panels and sunshade, so a value of a few hundredths is
+    plausible. With it, the 20 sightings fit to ${fmt(AR.rms_arcsec, 2)}&Prime; RMS. Without any sunlight pressure (&chi;&sup2; at the left of the plot)
+    the fit is clearly worse. This is the opposite of the Chang'e case, where five days of data could not see sunlight pressure at all.`;
+  const E = AR.elements, ES = AR.elements_sigma, T = AR.truth_elements;
+  const rows = [["Semi-major axis", "a_km", "a_sigma_km", " km", 1], ["Eccentricity", "e", "e_sigma", "", 5], ["Inclination", "i_deg", "i_sigma_deg", "&deg;", 4],
+    ["Ascending node", "raan_deg", "raan_sigma_deg", "&deg;", 3], ["Argument of perigee", "argp_deg", "argp_sigma_deg", "&deg;", 3]];
+  $("elemTable").innerHTML = `<p>Osculating elements on 23.0 October 2020 (geocentric, J2000 equator):</p>` + table(["Element", "This toolkit", "Find_Orb", "NASA (Horizons)"],
+    rows.map(([n, k, ks, u, d]) => [n, `${fmt(E[k], d)}${u} &plusmn; ${fmt(ES[k], d)}`, `${fmt(REF[k], d)}${u} &plusmn; ${fmt(REF[ks], d)}`, `${fmt(T[k], d)}${u}`]), [1, 2, 3]) +
+    `<p class="small muted">Both fits agree with NASA closely, but not within their stated uncertainties. That gap is what the unmodelled events of section 7 would
+    produce. A formal uncertainty assumes the model is complete.</p>`;
+  const back = D.back, bmed = median(back.sep_arcmin);
+  $("predText").innerHTML = `Within the arc the three-night orbit is ${fmt(Math.min(...errArc))}&ndash;${fmt(Math.max(...errArc))} km from NASA's. The sawtooth is the
+    orbit itself. The peaks come at each perigee pass, where TESS moves at about 3 km/s, so arriving two or three minutes early or late becomes a few
+    hundred km along the track. Near apogee, where the telescopes saw it, the error drops to tens of km. Going backward, the
+    error is ${fmt(predAt(D.pred.three, "2020-07-01") ?? 0)} km by 1 July and ${fmt(predAt(D.pred.three, "2020-04-13") ?? 0)} km by 13 April. Forward, it is
+    ${fmt(predAt(D.pred.three, "2021-01-20") ?? 0)} km by 20 January 2021. The one-night orbit is off by ${fmt(predAt(D.pred.one, "2020-09-24") ?? 0)} km by
+    24 September. On the sky, the backward prediction misses the January&ndash;April 2020 survey sightings by a median of ${fmt(bmed, 1)}&prime;
+    (range ${fmt(Math.min(...back.sep_arcmin), 1)}&ndash;${fmt(Math.max(...back.sep_arcmin), 1)}&prime;). Gray reports "within about 6&prime; five months earlier" for
+    Find_Orb. Either way it is close enough to find TESS in an old image and confirm it, but not to point a narrow-field instrument without searching.`;
+  const W = D.windows, q = W.rms_km.map((v, i) => [v, W.start[i]]).sort((a, b) => b[0] - a[0]);
+  $("coastText").innerHTML = `Most windows match to ${fmt(median(W.rms_km), 1)} km. The worst start on ${q[0][1]} (${fmt(q[0][0], 1)} km) and ${q[1][1]}
+    (${fmt(q[1][0], 1)} km). Something happens in those stretches that an unpowered model can't follow: a thruster firing, or a join between two of NASA's
+    trajectory solutions. Public data can't tell which. Either way, it explains why both fits sit tens of km from NASA's trajectory even inside the arc.`;
+  $("nuText").textContent = fmt(D.cr3bp.nu, 4);
+  const fitApo = L.fit.moon_angle;
+  $("longText").innerHTML = `Over ${L.years} years the perigee wanders between ${fmt(Math.min(...L.fit.peri_km))} and ${fmt(Math.max(...L.fit.peri_km))} km and the apogee
+    between ${fmt(Math.min(...L.fit.apo_km))} and ${fmt(Math.max(...L.fit.apo_km))} km. That is a slow breathing driven by the Sun and Moon, not a drift
+    toward escape or impact. All twelve uncertainty samples and NASA's own state behave the same way. ${L.samples.some((s) => s.impact) ? "Some samples impacted." : "None comes near the Moon or re-enters."}
+    Compare the Chang'e stage, whose orbit led straight into the Moon within six weeks of its last observations.`;
+  $("compareTable").innerHTML = table(["", "Chang'e 5-T1 stage", "TESS"], [
+    ["Object", "Spent Long March 3C stage", "Working NASA spacecraft"],
+    ["Orbit", "Chaotic, Earth&ndash;Moon crossing", "2:1 lunar resonance, phased for stability"],
+    ["Data", "111 sightings in 5 days, 9 sites", `${AR.n} sightings on 3 nights over 2 months, ${new Set(AR.resid.st).size} sites`],
+    ["Fit", "0.63&Prime; RMS", `${fmt(AR.rms_arcsec, 2)}&Prime; RMS`],
+    ["Sunlight pressure", "Not measurable from the data; it dominated the forecast", `Measured: ${fmt(AR.amr, 4)} &plusmn; ${fmt(AR.amr_sigma, 4)} m&sup2;/kg`],
+    ["Truth", "One crater, six weeks later", "NASA's trajectory at every instant"],
+    ["Forecast", "135 km from the crater (gravity only)", `${fmt(predAt(D.pred.three, "2021-01-20") ?? 0)} km after two months`],
+    ["Long-term", "Hit the Moon", `Bounded for ${L.years}+ years (unpowered)`]]);
+})();
+
+register(function timeline() {
+  const t = tok(), tr = [0, 1, 2].map((g) => { const k = dIdx((s) => GROUP(s) === g);
+    return {type: "scatter", mode: "markers", name: GNAME[g], x: k.map((i) => O.date[i]), y: k.map((i) => O.st[i]), marker: {color: t.s[g], size: 7},
+      hovertemplate: "%{y} %{x}<extra></extra>"}; });
+  Plotly.react("fig-timeline", tr, layout2d(t, "date", "observatory", {showlegend: false,
+    shapes: [{type: "rect", xref: "x", yref: "paper", x0: "2020-09-20", x1: "2020-11-24", y0: 0, y1: 1, fillcolor: t.grid, opacity: 0.6, line: {width: 0}, layer: "below"}]}), CFG);
+});
+register(function truthres() {
+  const t = tok(), tr = [];
+  [0, 1, 2].forEach((g) => { const k = dIdx((s) => GROUP(s) === g);
+    tr.push({type: "scatter", mode: "markers", name: GNAME[g], legendgroup: g, x: k.map((i) => O.date[i]), y: k.map((i) => O.dra[i]), marker: {color: t.s[g], size: 6},
+      customdata: k.map((i) => O.st[i]), hovertemplate: "%{customdata} %{x}<br>RA %{y:.2f}&Prime;<extra></extra>"});
+    tr.push({type: "scatter", mode: "markers", name: GNAME[g], legendgroup: g, showlegend: false, x: k.map((i) => O.date[i]), y: k.map((i) => O.ddec[i]),
+      marker: {color: t.s[g], size: 6, symbol: "diamond-open"}, customdata: k.map((i) => O.st[i]), hovertemplate: "%{customdata} %{x}<br>Dec %{y:.2f}&Prime;<extra></extra>"}); });
+  Plotly.react("fig-truthres", tr, layout2d(t, "date", "offset from NASA trajectory [arcsec]", {yaxis: axis(t, "offset from NASA trajectory [arcsec]", {range: [-9, 6]}),
+    legend: {orientation: "h", y: 1.15, font: {color: t.ink}}}), CFG);
+});
+register(function srp() {
+  const t = tok(), p = AR.profile, c0 = Math.min(...p.map((x) => x.chi2));
+  Plotly.react("fig-srp", [{type: "scatter", mode: "lines+markers", name: "Δχ²", x: p.map((x) => x.amr), y: p.map((x) => x.chi2 - c0), line: {color: t.s[0], width: 2},
+    hovertemplate: "C<sub>r</sub>A/m %{x:.3f}: Δχ² %{y:.1f}<extra></extra>"}],
+    layout2d(t, "C<sub>r</sub>A/m [m²/kg]", "Δχ² (fit to 20 sightings)", {yaxis: axis(t, "Δχ² (fit to 20 sightings)", {type: "log", range: [-1, 3.5]}), showlegend: false,
+      shapes: [{type: "line", x0: REF.amr_m2_per_kg, x1: REF.amr_m2_per_kg, yref: "paper", y0: 0, y1: 1, line: {color: t.ink2, dash: "dash", width: 1}}],
+      annotations: [{x: REF.amr_m2_per_kg, y: 1, yref: "paper", text: " Find_Orb", showarrow: false, xanchor: "left", font: {size: 11, color: t.ink2}}]}), CFG);
+});
+register(function pred() {
+  const t = tok(), P = D.pred;
+  Plotly.react("fig-pred", [
+    {type: "scatter", mode: "lines", name: "fit to 3 nights (Sep 24, Oct 8, Nov 20)", x: P.date, y: P.three, line: {color: t.s[0], width: 2}},
+    {type: "scatter", mode: "lines", name: "fit to 1 night (Nov 20 only)", x: P.date, y: P.one, line: {color: t.s[1], width: 1.5, dash: "dot"}}],
+    layout2d(t, "date", "distance from NASA's trajectory [km]", {yaxis: axis(t, "distance from NASA's trajectory [km]", {type: "log"}),
+      legend: {x: 0.01, y: 0.99, font: {color: t.ink}},
+      shapes: [{type: "rect", xref: "x", yref: "paper", x0: "2020-09-24", x1: "2020-11-20", y0: 0, y1: 1, fillcolor: t.grid, opacity: 0.6, line: {width: 0}, layer: "below"}]}), CFG);
+});
+register(function coast() {
+  const t = tok(), W = D.windows, m = median(W.rms_km);
+  Plotly.react("fig-coast", [{type: "bar", x: W.start, y: W.rms_km, marker: {color: W.rms_km.map((v) => v > 2.5 * m ? t.s[1] : t.muted)},
+    hovertemplate: "window from %{x}: %{y:.1f} km<extra></extra>"}],
+    layout2d(t, "window start", "RMS mismatch [km]", {showlegend: false}), CFG);
+});
+register(function rot() {
+  const t = tok(), C = D.cr3bp, k = (a) => a.map((v) => v / 1000);
+  const circ = [...Array(73).keys()].map((i) => [384.4 * Math.cos(i * Math.PI / 36), 384.4 * Math.sin(i * Math.PI / 36)]);
+  Plotly.react("fig-rot", [
+    {type: "scatter", mode: "lines", name: "Moon's distance", x: circ.map((p) => p[0]), y: circ.map((p) => p[1]), line: {color: t.grid, width: 1, dash: "dot"}, hoverinfo: "skip"},
+    {type: "scatter", mode: "lines", name: `CR3BP 2:1 resonant orbit (e = ${fmt(C.e, 2)}, ν = ${fmt(C.nu, 3)})`, x: k(C.orbit.x), y: k(C.orbit.y), line: {color: t.muted, width: 3}},
+    {type: "scatter", mode: "lines", name: "TESS, 24 Sep - 18 Nov 2020 (NASA trajectory)", x: k(C.tess.x), y: k(C.tess.y), line: {color: t.s[0], width: 1.5}},
+    {type: "scatter", mode: "markers", name: "Earth", x: [0], y: [0], marker: {color: t.earth, size: 12}},
+    {type: "scatter", mode: "markers", name: "Moon", x: [384.4], y: [0], marker: {color: t.moon, size: 9}}],
+    layout2d(t, "x toward the Moon [1000 km]", "y [1000 km]", {yaxis: axis(t, "y [1000 km]", {scaleanchor: "x"}), legend: {x: 0.01, y: 0.99, font: {color: t.ink}, bgcolor: t.surface}}), CFG);
+});
+register(function longterm() {
+  const t = tok(), L = D.longterm, yr = (a) => a.map((d) => 2020.89 + d / 365.25), tr = [];
+  L.samples.forEach((s, i) => {
+    tr.push({type: "scatter", mode: "markers", name: "uncertainty samples", legendgroup: "s", showlegend: i === 0, x: yr(s.apo_t), y: s.apo_km.map((v) => v / 1000), marker: {color: t.muted, size: 2, opacity: 0.5}, hoverinfo: "skip"});
+    tr.push({type: "scatter", mode: "markers", legendgroup: "s", showlegend: false, x: yr(s.peri_t), y: s.peri_km.map((v) => v / 1000), marker: {color: t.muted, size: 2, opacity: 0.5}, hoverinfo: "skip"}); });
+  [["NASA state, same model", L.truth_start, t.s[1], {size: 7, symbol: "circle-open"}], ["fitted orbit", L.fit, t.s[0], {size: 3}]].forEach(([n, r, c, mk]) => {
+    tr.push({type: "scatter", mode: "markers", name: n, legendgroup: n, x: yr(r.apo_t), y: r.apo_km.map((v) => v / 1000), marker: Object.assign({color: c}, mk)});
+    tr.push({type: "scatter", mode: "markers", legendgroup: n, showlegend: false, x: yr(r.peri_t), y: r.peri_km.map((v) => v / 1000), marker: Object.assign({color: c}, mk)}); });
+  Plotly.react("fig-long", tr, layout2d(t, "year", "distance from Earth at apogee (top) and perigee (bottom) [1000 km]",
+    {legend: {orientation: "h", y: 1.1, font: {color: t.ink}}, yaxis: axis(t, "apogee (top) and perigee (bottom) [1000 km]")}), CFG);
+});
+register(function angle() {
+  const t = tok(), L = D.longterm, yr = (a) => a.map((d) => 2020.89 + d / 365.25), tr = [];
+  L.samples.forEach((s, i) => tr.push({type: "scatter", mode: "markers", name: "uncertainty samples", showlegend: i === 0, legendgroup: "s",
+    x: yr(s.apo_t), y: s.moon_angle, marker: {color: t.muted, size: 2, opacity: 0.5}, hoverinfo: "skip"}));
+  tr.push({type: "scatter", mode: "markers", name: "fitted orbit", x: yr(L.fit.apo_t), y: L.fit.moon_angle, marker: {color: t.s[0], size: 3}});
+  Plotly.react("fig-angle", tr, layout2d(t, "year", "Moon–Earth–TESS angle at apogee [deg]", {yaxis: axis(t, "angle at apogee [deg]", {range: [0, 180], dtick: 30}),
+    legend: {orientation: "h", y: 1.15, font: {color: t.ink}}}), CFG);
+});
+</script>
+</body>
+</html>

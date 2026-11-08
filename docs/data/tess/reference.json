@@ -1,0 +1,24 @@
+{
+  "object": "TESS (Transiting Exoplanet Survey Satellite) = 2018-038A = NORAD 43435, in a P/2 lunar-resonant high Earth orbit (launched 2018-04-18)",
+  "find_orb_elements_late_2020": {
+    "source": "https://projectpluto.com/pluto/mpecs/18038a.htm (Find_Orb, 20 of 134 observations 2020 Sept 24 - Nov 20, mean residual 0.737 arcsec)",
+    "epoch_tt": "2020-10-23.0 (JD 2459145.5)",
+    "frame": "J2000 equator, geocentric",
+    "a_km": 249800.731517, "a_sigma_km": 0.0853,
+    "e": 0.6099326548, "e_sigma": 5.49e-6,
+    "i_deg": 3.80009577, "i_sigma_deg": 0.00026,
+    "raan_deg": 78.67529555, "raan_sigma_deg": 0.00043,
+    "argp_deg": 196.41134634, "argp_sigma_deg": 0.0013,
+    "mean_anomaly_deg": 44.10569609819,
+    "perigee_tt": "2020-10-21.23810517",
+    "perigee_km": 97439.1081658, "apogee_km": 402162.354868, "period_days": 14.38,
+    "amr_m2_per_kg": 0.026923, "amr_sigma": 0.000184
+  },
+  "gray_notes": [
+    "The orbit for TESS has been relatively stable.",
+    "an orbit based on data from two months in late 2020 integrates backward to get results within about 6' five months earlier.",
+    "they'll make some small adjustment to the orbit, and the change will accumulate with time.",
+    "Thus far, the Horizons ephemerides have been spot-on."
+  ],
+  "truth": "JPL Horizons target -95 (TESS), geocentric ICRF vectors; Horizons ephemerides include NASA flight-dynamics tracking and planned maneuvers"
+}

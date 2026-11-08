@@ -2,7 +2,7 @@
 
 Living document. Update status, phases and ADRs as the project evolves.
 
-Status (2026-11-07): v0.1 -- Phases 0-6g complete (incl. servicing case study, orbit determination); user manual (docs/manual.html) with advanced sections on rosette orbits and on transient orbits / flybys / Delta-v budgets.
+Status (2026-11-07): v0.1 -- Phases 0-6g complete (incl. servicing case study, orbit determination, Chang'e 5-T1, TESS and rock-or-rocket real-astrometry case studies); user manual (docs/manual.html) with advanced sections on rosette orbits and on transient orbits / flybys / Delta-v budgets.
 
 ## 1. Problem statement
 
@@ -73,6 +73,8 @@ high-fidelity sequential navigation filters (an EKF/UKF may follow `od.py`).
 | `budget.py` | `DeltaVBudget`: deterministic / statistical / station-keeping / margin line items, built from `Transfer`, `TcmResult` and `StationKeepingResult` objects, with totals and a printable table. |
 | `servicing.py` | Servicing-architecture case study: orbit *nodes* (periodic CR3BP orbits, or Keplerian orbits about Earth/Moon with free phase/RAAN and an optional inclination range), phase-free minimum-Delta-v transfers between nodes (Lambert scan over node parameters and TOF -> CR3BP shooting -> Nelder-Mead), analytic two-body transfers between Earth orbits, co-orbital phasing allowances, a parallel cost-matrix builder, and campaign economics (Delta-v ledger and rocket-equation propellant / IMLEO for direct vs station-based architectures). |
 | `od.py` | Orbit determination and identification from sparse observations: observation models (position, velocity, angles, range, range-rate, direction of travel, angle rates from streaks) seen from an observer (Earth/Moon centre, ground site, spacecraft) in rotating / inertial / equatorial axes; initial orbit determination (pos+vel, CR3BP Lambert between fixes); weighted batch least squares (Levenberg-Marquardt, STM partials, optional prior) with covariance; a periodic-orbit *catalogue* (Lyapunov, halo/NRHO, DRO families, cached) used to generate hypotheses when the data cannot determine all six state components; nearest periodic orbit with stability index and insertion Delta-v; covariance prediction and fate Monte Carlo. |
+| `ephemeris.py` | Real-world dynamics for working with actual observations: JPL Horizons vector tables (Moon, Sun) fetched once and cached as JSON, Hermite-interpolated; time scales (UTC/TT/TDB, JD); Earth orientation (GMST/GAST, IAU-1976 precession, leading IAU-1980 nutation terms) for station positions in J2000; the IAU lunar rotation model (selenographic coordinates); `NBodyDynamics` - Earth-centred J2000 point-mass Earth+Moon+Sun (+ Earth J2) with STM, Moon-impact events; `CR3BPInFrame` - the CR3BP aligned to the real Moon at an epoch, exposed in the same J2000 frame for like-for-like comparison. |
+| `astrometry.py` | MPC 80-column and Find_Orb high-precision astrometry parsing, MPC observatory codes (parallax constants) as `od.Observer`s, conversion to `od` angle observations with light-time, Gauss angles-only initial orbit determination, and a parallel range-scan IOD (trial distances at both ends of a short arc, each refined in the full force model) for objects far from Earth where Gauss's two-body assumption fails; `mpc_stations` pulls parallax constants from the MPC list. |
 | `viz/plot2d.py` | Matplotlib 2D: trajectories projected on any plane, primaries and L-points, zero-velocity curves, porkchop contours, LVLH relative plots (V-bar / R-bar). |
 | `viz/plot3d.py` | Matplotlib 3D with to-scale Earth/Moon spheres and equal aspect; optional plotly interactive HTML export. |
 | `docs/build_manual.py` | Builds `docs/manual.html`: runs the toolkit (cached in `docs/_cache/manual_data.json`), embeds results as JSON, plotly.js, example PNGs and an API reference generated from docstrings into `docs/manual_template.html`. |
@@ -102,6 +104,8 @@ high-fidelity sequential navigation filters (an EKF/UKF may follow `od.py`).
   architecture -> `docs/build_case_study.py` -> `docs/case_study_base_stations.html`.
 
 * **Orbit determination**: `Observation` list (`od.obs_*` constructors) -> `od.determine_orbit(obs, catalog)` -> IOD and catalogue hypotheses -> `od.fit` (batch LS) per hypothesis -> `ODReport` ranked by chi-square, each with covariance, nearest periodic orbit (`OrbitMatch`) and `predict()`; `od.assess_fate` samples the covariance for capture / escape / impact.
+
+* **Real astrometry**: MPC lines -> `astrometry.parse` -> `astrometry.to_observations` (station observers, light-time) -> `astrometry.gauss_iod` -> `od.fit(..., dynamics=ephemeris.NBodyDynamics(...))` -> `ODResult` -> `NBodyDynamics.propagate` (impact event) -> `ephemeris.selenographic`. Case study: `docs/build_case_study_od.py` -> `docs/case_study_change5t1.html`.
 
 All internal computation is **nondimensional CR3BP** in the **barycentric rotating
 (synodic) frame**: x from Earth toward Moon, z along the system angular momentum.
@@ -246,6 +250,25 @@ Conversion to km, km/s, days happens only at the edges (inputs/outputs, plots).
   Hermite interpolation (derivatives from the EOM). The nearest *exact* periodic orbit is found by re-correcting
   interpolated family members (bounded 1-D search between neighbours). "Stable" means linearly stable (stability index
   nu <= 1); the fate Monte Carlo reports what the fitted (possibly transient) state actually does.
+* **ADR-27 Pluggable dynamics in `od`; an ephemeris model for real data.** Real astrometry of a cislunar object cannot be
+  fitted in the CR3BP: over 5 days the Sun's tidal acceleration alone displaces a 300,000-km-distant object by ~3,000 km
+  (arcminutes on the sky), and the real Moon is up to 21,000 km from its circular CR3BP position. `od.fit` therefore takes
+  a `dynamics` object (`propagate_many(x0, t0, times, with_stm)`); the default stays the CR3BP. `NBodyDynamics` works in
+  Earth-centred J2000 with the same nondimensional units (L*, T*), so `od`'s scaling, priors and reporting carry over.
+  Moon/Sun come from JPL Horizons tables (cached in the repo so builds are reproducible offline); STM partials ignore J2
+  (negligible). Solar radiation pressure is an optional cannonball term (C_r A/m, no shadow); the Chang'e case study
+  shows it dominates a 6-week lunar-impact forecast yet is unobservable from a 5-day arc. Not modelled: shadow, relativity.
+* **ADR-28 Astrometric measurement model.** MPC positions are astrometric (J2000, light-time included, no aberration):
+  the model is the geometric topocentric direction to the target at t - rho/c (first-order back-step along the velocity,
+  two iterations). Stations come from MPC parallax constants rotated by GAST, nutation (leading terms, ~0.5" error) and
+  IAU-1976 precession; UT1 = UTC, no polar motion (< 50 m at the site). Observation noise defaults to 1" per axis; the
+  fit reports per-station residuals so outliers can be down-weighted.
+* **ADR-29 Case-study data provenance.** Real data lives in `docs/data/<case>/` with source URLs and fetch dates; the
+  ground truth (LROC crater) is kept separate from anything used in the fit.
+* **ADR-30 Area-to-mass ratio as an identification test.** Solar radiation pressure (C_r A/m) is profiled by refitting the
+  orbit on a grid of fixed values and fitting a parabola to chi-square (simpler than adding a 7th estimated parameter, and it
+  shows the whole likelihood). Outliers are rejected at 5x the robust scatter (min 3"), re-done at the best value. Hollow
+  hardware (~0.01-0.02 m^2/kg) and rock (~3e-5 to 2e-4) differ ~100x, so a months-long arc separates them decisively.
 * **ADR-11 Performance.** Pure numpy/scipy; the STM right-hand side is hand-expanded
   (~24 us/call). Trial trajectories that hit a primary are stopped by an event.
   numba is a possible future accelerator (not installed on the dev machine).
@@ -295,6 +318,9 @@ cislunar/
       roll-up, manual section 11 (44 tests passing)
 - [x] Phase 6f -- servicing-station case study (`servicing.py`, docs/case_study_base_stations.html; 55-route matrix, 32 min on 7 cores)
 - [x] Phase 6g -- orbit determination & identification from sparse observations (`od.py`)
+- [x] Phase 6h -- real-data OD case study: Chang'e 5-T1 stage lunar impact (`ephemeris.py`, `astrometry.py`)
+- [x] Phase 6i -- second real-data OD case study: TESS stable 2:1 lunar-resonant orbit vs NASA truth (`docs/case_study_tess.html`)
+- [x] Phase 6j -- rock-or-rocket case study (2020 SO vs 2024 PT5), range-scan IOD, MPC station loader
 - [ ] Phase 9 -- additional families (axial, vertical, butterfly); quasi-periodic tori
 
 ## 8. Open questions

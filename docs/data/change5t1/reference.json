@@ -1,0 +1,27 @@
+{
+  "object": "WE0913A = 2014-065B = Long March 3C third stage from Chang'e 5-T1 (launched 2014-10-23 18:00 UTC); first misidentified as 2015-007B, the DSCOVR Falcon 9 second stage",
+  "find_orb_elements_jan_arc": {
+    "source": "https://projectpluto.com/temp/dscovr.htm (Find_Orb, 111 observations 2022 Jan 15-20, mean residual 0.731 arcsec)",
+    "epoch_tt": "2022-01-21.0 (JD 2459600.5)",
+    "frame": "J2000 equator, geocentric",
+    "a_km": 295911.94259, "a_sigma_km": 96.5,
+    "e": 0.889824677, "e_sigma": 3.05e-5,
+    "i_deg": 27.0092517, "i_sigma_deg": 6e-5,
+    "raan_deg": 17.8212832, "raan_sigma_deg": 6e-4,
+    "argp_deg": 149.2278077, "argp_sigma_deg": 0.0037,
+    "mean_anomaly_deg": 0.1621535087,
+    "perigee_tt": "2022-01-20.9916485",
+    "perigee_km": 32602.193723, "apogee_km": 559221.69147, "period_days": 18.54
+  },
+  "gray_impact_prediction": {
+    "source": "https://projectpluto.com/temp/dscovr.htm (January and February astrometry)",
+    "utc": "2022-03-04T12:25:23", "lat_deg": 5.36, "lon_east_deg": 234.93
+  },
+  "jpl_prediction_note": "Per https://projectpluto.com/temp/imaged.htm the crater was ~8 km from JPL's predicted point and ~16 km from Gray's; uncertainty ~ a dozen km because the last observations were ~4 weeks before impact.",
+  "crater": {
+    "source": "LROC, M. Robinson, 2022-06-23, https://lroc.im-ldi.com/posts/1261 (before M1400727806L 2022-02-28, after M1407760984R 2022-05-21)",
+    "lat_deg": 5.226, "lon_east_deg": 234.486, "elevation_m": 1863,
+    "description": "double crater, eastern 18 m on western 16 m, ~28-29 m across, NE rim of Hertzsprung basin"
+  },
+  "impact_angle_from_vertical_deg": 15
+}

@@ -1,0 +1,9 @@
+# MPC observatory codes used (https://www.minorplanetcenter.net/iau/lists/ObsCodes.html, fetched 2026-11-07)
+# code  east_lon_deg  rho_cos_phi  rho_sin_phi  name   (rho in Earth equatorial radii)
+703 249.26736  0.845311  +0.533211  Catalina Sky Survey, Arizona, USA
+858 253.7800   0.8194    +0.5719    Tebbutt Observatory, Edgewood, New Mexico, USA
+G96 249.21128  0.845107  +0.533611  Mt. Lemmon Survey, Arizona, USA
+I41 243.14022  0.836322  +0.546875  Palomar Mountain ZTF, California, USA
+I52 249.21108  0.845109  +0.533609  Steward Observatory Mt. Lemmon Station, Arizona, USA
+J95 358.55301  0.624152  +0.778715  Great Shefford, England
+T08 204.42395  0.943290  +0.332467  ATLAS-MLO, Mauna Loa, Hawaii, USA

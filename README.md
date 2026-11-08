@@ -5,7 +5,7 @@ computing intercepts, rendezvous and RPOD approach sequences. The dynamics model
 is the Earth-Moon circular restricted three-body problem (CR3BP).
 See [architecture.md](architecture.md) for design and decisions.
 
-**Read online:** [user manual](https://yoyoerx.github.io/cislunar/manual.html) · [servicing base-station case study](https://yoyoerx.github.io/cislunar/case_study_base_stations.html)
+**Read online:** [user manual](https://yoyoerx.github.io/cislunar/manual.html) · [servicing base-station case study](https://yoyoerx.github.io/cislunar/case_study_base_stations.html) · [orbit determination from real astrometry: the Chang'e 5-T1 stage's lunar impact](https://yoyoerx.github.io/cislunar/case_study_change5t1.html) · [TESS: a stable resonant orbit from survey sightings](https://yoyoerx.github.io/cislunar/case_study_tess.html) · [rock or rocket? 2020 SO vs 2024 PT5](https://yoyoerx.github.io/cislunar/case_study_rock_or_rocket.html)
 
 ## Install
 
@@ -146,6 +146,27 @@ If the data fix all six state components, you get a batch least-squares fit with
 covariance. If they don't (for example a single position fix), the periodic-orbit
 catalogue supplies hypotheses, and each family is searched for the member that best
 fits the data. The answer is then a ranked list that narrows as you add observations.
+
+## Case study: orbit determination from real observations
+
+`docs/case_study_change5t1.html` fits 111 published amateur and professional astrometric observations of the
+Chang'e 5-T1 Long March 3C stage (2022 Jan 15-20) and forecasts its lunar impact on 2022-03-04, then checks the
+forecast against the crater LRO found. It uses `cislunar.ephemeris` (JPL Horizons Moon/Sun tables, Earth orientation,
+an Earth+Moon+Sun n-body model with solar radiation pressure) and `cislunar.astrometry` (MPC formats, observatory codes,
+Gauss angles-only IOD). The fit matches Find_Orb's orbit; the January-only forecast lands 135 km from the crater with
+gravity alone, and 4 km away when a modest sunlight pressure is allowed (which the January data cannot measure).
+Rebuild with `python docs/build_case_study_od.py --rebuild` (~8 min). Data and sources: `docs/data/change5t1/`.
+
+A companion study, `docs/case_study_tess.html`, does the same for NASA's TESS in its stable 2:1 lunar-resonant
+orbit: 20 sky-survey sightings from late 2020 give an orbit within tens of km of NASA's trajectory near apogee, a
+sunlight-pressure value of 0.0273 +/- 0.0003 m^2/kg (Find_Orb: 0.0269 +/- 0.0002), and ten-year runs that stay bound
+and resonance-locked. Rebuild with `python docs/build_case_study_tess.py --rebuild` (~11 min). Data: `docs/data/tess/`.
+
+A third study, `docs/case_study_rock_or_rocket.html`, fits 2020 SO (the Surveyor 2 Centaur stage) and 2024 PT5 (a natural
+mini-moon) with the same pipeline and measures the sunlight push on each: C_r A/m = 0.0125 +/- 0.0001 m^2/kg for 2020 SO
+(Find_Orb: 0.0126), about 100 times that of 2024 PT5 (0.00013 +/- 0.00002, a ~10 m rock). It adds an angles-only
+range-scan IOD (`astrometry.range_scan_iod`) for objects where Gauss's method fails. Rebuild with
+`python docs/build_case_study_rock.py --rebuild` (~17 min). Data: `docs/data/rock_or_rocket/`.
 
 ## Tests
 

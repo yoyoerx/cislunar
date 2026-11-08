@@ -1,0 +1,11 @@
+# MPC observatory codes used (https://www.minorplanetcenter.net/iau/lists/ObsCodes.html, fetched 2026-11-07)
+# code  east_lon_deg  rho_cos_phi  rho_sin_phi  name   (rho in Earth equatorial radii)
+104  10.80375  0.719842  +0.692040  San Marcello Pistoiese, Italy
+204   8.76972  0.697648  +0.714307  Schiaparelli Observatory, Italy
+718 247.7042   0.76004   +0.64802   Tooele, Utah, USA
+970   0.49348  0.620452  +0.781632  Chelmsford, England
+C95   5.71239  0.721406  +0.690350  SATINO Remote Observatory, Haute Provence, France
+J57 358.89083  0.767822  +0.638840  Centro Astronomico Alto Turia, Spain
+J95 358.55301  0.624152  +0.778715  Great Shefford, England
+K19   5.64731  0.720582  +0.691187  PASTIS Observatory, Banon, France
+L34  14.02061  0.789742  +0.611548  Galhassin Robotic Telescope, Isnello, Italy

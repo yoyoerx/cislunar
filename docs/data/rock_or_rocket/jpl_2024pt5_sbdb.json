@@ -1,0 +1,41 @@
+{
+ "object": {
+  "orbit_class": {
+   "code": "APO",
+   "name": "Apollo"
+  },
+  "fullname": "(2024 PT5)",
+  "spkid": "54466137",
+  "orbit_id": "70",
+  "neo": true,
+  "prefix": null,
+  "des": "2024 PT5",
+  "pha": false,
+  "kind": "au"
+ },
+ "orbit": {
+  "orbit_id": "70",
+  "epoch": "2461200.5",
+  "first_obs": "2024-07-31",
+  "last_obs": "2025-02-06",
+  "n_obs_used": 380,
+  "data_arc": "190",
+  "model_pars": [],
+  "rms": "0.41",
+  "comment": null
+ },
+ "phys_par": [
+  {
+   "units": null,
+   "name": "H",
+   "title": "absolute magnitude",
+   "ref": "E2025C64",
+   "desc": "absolute magnitude (magnitude at 1 au from Sun and observer)",
+   "sigma": ".5125",
+   "notes": "autocmod 3.0f",
+   "value": "27.45"
+  }
+ ],
+ "fetched": "2026-11-07",
+ "source": "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=2024%20PT5"
+}

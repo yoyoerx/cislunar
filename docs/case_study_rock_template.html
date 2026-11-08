@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case study: rock or rocket? Two objects the Earth caught</title>
+<style>/*__CSS__*/
+.small { font-size: 13px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.src { font-size: 13px; color: var(--ink2); }
+</style>
+<script>/*__PLOTLY__*/</script>
+</head>
+<body>
+<header class="top">
+  <span class="brand">cislunar</span><span class="ver">case study &middot; rock or rocket? &middot; v__VERSION__</span>
+  <button id="themeBtn" type="button">Toggle dark mode</button>
+</header>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+<ol>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#objects">Two visitors</a></li>
+  <li><a href="#idea">The idea: sunlight as a scale</a></li>
+  <li><a href="#data">The observations</a></li>
+  <li><a href="#first">First orbits</a></li>
+  <li><a href="#test">The test</a></li>
+  <li><a href="#verdict">The verdict</a></li>
+  <li><a href="#capture">Were they really captured?</a></li>
+  <li><a href="#checks">Checks against the professionals</a></li>
+  <li><a href="#limits">Limits</a></li>
+  <li><a href="#reproduce">Reproduce it</a></li>
+</ol>
+</nav>
+<main>
+
+<section id="summary">
+<h1>Rock or rocket? Two objects the Earth caught, and how to tell them apart</h1>
+<p class="lede">Every so often the Earth briefly captures a small object, which loops around us for a few weeks or months and then leaves.
+Some are natural boulders. Some are old rocket stages coming home. From a telescope both look like the same faint moving dot.
+This case study takes two of them, <b>2020 SO</b> and <b>2024 PT5</b>, runs the published observations through exactly the same
+<code>cislunar</code> pipeline, and lets the orbits say which is which.</p>
+<div class="callout"><span class="tag">Headline results</span><div id="headline"></div></div>
+</section>
+
+<section id="objects">
+<h2>1. Two visitors</h2>
+<p><b>2020 SO</b> was found by the Pan-STARRS survey in September 2020 and catalogued as a small asteroid. Its orbit around the Sun was almost
+identical to the Earth's, with low inclination and very low speed relative to us, which is suspicious for a natural object. It was captured by the
+Earth from November 2020 to March 2021. Paul Chodas at JPL traced its orbit back to a close pass by the Earth in September 1966, matching the
+launch of NASA's Surveyor 2 lunar lander. Spectra from NASA's Infrared Telescope Facility later matched painted stainless steel. It is the
+Centaur upper stage that sent Surveyor 2 toward the Moon. It has since been removed from the asteroid catalogues, so today the Minor Planet
+Center and JPL's small-body database both answer "not found".</p>
+<p><b>2024 PT5</b> was found by the ATLAS survey in August 2024. It is about 10 m across and was temporarily captured from late September to
+late November 2024; news reports called it the Earth's "second moon". Its spectrum resembles lunar rock, which suggests it may be a fragment
+blasted off the Moon by an old impact. Nobody has suggested it is artificial.</p>
+<p class="src">Sources: <a href="https://projectpluto.com/pluto/mpecs/66084b.htm">Project Pluto pseudo-MPEC for 2020 SO = Surveyor 2 Centaur</a> (astrometry and
+Find_Orb orbit); 2024 PT5 astrometry from the <a href="https://data.minorplanetcenter.net/api/get-obs">Minor Planet Center</a> and JPL's orbit from
+<a href="https://ssd.jpl.nasa.gov/horizons/">Horizons</a> / <a href="https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=2024%20PT5">SBDB</a>; Moon and Sun from JPL Horizons.
+The background on each object's identification is from published reports, not from this analysis.</p>
+</section>
+
+<section id="idea">
+<h2>2. The idea: sunlight as a scale</h2>
+<p>Sunlight carries momentum, so it pushes on whatever it hits. The push is proportional to the area facing the Sun, and the acceleration it causes
+is inversely proportional to mass. So what matters is the <b>area-to-mass ratio</b> <i>A/m</i>, multiplied by a reflectivity factor
+<i>C<sub>r</sub></i> between about 1 and 2.</p>
+<ul>
+<li>A <b>solid rock</b> 5&ndash;15&nbsp;m across, with density 2&ndash;3.5&nbsp;g/cm&sup3;, has <i>C<sub>r</sub>A/m</i> of roughly <b>0.00003&ndash;0.0002</b> m&sup2;/kg.</li>
+<li>An <b>empty rocket stage</b> is a thin-walled tank. A Centaur, about 9&nbsp;m long, 3&nbsp;m wide and 2&nbsp;t empty, tumbling, has
+<i>C<sub>r</sub>A/m</i> of roughly <b>0.01&ndash;0.02</b> m&sup2;/kg.</li>
+</ul>
+<p>That is a factor of about a hundred. You can't weigh an object 1,000,000&nbsp;km away, but its orbit records how hard sunlight has been pushing
+on it. Over weeks to months the push displaces a hollow object by thousands of kilometres and a rock by tens. The test: fit each orbit with
+<i>C<sub>r</sub>A/m</i> as a free parameter and see where it lands.</p>
+</section>
+
+<section id="data">
+<h2>3. The observations</h2>
+<div id="dataTable"></div>
+<div class="figure">
+  <div class="ftitle">Figure 1. Observing nights for each object</div>
+  <div class="fsub">One dot per observation, by date. 2020 SO was watched closely through its capture and its close pass by the Earth on 1 December 2020.
+  2024 PT5 was followed for six months, through its capture and beyond.</div>
+  <div id="fig-timeline" class="plot short"></div>
+</div>
+</section>
+
+<section id="first">
+<h2>4. First orbits</h2>
+<p id="firstText"></p>
+</section>
+
+<section id="test">
+<h2>5. The test</h2>
+<p><b>Gravity alone.</b> First, fit each object as a pure point mass moving under the Earth, Moon and Sun, the way you would fit a rock. Start with a
+few days of data and keep extending the arc:</p>
+<div class="figure">
+  <div class="ftitle">Figure 2. Can gravity alone explain the whole arc?</div>
+  <div class="fsub">RMS residual of the best gravity-only orbit as the arc grows. A correct model stays near the measurement noise (about 0.5&ndash;1&Prime;)
+  however long the arc. The dashed line is 2020 SO fitted with the sunlight pressure measured below.</div>
+  <div id="fig-growth" class="plot short"></div>
+</div>
+<p id="growthText"></p>
+<p><b>Measuring the push.</b> Next, repeat the fit over the whole arc for a range of <i>C<sub>r</sub>A/m</i> values:</p>
+<div class="figure">
+  <div class="ftitle">Figure 3. How well each sunlight-pressure value fits the data</div>
+  <div class="fsub">&Delta;&chi;&sup2; above the best fit (log scale; a rise of 1 is one standard deviation, 25 is five). The two objects need very different
+  amounts of push. Note the different horizontal scales.</div>
+  <div id="fig-profile" class="plot short"></div>
+</div>
+<p id="profileText"></p>
+</section>
+
+<section id="verdict">
+<h2>6. The verdict</h2>
+<div class="figure">
+  <div class="ftitle">Figure 4. Measured sunlight push compared with what rocks and rocket stages should show</div>
+  <div class="fsub">Log scale. Shaded bands are the rough expectations from section 2. If a measurement were consistent with zero, the
+  marker is its 95% upper limit. Error bars are &plusmn;2&sigma;.</div>
+  <div id="fig-verdict" class="plot short"></div>
+</div>
+<p id="verdictText"></p>
+<div class="figure">
+  <div class="ftitle">Figure 5. Residuals of the final fits</div>
+  <div class="fsub">Observed minus computed position for every observation, in arcseconds. Grey crosses are observations rejected as outliers, those more
+  than five times the typical scatter.</div>
+  <div id="fig-resid" class="plot short"></div>
+</div>
+</section>
+
+<section id="capture">
+<h2>7. Were they really captured?</h2>
+<p>"Captured" usually means that, measured from the Earth, the object's orbital energy is negative (it is bound to the Earth, not just passing), while it
+is within a few Hill radii. The Hill radius, 1.5 million km, is where the Earth's pull and the Sun's tidal pull balance. This is a three-body
+problem, but the relevant pair is the <b>Sun and the Earth</b>, not the Earth and the Moon. The toolkit's CR3BP machinery works the same way for any
+pair of bodies; the Sun&ndash;Earth L1 and L2 points sit about 1.5 million km sunward and anti-sunward of the Earth.</p>
+<div class="tiles" id="captureTiles"></div>
+<div class="figure">
+  <div class="ftitle">Figure 6. Distance from the Earth through each capture</div>
+  <div class="fsub">Time is measured from each object's closest approach. The dashed line is the Hill radius. Thick segments are where the object was bound
+  to the Earth (negative geocentric energy, within three Hill radii).</div>
+  <div id="fig-dist" class="plot short"></div>
+</div>
+<div class="figure">
+  <div class="ftitle">Figure 7. The captures seen from a frame that turns with the Earth around the Sun</div>
+  <div class="fsub">Earth at the centre, Sun far to the left. The circle is the Hill sphere and the crosses are the Sun&ndash;Earth L1 and L2 points.
+  2020 SO comes in near L1, loops around the Earth inside the Hill sphere, and leaves near L2. 2024 PT5 swept through the Hill sphere in July&ndash;August, too
+  fast to be held, then drifted outward. Its energy-defined "capture" happened later, 3.5&ndash;4 million km out (lower right).</div>
+  <div id="fig-rot" class="plot tall"></div>
+</div>
+<div class="figure">
+  <div class="ftitle">Figure 8. The Sun&ndash;Earth Jacobi value</div>
+  <div class="fsub">In the Sun&ndash;Earth three-body problem the Jacobi constant sets which regions are reachable. Just below the L1/L2 values (dashed) only a narrow neck
+  around L1 and L2 is open, which is the regime of slow, looping temporary captures like 2020 SO's. Far below, as for 2024 PT5, the region around the Earth is wide
+  open and an object can wander past freely.</div>
+  <div id="fig-jacobi" class="plot short"></div>
+</div>
+<p id="captureText"></p>
+</section>
+
+<section id="checks">
+<h2>8. Checks against the professionals</h2>
+<div id="checkTable"></div>
+<div class="figure">
+  <div class="ftitle">Figure 9. 2024 PT5: this fit against JPL's orbit</div>
+  <div class="fsub">Distance between the two orbit solutions over the observed arc. JPL's is also a fit to the same observations, so this checks the
+  method, not the truth.</div>
+  <div id="fig-jpl" class="plot short"></div>
+</div>
+</section>
+
+<section id="limits">
+<h2>9. Limits</h2>
+<ul>
+<li>Sunlight pressure is modelled as a steady push away from the Sun (a "cannonball"). A tumbling stage presents a changing area, and reflected and
+re-emitted heat add small sideways pushes. The fitted value is an average effective number.</li>
+<li>Planets other than the Earth are left out. Over a few months near the Earth their effect is small, but not zero. For 2024 PT5, which spent months
+millions of km from the Earth, their pull could account for part of its small measured push.</li>
+<li>For 2020 SO only the November&ndash;January part of the published arc is used here (Project Pluto lists earlier observations back to August 2020).</li>
+<li>The expected ranges for rocks and stages in section 2 are rough. The point is the factor of about a hundred between them, not the exact edges.</li>
+<li>The identification of 2020 SO as Surveyor 2's Centaur rests on JPL's back-integration to 1966 and on spectra. This analysis independently confirms
+the hollow-object signature, not the specific launch.</li>
+</ul>
+</section>
+
+<section id="reproduce">
+<h2>10. Reproduce it</h2>
+<pre><code>python docs/data/rock_or_rocket/fetch_data.py      # once: MPC/JPL data (results are committed)
+python docs/build_case_study_rock.py --rebuild       # about 20 minutes on 7 cores, offline</code></pre>
+<p>Data with sources and fetch dates: <code>docs/data/rock_or_rocket/</code>. The new toolkit pieces used here are <code>astrometry.range_scan_iod</code>
+(angles-only first orbit by scanning trial distances, for objects where Gauss's method fails), <code>astrometry.mpc_stations</code>, and sunlight
+pressure in <code>ephemeris.NBodyDynamics</code>.</p>
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+const D = /*__DATA__*/null;
+const CFG = {displaylogo: false, responsive: true, modeBarButtonsToRemove: ["select2d", "lasso2d"]};
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 0) => Number(v).toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
+function tok() {
+  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim();
+  return {surface: g("--surface"), ink: g("--ink"), ink2: g("--ink2"), muted: g("--muted"), grid: g("--grid"), axis: g("--axis"),
+    earth: g("--earth"), moon: g("--moon"), s: [g("--s1"), g("--s2"), g("--s3"), g("--s4"), g("--s5"), g("--s6")], critical: g("--critical")};
+}
+const charts = [];
+function register(fn) { charts.push(fn); fn(); }
+$("themeBtn").addEventListener("click", () => {
+  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
+  document.documentElement.dataset.theme = dark ? "light" : "dark"; charts.forEach((f) => f());
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => charts.forEach((f) => f()));
+function axis(t, title, extra = {}) {
+  return Object.assign({title: {text: title, font: {color: t.ink2, size: 13}}, gridcolor: t.grid, zerolinecolor: t.axis,
+    linecolor: t.axis, tickfont: {color: t.ink2, size: 11}}, extra);
+}
+function layout2d(t, xt, yt, extra = {}) {
+  return Object.assign({paper_bgcolor: t.surface, plot_bgcolor: t.surface, font: {family: "system-ui, -apple-system, Segoe UI, sans-serif", color: t.ink, size: 12},
+    margin: {l: 64, r: 16, t: 20, b: 50}, xaxis: axis(t, xt), yaxis: axis(t, yt), legend: {font: {color: t.ink}, bgcolor: "rgba(0,0,0,0)"}}, extra);
+}
+const tileHtml = (rows) => rows.map(([a, b]) => `<div class="tile"><div class="k">${a}</div><div class="v">${b}</div></div>`).join("");
+const table = (head, rows, num = []) => `<table><thead><tr>${head.map((h, i) => `<th${num.includes(i) ? ' class="num"' : ""}>${h}</th>`).join("")}</tr></thead><tbody>` +
+  rows.map((r) => `<tr>${r.map((c, i) => `<td${num.includes(i) ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+
+const SO = D.objects["2020so"], PT = D.objects["2024pt5"], OBJ = [SO, PT];
+const COLOR = (t, i) => [t.s[1], t.s[0]][i];   // 2020 SO orange (hardware), 2024 PT5 blue (rock)
+const ROCK = [3e-5, 2e-4], STAGE = [0.01, 0.02];
+const upper = (o) => Math.max(o.amr, 0) + 2 * o.amr_sigma;
+const detected = (o) => o.amr > 3 * o.amr_sigma;
+const RH = D.r_hill_km;
+function interval(o, cond) {
+  const k = o.traj.date.map((d, i) => cond(i) ? i : -1).filter((i) => i >= 0);
+  return k.length ? {a: o.traj.date[k[0]].slice(0, 10), b: o.traj.date[k.at(-1)].slice(0, 10), k} : null;
+}
+const bound = (o) => interval(o, (i) => o.traj.energy[i] < 0 && o.traj.r_km[i] < 3 * RH);
+const boundInside = (o) => interval(o, (i) => o.traj.energy[i] < 0 && o.traj.r_km[i] < RH);
+const rangeWhile = (o, iv) => iv ? [Math.min(...iv.k.map((i) => o.traj.r_km[i])), Math.max(...iv.k.map((i) => o.traj.r_km[i]))] : null;
+const tClose = (o) => o.traj.date[o.traj.r_km.indexOf(Math.min(...o.traj.r_km))];
+const daysFrom = (o) => { const t0 = Date.parse(tClose(o).replace(" ", "T") + ":00Z");
+  return o.traj.date.map((d) => (Date.parse(d.replace(" ", "T") + ":00Z") - t0) / 864e5); };
+const fmtSci = (v) => v === 0 ? "0" : Math.abs(v) >= 0.001 ? fmt(v, 4) : v.toExponential(1);
+
+(function texts() {
+  const ratio = SO.amr / (detected(PT) ? PT.amr : upper(PT));
+  $("headline").innerHTML = `<ul>
+  <li><b>2020 SO:</b> sunlight pushes on it with <i>C<sub>r</sub>A/m</i> = <b>${fmt(SO.amr, 4)} &plusmn; ${fmt(SO.amr_sigma, 4)}</b> m&sup2;/kg. That is squarely in
+  the range of an empty rocket stage and about a hundred times too much for a rock. Find_Orb's independent value: ${fmt(SO.find_orb.amr, 4)}.</li>
+  <li><b>2024 PT5:</b> <i>C<sub>r</sub>A/m</i> = <b>${fmtSci(PT.amr)} &plusmn; ${fmtSci(PT.amr_sigma)}</b> m&sup2;/kg${detected(PT) ? ", a tiny but measurable push" : ", consistent with zero"}.
+  That is right in the range of a solid rock about 10 m across, and ${fmt(SO.amr / Math.max(PT.amr, PT.amr_sigma))} times less than 2020 SO.</li>
+  <li><b>Without sunlight pressure</b>, no orbit fits 2020 SO's three months of data (${fmt(SO.steps_gravity.at(-1).rms, 1)}&Prime; RMS, against ${fmt(SO.final.rms, 2)}&Prime;
+  with it). 2024 PT5 fits fine with gravity alone over six months (${fmt(PT.steps_gravity.at(-1).rms, 2)}&Prime;).</li>
+  <li><b>Two different kinds of capture:</b> 2020 SO was bound to the Earth <i>and</i> inside its Hill sphere from ${boundInside(SO).a} to ${boundInside(SO).b}
+  (NASA's published dates), looping around us. 2024 PT5 was bound only in the energy sense, from ${bound(PT).a} to ${bound(PT).b}, while staying
+  ${fmt(rangeWhile(PT, bound(PT))[0] / 1e6, 1)}&ndash;${fmt(rangeWhile(PT, bound(PT))[1] / 1e6, 1)} million km away: a loose, distant "mini-moon".</li></ul>`;
+  $("dataTable").innerHTML = table(["", "Observations", "Observatories", "First", "Last", "Arc"],
+    OBJ.map((o) => [o.label, o.n_obs, o.stations.length, o.first_utc, o.last_utc, `${fmt(o.arc_days)} days`]), [1, 2, 5]);
+  const I1 = SO.iod, I2 = PT.iod;
+  $("firstText").innerHTML = `<b>2020 SO.</b> Gauss's three-observation method (section 4 of the Chang'e case study) works directly. From ${I1.n} observations in the first
+    ${fmt(I1.days)} days it puts the object ${fmt(I1.r_km)} km from Earth, close enough to be bound to it.<br><br>
+    <b>2024 PT5.</b> Gauss's method assumes the Earth's gravity dominates. In July&ndash;August 2024, 2024 PT5 was about a million kilometres away on an
+    orbit around the Sun. ${I2.gauss_r_km.length ? `Gauss returns ${I2.gauss_r_km.map((r) => fmt(r) + " km").join(", ")}, which is wrong.` : "On this window Gauss's method finds no physical solution at all (a nearby window gives a distance of 40,000 km, also wrong)."} The toolkit's new <b>range scan</b> handles it. It tries a grid of
+    distances for the first and last observation of a ${fmt(I2.days)}-day window (${I2.n} observations), turns each pair into a trial orbit, and fits
+    each with the full Earth&ndash;Moon&ndash;Sun model. The best fit puts it ${fmt(I2.r_km)} km away, within a few hundred km of JPL's orbit. The scan took
+    ${fmt(I2.seconds / 60, 1)} minutes on 7 cores.`;
+  $("growthText").innerHTML = `2024 PT5's gravity-only fit stays at ${fmt(Math.min(...PT.steps_gravity.map((s) => s.rms)), 2)}&ndash;${fmt(Math.max(...PT.steps_gravity.map((s) => s.rms)), 2)}&Prime; as the arc
+    grows to ${fmt(PT.arc_days)} days, creeping up slightly only at the end, where the small push measured below starts to show. A rock behaves like a rock. 2020 SO's starts as well as anything (${fmt(SO.steps_gravity[0].rms, 2)}&Prime; over the first days), then falls apart:
+    ${fmt(SO.steps_gravity.at(-1).rms, 1)}&Prime; over ${fmt(SO.arc_days)} days. Something besides gravity is pushing it. With the measured sunlight pressure the same arc fits to
+    ${fmt(SO.steps_srp.at(-1).rms, 2)}&Prime;.`;
+  const c0 = (o) => o.profile.find((p) => Math.abs(p.amr) < 1e-12).chi2 - Math.min(...o.profile.map((p) => p.chi2));
+  const at = (o, a) => { const p = o.profile.reduce((b, q) => Math.abs(q.amr - a) < Math.abs(b.amr - a) ? q : b); return p.chi2 - Math.min(...o.profile.map((q) => q.chi2)); };
+  $("profileText").innerHTML = `For 2020 SO the best value is <b>${fmt(SO.amr, 4)} &plusmn; ${fmt(SO.amr_sigma, 4)}</b> m&sup2;/kg. Zero, the rock hypothesis, is worse by
+    &Delta;&chi;&sup2; = ${fmt(c0(SO))}, rejected at roughly ${fmt(Math.sqrt(c0(SO)))} standard deviations. For 2024 PT5 the best value is ${fmtSci(PT.amr)} &plusmn; ${fmtSci(PT.amr_sigma)}${detected(PT) ? `, small but ${fmt(PT.amr / PT.amr_sigma)} standard deviations from zero` : ""}.
+    A push as strong as 2020 SO's would make its fit worse by &Delta;&chi;&sup2; &gt; ${fmt(at(PT, PT.profile.at(-1).amr))} even at only ${fmt(PT.profile.at(-1).amr, 3)} m&sup2;/kg.`;
+  $("verdictText").innerHTML = `<b>2020 SO is hollow.</b> Its measured push falls in the rocket-stage band and is ${fmt(SO.amr / ROCK[1])} times the top of the rock band.
+    <b>2024 PT5 is solid.</b> Its push ${detected(PT) ? "is measured, and falls" : "is consistent with zero, with an upper limit"} inside the rock band, ${fmt(ratio)} times below 2020 SO's value.
+    For a 10 m rock of density 2.5 g/cm&sup3;, <i>A/m</i> is 0.00006 m&sup2;/kg, so with <i>C<sub>r</sub></i> of 1&ndash;2 the measured value is just what a boulder
+    should show. Part of it may also be the pull of Venus and Jupiter, which this model leaves out over the six-month arc. The same data pipeline, with no
+    knowledge of what either object is, sorts them correctly. How an orbit responds to sunlight is one of the standard clues that a &ldquo;new asteroid&rdquo; is really old hardware.`;
+  const bi = boundInside(SO), bp = bound(PT), rp = rangeWhile(PT, bp);
+  const tiles = [["2020 SO: bound and inside the Hill sphere", `${bi.a.slice(5)} &rarr; ${bi.b.slice(5)} <small>${bi.a.slice(0, 4)}&ndash;${bi.b.slice(0, 4)}</small>`],
+    ["2024 PT5: bound (energy only)", `${bp.a.slice(5)} &rarr; ${bp.b.slice(5)} <small>${bp.a.slice(0, 4)}</small>`],
+    ["2024 PT5: distance while bound", `${fmt(rp[0] / 1e6, 1)}&ndash;${fmt(rp[1] / 1e6, 1)} <small>million km</small>`]];
+  OBJ.forEach((o) => tiles.push([`${o.label}: closest approach`, `${fmt(o.capture.min_r_km)} <small>km, ${o.capture.min_r_date}</small>`]));
+  $("captureTiles").innerHTML = tileHtml(tiles);
+  const cSO = [Math.min(...SO.traj.C), Math.max(...SO.traj.C)], cPT = [Math.min(...PT.traj.C), Math.max(...PT.traj.C)];
+  $("captureText").innerHTML = `<b>2020 SO</b> is a textbook temporary capture. It was bound and inside the Hill sphere from ${bi.a} to ${bi.b}, the dates NASA published, and swung to within
+    ${fmt(SO.capture.min_r_km)} km of the Earth on ${SO.capture.min_r_date}, inside the Moon's orbit. Its Jacobi value (${fmt(cSO[0], 5)}&ndash;${fmt(cSO[1], 5)}) sits just below
+    the L1/L2 values (${fmt(D.C_L.L1, 5)}). The zero-velocity surfaces are then barely open: there is a narrow neck at L1 and L2, the object squeezes through
+    one, loops, and squeezes back out.<br><br>
+    <b>2024 PT5</b> is a much looser affair. Its closest approach was ${fmt(PT.capture.min_r_km)} km on ${PT.capture.min_r_date}, <i>before</i> the "capture", when it crossed the Hill sphere too fast to be bound. By the energy definition it was
+    bound later, from ${bp.a} to ${bp.b}, but by then it was ${fmt(rp[0] / 1e6, 1)}&ndash;${fmt(rp[1] / 1e6, 1)} million km away, well outside the Hill sphere, and it never
+    completed an orbit of the Earth. Its Jacobi value (${fmt(cPT[0], 4)}) is far below the L1/L2 values, so no energy barrier stood in its way. It was a slow,
+    distant drift past us that the Earth's gravity briefly held on to. That is why it was widely noted that it never completed a full orbit of the Earth.
+    Both objects leave the way they came, back into orbit around the Sun: transient dynamics of the kind the toolkit's manifold and fate tools describe
+    for the Earth&ndash;Moon system, here at Sun&ndash;Earth scale.`;
+  $("checkTable").innerHTML = table(["Quantity", "This toolkit", "Reference"], [
+    ["2020 SO <i>C<sub>r</sub>A/m</i>", `${fmt(SO.amr, 4)} &plusmn; ${fmt(SO.amr_sigma, 4)} m&sup2;/kg`,
+     `${fmt(SO.find_orb.amr, 4)} &plusmn; ${fmt(SO.find_orb.amr_sigma, 5)} (Find_Orb A1 = ${SO.find_orb.A1.toExponential(2)} AU/d&sup2;, converted)`],
+    ["2020 SO fit RMS", `${fmt(SO.final.rms, 2)}&Prime; (${SO.n_used} of ${SO.n_obs} obs., Nov&ndash;Jan)`, `${SO.find_orb.rms}&Prime; (Find_Orb, ${SO.find_orb.n} obs., Aug&ndash;Jan)`],
+    ["2024 PT5 fit RMS", `${fmt(PT.final.rms, 2)}&Prime; (${PT.n_used} of ${PT.n_obs} obs.)`, `${PT.jpl.orbit.rms}&Prime; (JPL orbit ${PT.jpl.orbit.orbit_id}, ${PT.jpl.orbit.n_obs_used} obs., gravity only)`],
+    ["2024 PT5 vs JPL orbit", `${fmt(Math.min(...PT.vs_jpl.km))}&ndash;${fmt(Math.max(...PT.vs_jpl.km))} km over the arc`, "Figure 9"]], []);
+})();
+
+register(function timeline() {
+  const t = tok();
+  Plotly.react("fig-timeline", OBJ.map((o, i) => ({type: "scatter", mode: "markers", name: o.label,
+    x: o.resid.t_d.map((d) => new Date(Date.parse(o.first_utc + "T00:00:00Z") + d * 864e5).toISOString().slice(0, 10)),
+    y: o.resid.t_d.map(() => o.label), marker: {color: COLOR(t, i), size: 6, opacity: 0.6}, hovertemplate: "%{x}<extra></extra>"})),
+    layout2d(t, "date", "", {showlegend: false, margin: {l: 80, r: 16, t: 10, b: 46}}), CFG);
+});
+register(function growth() {
+  const t = tok(), tr = OBJ.map((o, i) => ({type: "scatter", mode: "lines+markers", name: `${o.label}, gravity only`, x: o.steps_gravity.map((s) => s.span_d),
+    y: o.steps_gravity.map((s) => s.rms), line: {color: COLOR(t, i), width: 2}}));
+  tr.push({type: "scatter", mode: "lines+markers", name: "2020 SO, with measured sunlight pressure", x: SO.steps_srp.map((s) => s.span_d), y: SO.steps_srp.map((s) => s.rms),
+    line: {color: COLOR(t, 0), width: 1.5, dash: "dash"}, marker: {symbol: "circle-open"}});
+  Plotly.react("fig-growth", tr, layout2d(t, "length of arc fitted [days]", "RMS residual [arcsec]", {yaxis: axis(t, "RMS residual [arcsec]", {type: "log"}),
+    xaxis: axis(t, "length of arc fitted [days]", {type: "log"}), legend: {x: 0.01, y: 0.99, font: {color: t.ink}}}), CFG);
+});
+register(function profile() {
+  const t = tok(), tr = OBJ.map((o, i) => { const c0 = Math.min(...o.profile.map((p) => p.chi2));
+    return {type: "scatter", mode: "lines+markers", name: o.label, x: o.profile.map((p) => p.amr), y: o.profile.map((p) => Math.max(p.chi2 - c0, 0.1)),
+      xaxis: i ? "x2" : "x", yaxis: i ? "y2" : "y", line: {color: COLOR(t, i), width: 2}, hovertemplate: "C<sub>r</sub>A/m %{x}: Δχ² %{y:.1f}<extra></extra>"}; });
+  Plotly.react("fig-profile", tr, layout2d(t, "", "", {grid: {rows: 1, columns: 2, pattern: "independent"},
+    xaxis: axis(t, "2020 SO: C<sub>r</sub>A/m [m²/kg]"), xaxis2: axis(t, "2024 PT5: C<sub>r</sub>A/m [m²/kg]"),
+    yaxis: axis(t, "Δχ²", {type: "log", range: [-1, 6]}), yaxis2: axis(t, "Δχ²", {type: "log", range: [-1, 6]}), legend: {orientation: "h", y: 1.15, font: {color: t.ink}}}), CFG);
+});
+register(function verdict() {
+  const t = tok();
+  const band = (x0, x1, c, label) => ({type: "rect", xref: "x", yref: "paper", x0, x1, y0: 0, y1: 1, fillcolor: c, opacity: 0.18, line: {width: 0}});
+  Plotly.react("fig-verdict", [
+    {type: "scatter", mode: "markers", name: "2020 SO (measured)", x: [SO.amr], y: ["2020 SO"], error_x: {type: "data", array: [2 * SO.amr_sigma], color: COLOR(t, 0)},
+      marker: {color: COLOR(t, 0), size: 12}},
+    detected(PT) ? {type: "scatter", mode: "markers", name: "2024 PT5 (measured)", x: [PT.amr], y: ["2024 PT5"], error_x: {type: "data", array: [2 * PT.amr_sigma], color: COLOR(t, 1)},
+      marker: {color: COLOR(t, 1), size: 12}} :
+    {type: "scatter", mode: "markers", name: "2024 PT5 (95% upper limit)", x: [upper(PT)], y: ["2024 PT5"], marker: {color: COLOR(t, 1), size: 14, symbol: "triangle-left"}}],
+    layout2d(t, "C<sub>r</sub>A/m [m²/kg], log scale", "", {xaxis: axis(t, "C<sub>r</sub>A/m [m²/kg], log scale", {type: "log", range: [-5, -1.3]}), showlegend: false,
+      margin: {l: 80, r: 16, t: 30, b: 50}, shapes: [band(ROCK[0], ROCK[1], t.s[2]), band(STAGE[0], STAGE[1], t.s[3])],
+      annotations: [{x: Math.log10(Math.sqrt(ROCK[0] * ROCK[1])), y: 1.08, yref: "paper", text: "solid rock, 5–15 m", showarrow: false, font: {size: 11, color: t.ink2}},
+        {x: Math.log10(Math.sqrt(STAGE[0] * STAGE[1])), y: 1.08, yref: "paper", text: "empty rocket stage", showarrow: false, font: {size: 11, color: t.ink2}}]}), CFG);
+});
+register(function resid() {
+  const t = tok(), tr = [];
+  OBJ.forEach((o, i) => {
+    const used = o.resid.used.map((u, k) => u ? k : -1).filter((k) => k >= 0), bad = o.resid.used.map((u, k) => u ? -1 : k).filter((k) => k >= 0);
+    tr.push({type: "scatter", mode: "markers", name: o.label, x: used.map((k) => o.resid.dra[k]), y: used.map((k) => o.resid.ddec[k]), xaxis: i ? "x2" : "x", yaxis: i ? "y2" : "y",
+      marker: {color: COLOR(t, i), size: 4, opacity: 0.6}, hovertemplate: `${o.label}<br>RA %{x:.2f}&Prime; Dec %{y:.2f}&Prime;<extra></extra>`});
+    tr.push({type: "scatter", mode: "markers", name: "rejected", showlegend: i === 0, x: bad.map((k) => o.resid.dra[k]), y: bad.map((k) => o.resid.ddec[k]), xaxis: i ? "x2" : "x", yaxis: i ? "y2" : "y",
+      marker: {color: t.muted, size: 7, symbol: "x"}});
+  });
+  const r = {range: [-5, 5]};
+  Plotly.react("fig-resid", tr, layout2d(t, "", "", {grid: {rows: 1, columns: 2, pattern: "independent"},
+    xaxis: axis(t, "2020 SO: RA cos(Dec) residual [arcsec]", r), yaxis: axis(t, "Dec residual [arcsec]", Object.assign({scaleanchor: "x"}, r)),
+    xaxis2: axis(t, "2024 PT5: RA cos(Dec) residual [arcsec]", r), yaxis2: axis(t, "Dec residual [arcsec]", Object.assign({scaleanchor: "x2"}, r)),
+    legend: {orientation: "h", y: 1.15, font: {color: t.ink}}}), CFG);
+});
+register(function dist() {
+  const t = tok(), tr = [];
+  OBJ.forEach((o, i) => {
+    const x = daysFrom(o), y = o.traj.r_km.map((v) => v / 1e6);
+    tr.push({type: "scatter", mode: "lines", name: o.label, x, y, line: {color: COLOR(t, i), width: 1.2}, hovertemplate: `${o.label} %{x:.0f} d: %{y:.2f} million km<extra></extra>`});
+    const yb = y.map((v, k) => o.traj.energy[k] < 0 && o.traj.r_km[k] < 3 * D.r_hill_km ? v : null);
+    tr.push({type: "scatter", mode: "lines", name: `${o.label} bound to Earth`, x, y: yb, line: {color: COLOR(t, i), width: 4}, hoverinfo: "skip"});
+  });
+  Plotly.react("fig-dist", tr, layout2d(t, "days from closest approach", "distance from Earth [million km]", {legend: {x: 0.01, y: 0.99, font: {color: t.ink}},
+    yaxis: axis(t, "distance from Earth [million km]", {type: "log"}),
+    shapes: [{type: "line", xref: "paper", x0: 0, x1: 1, y0: D.r_hill_km / 1e6, y1: D.r_hill_km / 1e6, line: {color: t.ink2, dash: "dash", width: 1}}]}), CFG);
+});
+register(function rot() {
+  const t = tok(), tr = [], H = D.r_hill_km / 1e6;
+  const circ = [...Array(73).keys()].map((i) => [H * Math.cos(i * Math.PI / 36), H * Math.sin(i * Math.PI / 36)]);
+  tr.push({type: "scatter", mode: "lines", name: "Hill sphere", x: circ.map((p) => p[0]), y: circ.map((p) => p[1]), line: {color: t.grid, dash: "dot"}, hoverinfo: "skip"});
+  OBJ.forEach((o, i) => tr.push({type: "scatter", mode: "lines", name: o.label, x: o.traj.x.map((v) => v / 1e6), y: o.traj.y.map((v) => v / 1e6),
+    line: {color: COLOR(t, i), width: 1.5}, customdata: o.traj.date, hovertemplate: "%{customdata}<extra></extra>"}));
+  tr.push({type: "scatter", mode: "markers+text", name: "Sun–Earth L1, L2", x: [D.L_km.L1 / 1e6, D.L_km.L2 / 1e6], y: [0, 0], text: ["L1", "L2"], textposition: "top center",
+    marker: {color: t.ink2, size: 9, symbol: "x"}, textfont: {color: t.ink2}});
+  tr.push({type: "scatter", mode: "markers", name: "Earth", x: [0], y: [0], marker: {color: t.earth, size: 10}});
+  Plotly.react("fig-rot", tr, layout2d(t, "← toward the Sun   x [million km]", "y [million km]", {yaxis: axis(t, "y [million km]", {scaleanchor: "x"}),
+    xaxis: axis(t, "← toward the Sun   x [million km]", {range: [-5, 5]}), legend: {x: 0.01, y: 0.99, font: {color: t.ink}, bgcolor: t.surface}}), CFG);
+});
+register(function jacobi() {
+  const t = tok(), L = D.C_L;
+  Plotly.react("fig-jacobi", OBJ.map((o, i) => ({type: "scatter", mode: "lines", name: o.label, x: daysFrom(o), y: o.traj.C, line: {color: COLOR(t, i), width: 1.5}})),
+    layout2d(t, "days from closest approach", "Sun–Earth Jacobi value", {legend: {x: 0.01, y: 0.99, font: {color: t.ink}},
+      shapes: ["L1", "L2"].map((k) => ({type: "line", xref: "paper", x0: 0, x1: 1, y0: L[k], y1: L[k], line: {color: t.ink2, dash: "dash", width: 1}})),
+      annotations: ["L1", "L2"].map((k, i) => ({xref: "paper", x: 0.99, y: L[k], text: `C at ${k}`, showarrow: false, xanchor: "right", yanchor: i ? "top" : "bottom", font: {size: 11, color: t.ink2}}))}), CFG);
+});
+register(function jplCmp() {
+  const t = tok();
+  Plotly.react("fig-jpl", [{type: "scatter", mode: "lines", name: "|this fit − JPL|", x: PT.vs_jpl.date, y: PT.vs_jpl.km, line: {color: COLOR(t, 1), width: 2}}],
+    layout2d(t, "date", "distance between solutions [km]", {showlegend: false}), CFG);
+});
+</script>
+</body>
+</html>

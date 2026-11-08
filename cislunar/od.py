@@ -49,7 +49,7 @@ _ZHAT = np.array([0.0, 0.0, 1.0])
 
 KINDS = {"position": 3, "velocity": 3, "angles": 2, "range": 1, "range_rate": 1,
          "velocity_direction": 2, "angle_rates": 2}
-FRAMES = ("rotating", "inertial", "equatorial")
+FRAMES = ("rotating", "inertial", "equatorial", "native")  # native: the state vector's own axes
 
 
 def _c_eq2in():
@@ -157,6 +157,8 @@ class Observation:
     frame: str = "rotating"
     theta0: float = 0.0
     label: str = ""
+    light_time: float = 0.0  # speed of light (nondim) to apply light-time; 0 = instantaneous
+    v_ssb: np.ndarray | None = None  # observer-system barycentric velocity (nondim) for astrometric directions
 
     def __post_init__(self):
         if self.kind not in KINDS:
@@ -175,7 +177,7 @@ class Observation:
     def axes(self, t=None) -> np.ndarray:
         """Matrix taking rotating-frame vector components into measurement axes."""
         t = self.t if t is None else t
-        if self.frame == "rotating":
+        if self.frame in ("rotating", "native"):
             return np.eye(3)
         m = frames.rot_z(t + self.theta0)
         return _C_EQ2IN.T @ m if self.frame == "equatorial" else m
@@ -186,7 +188,15 @@ class Observation:
         o = self.observer.state(self.t)
         rho = X[:, :3] - o[:3]
         rhod = X[:, 3:] - o[3:]
-        if self.frame != "rotating":
+        if self.light_time:
+            # target at emission time t - |rho|/c (first-order back-step); astrometric
+            # directions also carry the observer system's barycentric motion during tau
+            for _ in range(2):
+                tau = np.linalg.norm(rho, axis=1, keepdims=True) / self.light_time
+                rho = X[:, :3] - tau * X[:, 3:] - o[:3]
+                if self.v_ssb is not None:
+                    rho = rho - tau * self.v_ssb
+        if self.frame in ("inertial", "equatorial"):
             rhod = rhod + np.cross(_ZHAT, rho)
         m = self.axes()
         return rho @ m.T, rhod @ m.T
@@ -307,24 +317,32 @@ def obs_angle_rates(t_days, ra_rate_arcsec_s=None, dec_rate_arcsec_s=None, sigma
 
 
 def simulate(observations, x_epoch, epoch: float = 0.0, system: System = EARTH_MOON,
-             rng=None, noise: bool = True):
+             rng=None, noise: bool = True, dynamics=None):
     """Fill templates with synthetic measurements of a true state x_epoch (nondim, at
     nondim time ``epoch``), adding Gaussian noise with each observation's sigma."""
     rng = np.random.default_rng(rng)
     times = [o.t for o in observations]
-    states = _propagate_many(x_epoch, epoch, times, system, with_stm=False)
+    states = _prop(dynamics, x_epoch, epoch, times, system, with_stm=False)
     out = []
     for o, (x, _) in zip(observations, states):
         z = o.predict(x)[0]
         if noise:
             z = z + rng.normal(0.0, o.sigma)
-        out.append(Observation(o.t, o.kind, z, o.sigma.copy(), o.observer, o.frame, o.theta0, o.label))
+        out.append(Observation(o.t, o.kind, z, o.sigma.copy(), o.observer, o.frame, o.theta0, o.label,
+                               o.light_time, o.v_ssb))
     return out
 
 
 # ---------------------------------------------------------------------------
 # Propagation to observation times (with STM)
 # ---------------------------------------------------------------------------
+
+def _prop(dynamics, x0, t0, times, system: System, with_stm: bool = True):
+    """Propagate with a pluggable dynamics object (default: the CR3BP)."""
+    if dynamics is None:
+        return _propagate_many(x0, t0, times, system, with_stm)
+    return dynamics.propagate_many(x0, t0, times, with_stm)
+
 
 def _propagate_many(x0, t0, times, system: System, with_stm: bool = True):
     """States (and STMs) at each of ``times`` from x0 at t0. Returns list of (x, phi)."""
@@ -379,6 +397,7 @@ class ODResult:
     system: System = EARTH_MOON
     match: "OrbitMatch | None" = None
     weight: float = 1.0
+    dynamics: object = None  # None = CR3BP; else e.g. ephemeris.NBodyDynamics
 
     @property
     def score(self) -> float:
@@ -412,7 +431,7 @@ class ODResult:
         (days from the time origin of the observations). Linear covariance mapping."""
         s = self.system
         t = np.atleast_1d(s.nd_time_days(np.asarray(t_days, float)))
-        res = _propagate_many(self.x, self.epoch, t, s, with_stm=True)
+        res = _prop(self.dynamics, self.x, self.epoch, t, s, with_stm=True)
         X = np.array([s.state_to_dim(x) for x, _ in res])
         sig = np.array([s.km(np.sqrt(np.trace((phi @ self.P @ phi.T)[:3, :3]))) for _, phi in res])
         return X, sig
@@ -431,8 +450,8 @@ class ODResult:
         return self.x + rng.standard_normal((n, 6)) @ L.T
 
 
-def _stack(observations, x, epoch, system):
-    res = _propagate_many(x, epoch, [o.t for o in observations], system, with_stm=True)
+def _stack(observations, x, epoch, system, dynamics=None):
+    res = _prop(dynamics, x, epoch, [o.t for o in observations], system, with_stm=True)
     r, A, per = [], [], []
     for o, (xk, phi) in zip(observations, res):
         rk = o.residual(xk)[0] / o.sigma
@@ -449,17 +468,17 @@ def _prior_scale(system, pos_km, vel_mps):
 
 
 def info_rank(observations, x, epoch: float = None, system: System = EARTH_MOON,
-              pos_km: float = 2000.0, vel_mps: float = 50.0) -> int:
+              pos_km: float = 2000.0, vel_mps: float = 50.0, dynamics=None) -> int:
     """How many state directions the observations constrain more tightly than
     (pos_km, vel_mps) would -- 6 means the data alone determines the orbit."""
     epoch = min(o.t for o in observations) if epoch is None else epoch
-    _, A, _ = _stack(observations, x, epoch, system)
+    _, A, _ = _stack(observations, x, epoch, system, dynamics)
     s = np.linalg.svd(A * _prior_scale(system, pos_km, vel_mps), compute_uv=False)
     return int(np.sum(s > 1.0))
 
 
 def fit(observations, x_guess, epoch: float | None = None, system: System = EARTH_MOON,
-        prior=None, max_iter: int = 40, source: str = "") -> ODResult:
+        prior=None, max_iter: int = 40, source: str = "", dynamics=None) -> ODResult:
     """Weighted batch least squares for the epoch state.
 
     observations : list of Observation (with z filled)
@@ -467,6 +486,9 @@ def fit(observations, x_guess, epoch: float | None = None, system: System = EART
     epoch        : nondim epoch time (default: earliest observation)
     prior        : optional (x_bar, sigma) with sigma a (6,) array of 1-sigma (nondim),
                    added as pseudo-measurements of the state.
+    dynamics     : None for the CR3BP (rotating frame), or an object with
+                   ``propagate_many(x0, t0, times, with_stm)`` such as
+                   :class:`cislunar.ephemeris.NBodyDynamics` (states in its frame).
     """
     obs = [o for o in observations if o.z is not None]
     if not obs:
@@ -484,8 +506,8 @@ def fit(observations, x_guess, epoch: float | None = None, system: System = EART
 
     def evaluate(x):
         try:
-            r, A, per = _stack(obs, x, epoch, system)
-        except (cr3bp.ImpactError, RuntimeError):
+            r, A, per = _stack(obs, x, epoch, system, dynamics)
+        except (cr3bp.ImpactError, RuntimeError, ValueError):
             return None
         return r, A, per, float(r @ r) + prior_cost(x)
 
@@ -532,7 +554,7 @@ def fit(observations, x_guess, epoch: float | None = None, system: System = EART
     s = np.linalg.svd(A * _prior_scale(system, 2000.0, 50.0), compute_uv=False)
     chi_d = float(r @ r)
     return ODResult(x, epoch, Pcov, chi_d, prior_cost(x), n_meas, bool(converged), it,
-                    xbar is not None, int(np.sum(s > 1.0)), per, source, system)
+                    xbar is not None, int(np.sum(s > 1.0)), per, source, system, dynamics=dynamics)
 
 
 # ---------------------------------------------------------------------------

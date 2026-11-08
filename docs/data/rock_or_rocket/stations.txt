@@ -1,0 +1,69 @@
+# MPC observatory codes (https://www.minorplanetcenter.net/iau/lists/ObsCodes.html)
+# code  east_lon_deg  rho_cos_phi  rho_sin_phi  name
+033   11.71124  0.630904  +0.773338  Karl Schwarzschild Observatory, Tautenburg
+088   31.82769  0.867391  +0.496114  Kottomia
+104   10.80375  0.719842  +0.692040  San Marcello Pistoiese
+126    9.79015  0.718943  +0.692828  Monte Viseggi L. Zannoni Observatory
+130   10.23963  0.700148  +0.711796  Lumezzane
+160   10.84144  0.722651  +0.688913  Castelmartini
+185    7.42190  0.678760  +0.732000  Observatoire Astronomique Jurassien-Vicques
+203    8.99548  0.701614  +0.710215  GiaGa Observatory
+204    8.76972  0.697648  +0.714307  Schiaparelli Observatory
+470   13.32756  0.749268  +0.660088  Ceccano
+587    9.22918  0.697459  +0.714479  Sormano
+595   13.52578  0.696925  +0.714749  Farra d'Isonzo
+598   11.33409  0.717444  +0.694448  Loiano
+654  242.31841  0.826471  +0.561727  Table Mountain Observatory, Wrightwood-PHMC
+673  242.31783  0.826474  +0.561722  Table Mountain Observatory, Wrightwood
+691  248.39962  0.849471  +0.526482  Steward Observatory, Kitt Peak-Spacewatch
+703  249.26736  0.845311  +0.533211  University of Arizona Catalina Sky Survey
+734  263.99758  0.779425  +0.624489  Farpoint Observatory, Eskridge
+807  289.19410  0.865600  -0.499800  Cerro Tololo Observatory, La Serena
+950  342.11760  0.877640  +0.478470  La Palma
+970    0.49348  0.620452  +0.781632  Chelmsford
+B49    2.11250  0.749498  +0.659844  Paus Observatory, Sabadell
+D43    7.77039  0.707805  +0.704162  45th Parallel Observatory, Pino Torinese
+F51  203.74409  0.936241  +0.351543  Pan-STARRS 1, Haleakala
+F52  203.74409  0.936239  +0.351545  Pan-STARRS 2, Haleakala
+G02   18.76539  0.653307  +0.754650  KYSUCE Observatory, Kysucke Nove Mesto
+G19   12.74600  0.632520  +0.772020  Immanuel Kant Observatory,Limbach
+G34   13.70150  0.632547  +0.772037  Oberfrauendorf
+G40  343.49174  0.881470  +0.471441  Slooh.com Canary Islands Observatory
+G96  249.21128  0.845107  +0.533611  University of Arizona Mt. Lemmon Survey
+H21  272.03173  0.772885  +0.632471  Astronomical Research Observatory, Westfield
+H36  264.29345  0.780428  +0.623229  Sandlot Observatory, Scranton
+I52  249.21108  0.845109  +0.533609  Steward Observatory, Mt. Lemmon Station
+I93  359.79704  0.713717  +0.698101  St Pardon de Conques
+J04  343.48818  0.881471  +0.471466  ESA Optical Ground Station, Tenerife
+J43  352.13354  0.856441  +0.515339  Oukaimeden Observatory, Marrakech
+J95  358.55301  0.624152  +0.778715  Great Shefford
+K19    5.64731  0.720582  +0.691187  PASTIS Observatory, Banon
+K38    8.91824  0.697505  +0.714297  M57 Observatory, Saltrio
+K74   10.23640  0.646670  +0.760250  Muensterschwarzach Observatory, Schwarzach
+K83   11.04317  0.723487  +0.688080  Osservatorio Astronomico Beppe Forti, Montelupo
+K87   10.17011  0.646647  +0.760288  Dettelbach Vineyard Observatory
+L01   13.74930  0.704742  +0.707169  Visnjan Observatory, Tican
+L04   23.59640  0.685544  +0.725675  ROASTERR-1 Observatory, Cluj-Napoca
+L18   26.71828  0.659348  +0.749399  QOS Observatory, Zalistsi
+M22   20.81033  0.845561  -0.532616  ATLAS South Africa, Sutherland
+M45   25.76889  0.697617  +0.714205  Starhopper Observatory, Sfantu Gheorghe
+M49   16.36172  0.919630  -0.392206  IAS Remote Observatory, Hakos
+Q06  136.49547  0.816116  +0.575990  Tarui Observatory, Tarui
+T05  203.74299  0.936236  +0.351547  ATLAS-HKO, Haleakala
+T08  204.42395  0.943290  +0.332467  ATLAS-MLO, Mauna Loa
+T12  204.53054  0.941733  +0.337201  University of Hawaii 88-inch telescope, Maunakea
+T15  204.53093  0.941728  +0.337214  Gemini North Observatory, Maunakea
+U52  237.45100  0.749240  +0.660270  Shasta Valley Observatory, Grenada
+V01  248.23911  0.762243  +0.645493  Mountainville Observatory, Alpine
+V39  255.98483  0.861053  +0.507427  McDonald Observatory-LCO ELP B
+W05  271.26719  0.836205  +0.546596  Tree Gate Farm Observatory, Starkville
+W16  273.76869  0.822976  +0.566292  Pleasant Groves Observatory
+W46  280.41192  0.818614  +0.572448  Foxfire Village
+W68  289.23502  0.862845  -0.504269  ATLAS Chile, Rio Hurtado
+Y05  316.31000  0.941320  -0.337075  SONEAR Wykrota-CEAMIG, Serra da Piedade
+Y64  343.48961  0.881484  +0.471433  Transient Survey Telescope (TST), Teide
+Y65  343.49042  0.881484  +0.471429  Two-meter Twin Telescope, TTT1
+Y66  343.49053  0.881484  +0.471429  Two-meter Twin Telescope, TTT2
+Y89  353.01189  0.741825  +0.668670  Proxima Centauri Observatory, Valdin
+Z80  359.62808  0.623054  +0.779568  Northolt Branch Observatory
+Z84  357.45184  0.797530  +0.601830  Calar Alto-Schmidt

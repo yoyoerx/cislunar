@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Case study: finding a rocket stage's orbit from amateur telescope data</title>
+<style>/*__CSS__*/
+.chip { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+.small { font-size: 13px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.src { font-size: 13px; color: var(--ink2); }
+</style>
+<script>/*__PLOTLY__*/</script>
+</head>
+<body>
+<header class="top">
+  <span class="brand">cislunar</span><span class="ver">case study &middot; orbit determination from real observations &middot; v__VERSION__</span>
+  <button id="themeBtn" type="button">Toggle dark mode</button>
+</header>
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+<ol>
+  <li><a href="#summary">Summary</a></li>
+  <li><a href="#object">The object</a></li>
+  <li><a href="#data">The observations</a></li>
+  <li><a href="#model">Modelling a telescope measurement</a></li>
+  <li><a href="#fit">From three points to an orbit</a></li>
+  <li><a href="#forces">Why the Sun matters</a></li>
+  <li><a href="#forecast">Six weeks ahead</a></li>
+  <li><a href="#where">Where on the Moon?</a></li>
+  <li><a href="#srp">Sunlight pressure</a></li>
+  <li><a href="#cr3bp">Through three-body eyes</a></li>
+  <li><a href="#limits">What this does and doesn't show</a></li>
+  <li><a href="#reproduce">Reproduce it</a></li>
+</ol>
+</nav>
+<main>
+
+<section id="summary">
+<h1>A rocket stage, 111 telescope sightings, and a crater on the far side of the Moon</h1>
+<p class="lede">In January 2022 amateur and professional astronomers tracked a faint object looping around the Earth. Orbit
+calculations showed it would hit the Moon on 4 March 2022. It was first thought to be a SpaceX stage, then identified as a
+Chinese rocket stage launched in 2014. Three months after the impact, NASA's Lunar Reconnaissance Orbiter photographed the new
+crater. This case study takes the 111 published sightings and runs them through the <code>cislunar</code> toolkit to see how far
+they get us, using a real crater as the answer key.</p>
+<div class="callout"><span class="tag">Headline results</span><div id="headline"></div></div>
+<div class="callout warn"><span class="tag">How to read this</span>
+Everything here uses only the observations from 15 to 20 January 2022, six weeks before impact. The professional predictions
+quoted for comparison also used February observations, which are not public in the source used here. The crater location
+comes from LRO and is used only to check the forecast, never in the fit.</div>
+</section>
+
+<section id="object">
+<h2>1. The object</h2>
+<p>The object was posted as <b>WE0913A</b> in 2015 by the Catalina Sky Survey and then mostly ignored. In January 2022, Bill Gray (Project
+Pluto, author of the Find_Orb orbit software) noticed that its orbit would take it into the Moon on 4 March. He first identified it as
+the second stage of the SpaceX Falcon 9 that launched NASA's DSCOVR spacecraft in February 2015. On 12 February 2022, Jon Giorgini of JPL
+pointed out that DSCOVR's trajectory didn't pass close enough to the Moon to fit. Gray then traced the object back to the Long March 3C
+third stage that launched China's <b>Chang'e 5-T1</b> lunar test mission on 23 October 2014. That stage passed the Moon five days after
+launch. Other evidence pointed the same way: an amateur-radio cubesat launched with it has a matching orbit, and University of Arizona
+spectra resemble Chinese boosters rather than Falcon 9s. China's foreign ministry denied it was the Chang'e 5 stage, which Gray attributes
+to a mix-up between the Chang'e 5 and 5-T1 missions.</p>
+<p>The stage hit the Moon at about 12:25 UTC on 4 March 2022 on the far side, near the crater Hertzsprung, out of sight from Earth. On
+21 May 2022, LRO imaged an unusual <b>double crater</b> there, roughly 28&nbsp;m across, at <b>5.226&deg;N, 234.486&deg;E</b>. A double
+crater suggests an object with heavy masses at both ends, which fits a spent rocket stage.</p>
+<p class="src">Sources: <a href="https://projectpluto.com/temp/dscovr.htm">Project Pluto pseudo-MPEC</a> (astrometry, Find_Orb orbit, impact prediction);
+<a href="https://projectpluto.com/temp/correct.htm">identification correction</a>; <a href="https://projectpluto.com/temp/imaged.htm">crater found</a>;
+<a href="https://lroc.im-ldi.com/posts/1261">LROC: "Mystery Rocket Body Found!"</a> (M. Robinson, 23 June 2022);
+<a href="https://www.minorplanetcenter.net/iau/lists/ObsCodes.html">MPC observatory codes</a>; Moon and Sun positions from
+<a href="https://ssd.jpl.nasa.gov/horizons/">JPL Horizons</a>.</p>
+</section>
+
+<section id="data">
+<h2>2. The observations</h2>
+<p>Each observation is a time and a direction: the object's right ascension and declination, measured against catalogue stars in a CCD image.
+There is no distance and no velocity. Nine observatories in Europe and the US contributed. Two French observatories, SATINO (C95) and
+PASTIS (K19), took most of them, in rapid series of 3 to 10 frames.</p>
+<div id="stationTable"></div>
+<div class="figure">
+  <div class="ftitle">Figure 1. Where the object was on the sky</div>
+  <div class="fsub">Each dot is one observation; colour is the observatory. The object brightened from magnitude 17 to 12 and sped up as it fell toward
+  perigee (closest approach to Earth, 32,600 km) late on 20 January.</div>
+  <div id="fig-sky" class="plot short"></div>
+</div>
+</section>
+
+<section id="model">
+<h2>3. Modelling a telescope measurement</h2>
+<p>To fit an orbit we must predict, for any trial orbit, exactly what each telescope would have measured. Getting this to a fraction of an
+arcsecond (1&Prime; is the width of a coin seen from 5 km) takes several corrections that are easy to miss:</p>
+<ul>
+<li><b>Where the telescope is.</b> The observatory's position on the spinning Earth, rotated into the star-catalogue frame (J2000) using Earth rotation,
+precession (0.3&deg; of drift since 2000) and nutation.</li>
+<li><b>Light travel time.</b> The light left the object about 1 second before it was recorded. In that time the object moved about a kilometre.</li>
+<li><b>The Earth's motion.</b> Star-catalogue positions are measured from the solar system's centre of mass. While the light is in transit, the Earth moves
+about 38&nbsp;km along its orbit around the Sun. Leaving this out caused a 20&Prime; error in the first version of this model.</li>
+</ul>
+<p>To check the model, it predicts where the <i>Moon</i> appears from observatory C95, and that is compared with JPL Horizons:</p>
+<div id="horizonsTable"></div>
+</section>
+
+<section id="fit">
+<h2>4. From three points to an orbit</h2>
+<p><b>A first guess.</b> Gauss's method (1801, devised to recover the asteroid Ceres) turns three directions into an orbit, assuming only the Earth's gravity.
+We used one observation a day apart on 17, 18 and 19 January: <span id="iodText"></span></p>
+<p><b>The fit.</b> The toolkit's least-squares estimator (<code>od.fit</code>) adjusts the position and velocity until the predicted directions match all 111
+observations as closely as possible. It uses the full force model described in the next section.</p>
+<div class="figure">
+  <div class="ftitle">Figure 2. What is left over: residuals of the best fit</div>
+  <div class="fsub">Observed minus predicted direction, in arcseconds, for each observation. Scatter of under an arcsecond is typical of the telescopes used.
+  On 20 January, near perigee, the object crossed the sky at about 6&Prime; per second. A clock error of a few tenths of a second
+  then becomes an arcsecond or two along the track, which is why the day-5 RA residuals spread more than the Dec residuals.</div>
+  <div id="fig-resid" class="plot short"></div>
+</div>
+<div id="residTable"></div>
+<p><b>Cross-check against Find_Orb.</b> Bill Gray fitted the same 111 observations with Find_Orb, a mature orbit-determination program. Both orbits, as
+osculating elements on 21.0 January 2022:</p>
+<div id="elemTable"></div>
+</section>
+
+<section id="forces">
+<h2>5. Why the Sun matters</h2>
+<p>The rest of this toolkit uses the circular restricted three-body problem (CR3BP): Earth and Moon only, with the Moon on a circular orbit.
+That model is excellent for designing orbits but not for fitting real measurements of this object. At 300,000&ndash;500,000&nbsp;km from Earth,
+the Sun's tidal pull moves the object by thousands of kilometres within a week. The same 111 observations fitted with each force model:</p>
+<div class="figure">
+  <div class="ftitle">Figure 3. How well each force model can fit the real observations</div>
+  <div class="fsub">RMS residual (log scale). The dashed line is the telescopes' measurement noise of about 0.7&Prime;: a model can't do better
+  than that, and a correct model should reach it.</div>
+  <div id="fig-models" class="plot short"></div>
+</div>
+<p id="modelsText"></p>
+</section>
+
+<section id="forecast">
+<h2>6. Six weeks ahead</h2>
+<p>From the fitted state on 15 January, the trajectory is propagated forward with the same force model until it meets the Moon's surface.</p>
+<div class="tiles" id="impactTiles"></div>
+<div class="figure">
+  <div class="ftitle">Figure 4. The trajectory, 15 January to 4 March 2022</div>
+  <div class="fsub">Earth-centred, seen from above the Earth's equator (J2000 x&ndash;y). The object makes two more loops past the Earth before
+  meeting the Moon. The grey line is the Moon's path over the same weeks. The dots mark the start and the impact.</div>
+  <div id="fig-traj" class="plot"></div>
+</div>
+<div class="figure">
+  <div class="ftitle">Figure 5. The last 24 hours, in the Moon's own frame</div>
+  <div class="fsub">Moon-centred, rotating with the Moon (x toward the mean Earth direction, so negative x is the far side). The stage comes in
+  over the far side and strikes about 15&deg; from vertical.</div>
+  <div id="fig-approach" class="plot"></div>
+</div>
+</section>
+
+<section id="where">
+<h2>7. Where on the Moon?</h2>
+<p>A forecast without an uncertainty is not much use. The fit's covariance says how well the January data pin down the orbit. Running 300
+trajectories drawn from it (a Monte Carlo) shows where the stage could have landed:</p>
+<div class="figure">
+  <div class="ftitle">Figure 6. Predicted impact points versus the crater LRO found</div>
+  <div class="fsub">Selenographic latitude and east longitude (1&deg; of longitude &asymp; 30&nbsp;km here). The cloud is the January-only Monte Carlo.
+  The line shows how the predicted impact moves as more sunlight pressure is assumed (section 8). The star is the crater.</div>
+  <div id="fig-moon" class="plot tall"></div>
+</div>
+<p id="whereText"></p>
+</section>
+
+<section id="srp">
+<h2>8. Sunlight pressure</h2>
+<p>Sunlight pushes on everything it hits. For a 12-metre empty rocket stage the push is tiny, about a ten-billionth of Earth's surface gravity.
+Over six weeks it adds up to hundreds of kilometres. Its strength depends on the stage's area-to-mass ratio <i>A/m</i> and how reflective it is
+(<i>C<sub>r</sub></i>). These enter only as the product <i>C<sub>r</sub>A/m</i>, which nobody knows in advance. Each value below was
+fitted to the January data and then forecast to impact:</p>
+<div class="figure">
+  <div class="ftitle">Figure 7. Same data, different sunlight pressure</div>
+  <div class="fsub">Left axis: how far the predicted impact lands from the crater. Right axis: how much worse the fit to January data gets (&Delta;&chi;&sup2;; a
+  change of 1 is one standard deviation). The January data barely care. The impact point cares a great deal.</div>
+  <div id="fig-srp" class="plot short"></div>
+</div>
+<p id="srpText"></p>
+<div class="figure">
+  <div class="ftitle">Figure 8. What February observations would have added (simulated)</div>
+  <div class="fsub">The fit quality (&Delta;&chi;&sup2;) as sunlight pressure is varied, for January data alone and for January plus <span id="febN"></span>
+  simulated February observations. The narrow valley is what pins the parameter down.</div>
+  <div id="fig-feb" class="plot short"></div>
+</div>
+<p id="febText"></p>
+</section>
+
+<section id="cr3bp">
+<h2>9. Through three-body eyes</h2>
+<p>In the CR3BP, the Jacobi constant <i>C</i> plays the role of energy. It decides which regions an object can reach: below the value at the L1 and L2
+points (about 3.19 and 3.17), the zero-velocity curves open and the Moon's neighbourhood becomes reachable. Below is <i>C</i> for this
+trajectory, computed in a rotating frame that follows the real Moon at each instant.</p>
+<div class="figure">
+  <div class="ftitle">Figure 9. The "constant" that isn't</div>
+  <div class="fsub">Jacobi value along the forecast trajectory. In the CR3BP it would be a flat line. The Sun and the Moon's eccentric orbit make it
+  drift, mostly near perigee passes. The object stays well below the L1/L2 values, so the CR3BP's energy barrier never closes, but whether it
+  actually hits the Moon depends on details the CR3BP doesn't have.</div>
+  <div id="fig-jacobi" class="plot short"></div>
+</div>
+</section>
+
+<section id="limits">
+<h2>10. What this does and doesn't show</h2>
+<ul>
+<li><b>The orbit fit is solid.</b> It reproduces the observations to their noise level, and its elements agree with Find_Orb's to within the stated uncertainties.</li>
+<li><b>The forecast is only as good as the force model.</b> With gravity alone, the January data put the impact within about the right distance along
+the track, but off to one side of the crater. Allowing a modest sunlight pressure puts the track through the crater. With only January data, though,
+that pressure is fitted <i>to the answer</i>; it isn't measured. February data would have measured it.</li>
+<li><b>The fitted pressure is lower than a simple estimate.</b> An empty stage 12.4&nbsp;m &times; 3&nbsp;m with about 2.8&nbsp;t dry mass, tumbling,
+would have <i>C<sub>r</sub>A/m</i> &asymp; 0.01&ndash;0.017&nbsp;m&sup2;/kg. The value that hits the crater is lower. It may be absorbing other model
+errors: Earth's shadow, a non-spherical stage, residual propellant, or the Moon's gravity field. Treat it as an effective parameter, not a measurement.</li>
+<li><b>Not modelled:</b> Earth-shadow passages, relativity, planets other than the Sun, lunar gravity harmonics on the final approach, and per-site timing biases.</li>
+</ul>
+</section>
+
+<section id="reproduce">
+<h2>11. Reproduce it</h2>
+<pre><code>from cislunar import astrometry as A, ephemeris as E, od
+from cislunar.constants import EARTH_MOON as S
+recs = A.parse("docs/data/change5t1/astrometry.txt")          # 111 observations
+st = A.load_stations("docs/data/change5t1/stations.txt")      # MPC parallax constants
+eph = E.Ephemeris.cached("docs/data/change5t1/ephemeris_2022.json", "2022-01-10", "2022-03-06")
+dyn = E.NBodyDynamics(eph, E.utc_to_tdb(recs[0].jd_utc))       # Earth+Moon+Sun (+J2), J2000
+obs = A.to_observations(recs, st, dyn)                          # light-time + barycentric aberration
+jd, r, v = A.gauss_iod([recs[40], recs[60], recs[80]], st)[0]   # first orbit from three directions
+x = dyn.propagate_many(S.state_to_nd(list(r) + list(v)), float(dyn.t_of_jd(E.utc_to_tdb(jd))), [0.0], False)[0][0]
+fit = od.fit(obs, x, 0.0, S, dynamics=dyn)                      # batch least squares
+t, X, impact = dyn.propagate(fit.x, 0.0, float(dyn.t_of_jd(2459644.0)), moon_radius_km=1739.26)
+print(impact["lat"], impact["lon"], E.tdb_to_utc(impact["jd_tdb"]))</code></pre>
+<p>Full pipeline: <code>python docs/build_case_study_od.py --rebuild</code> (about 10 minutes on 7 cores). The data files, with their sources, are in
+<code>docs/data/change5t1/</code>.</p>
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+const D = /*__DATA__*/null;
+const CFG = {displaylogo: false, responsive: true, modeBarButtonsToRemove: ["select2d", "lasso2d"]};
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 0) => Number(v).toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
+function tok() {
+  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim();
+  return {surface: g("--surface"), ink: g("--ink"), ink2: g("--ink2"), muted: g("--muted"), grid: g("--grid"), axis: g("--axis"),
+    earth: g("--earth"), moon: g("--moon"), s: [g("--s1"), g("--s2"), g("--s3"), g("--s4"), g("--s5"), g("--s6")],
+    good: g("--good"), critical: g("--critical")};
+}
+const charts = [];
+function register(fn) { charts.push(fn); fn(); }
+$("themeBtn").addEventListener("click", () => {
+  const dark = getComputedStyle(document.documentElement).colorScheme.includes("dark");
+  document.documentElement.dataset.theme = dark ? "light" : "dark"; charts.forEach((f) => f());
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => charts.forEach((f) => f()));
+function axis(t, title, extra = {}) {
+  return Object.assign({title: {text: title, font: {color: t.ink2, size: 13}}, gridcolor: t.grid, zerolinecolor: t.axis,
+    linecolor: t.axis, tickfont: {color: t.ink2, size: 11}}, extra);
+}
+function layout2d(t, xt, yt, extra = {}) {
+  return Object.assign({paper_bgcolor: t.surface, plot_bgcolor: t.surface, font: {family: "system-ui, -apple-system, Segoe UI, sans-serif", color: t.ink, size: 12},
+    margin: {l: 64, r: 16, t: 20, b: 50}, xaxis: axis(t, xt), yaxis: axis(t, yt), legend: {font: {color: t.ink}, bgcolor: "rgba(0,0,0,0)"}}, extra);
+}
+const tileHtml = (rows) => rows.map(([a, b]) => `<div class="tile"><div class="k">${a}</div><div class="v">${b}</div></div>`).join("");
+const table = (head, rows, num = []) => `<table><thead><tr>${head.map((h, i) => `<th${num.includes(i) ? ' class="num"' : ""}>${h}</th>`).join("")}</tr></thead><tbody>` +
+  rows.map((r) => `<tr>${r.map((c, i) => `<td${num.includes(i) ? ' class="num"' : ""}>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+
+const REF = D.reference, CR = REF.crater, FO = REF.find_orb_elements_jan_arc, GR = REF.gray_impact_prediction;
+// station groups: the two big contributors, the US site, and the other European sites
+const GROUP = (s) => s === "C95" ? 0 : s === "K19" ? 1 : s === "718" ? 2 : 3;
+const GNAME = ["C95 SATINO (France)", "K19 PASTIS (France)", "718 Tooele (Utah)", "6 other European sites"];
+const R = D.residuals;
+const miss = (lat, lon) => { const p1 = lat * Math.PI / 180, p2 = CR.lat_deg * Math.PI / 180, dl = (lon - CR.lon_east_deg) * Math.PI / 180;
+  return 1737.4 * Math.acos(Math.min(1, Math.sin(p1) * Math.sin(p2) + Math.cos(p1) * Math.cos(p2) * Math.cos(dl))); };
+
+/* ---------------------------------------------------------------- text and tables */
+(function texts() {
+  const N = D.nominal, M = D.srp_match, F = D.feb, fit = D.fit;
+  $("headline").innerHTML = `<ul>
+  <li><b>Orbit from 111 sightings:</b> fitted to <b>${fmt(fit.rms_arcsec, 2)}&Prime;</b> RMS, at the telescopes' noise level (Find_Orb: 0.73&Prime;).
+  The orbital elements match Find_Orb's within their uncertainties.</li>
+  <li><b>Force model:</b> the Earth&ndash;Moon three-body model can only fit the data to ${fmt(D.models[2].rms, 0)}&Prime;. Adding the Sun brings it down to
+  ${fmt(D.models[3].rms, 2)}&Prime;.</li>
+  <li><b>Forecast from January data, gravity only:</b> impact at <b>${N.utc.slice(11)} UTC</b> on 4 March (the actual impact was about 12:25), landing
+  <b>${fmt(N.miss_km)} km</b> from the crater. The Monte Carlo spread is long along the track and narrow across it.</li>
+  <li><b>Sunlight pressure is the main unknown:</b> each 0.01&nbsp;m&sup2;/kg of <i>C<sub>r</sub>A/m</i> moves the impact about ${fmt(srpSlope())}&nbsp;km.
+  At ${fmt(M.amr, 4)}&nbsp;m&sup2;/kg the forecast lands <b>${fmt(M.miss_km, 1)} km</b> from the crater. The January data can't tell these values apart
+  (&Delta;&chi;&sup2; &lt; ${fmt(D["jan_profile_dchi2_0_to_0.02"] + 0.5, 0)}). In simulation, ${F.n_obs} February observations (${F.first_utc.slice(5, 10)} to ${F.last_utc.slice(5, 10)}) would have measured it to
+  &plusmn;${fmt(F.sigma_amr, 4)}, about &plusmn;${fmt(F.sigma_amr * srpSlope() / 0.01)} km on the Moon.</li></ul>`;
+  const ids = Object.entries(D.stations).sort((a, b) => b[1].n - a[1].n);
+  $("stationTable").innerHTML = table(["Code", "Observatory", "East longitude", "Observations"],
+    ids.map(([k, v]) => [k, v.name, `${fmt(v.lon, 3)}&deg;`, v.n]), [2, 3]);
+  const H = D.horizons_check;
+  $("horizonsTable").innerHTML = H.length ? table(["Time (UTC)", "&Delta;RA cos(Dec)", "&Delta;Dec"],
+    H.map((h) => [h.utc, `${fmt(h.dra, 3)}&Prime;`, `${fmt(h.ddec, 3)}&Prime;`]), [1, 2]) +
+    `<p class="small muted">Differences between this model and JPL Horizons are hundredths of an arcsecond, far below the 0.5&ndash;1&Prime; noise of the observations.</p>` :
+    `<p class="small muted">(Horizons comparison not available in this build: it needs network access.)</p>`;
+  const roots = D.iod.roots;
+  $("iodText").innerHTML = `${roots.length} solution${roots.length > 1 ? "s" : ""}, the best ${fmt(roots[0].r_km)} km from Earth moving at ${fmt(roots[0].v_kms, 2)} km/s.
+    From that guess the fit converged in ${roots[0].iterations} iterations.`;
+  const st = [...new Set(R.st)].sort((a, b) => R.st.filter((s) => s === b).length - R.st.filter((s) => s === a).length);
+  $("residTable").innerHTML = table(["Site", "n", "RMS RA", "RMS Dec", "mean RA", "mean Dec"], st.map((s) => {
+    const k = R.st.map((x, i) => x === s ? i : -1).filter((i) => i >= 0);
+    const rms = (a) => Math.sqrt(k.reduce((acc, i) => acc + a[i] ** 2, 0) / k.length), mean = (a) => k.reduce((acc, i) => acc + a[i], 0) / k.length;
+    return [s, k.length, `${fmt(rms(R.dra), 2)}&Prime;`, `${fmt(rms(R.ddec), 2)}&Prime;`, `${fmt(mean(R.dra), 2)}&Prime;`, `${fmt(mean(R.ddec), 2)}&Prime;`];
+  }), [1, 2, 3, 4, 5]);
+  const E = D.elements.ours, ES = D.elements.ours_sigma;
+  const rows = [["Semi-major axis a", "a_km", "a_km", "a_sigma_km", " km", 1], ["Eccentricity e", "e", "e", "e_sigma", "", 6],
+    ["Inclination i", "i_deg", "i_deg", "i_sigma_deg", "&deg;", 5], ["Ascending node", "raan_deg", "raan_deg", "raan_sigma_deg", "&deg;", 4],
+    ["Argument of perigee", "argp_deg", "argp_deg", "argp_sigma_deg", "&deg;", 4]];
+  $("elemTable").innerHTML = table(["Element", "This toolkit", "Find_Orb", "Difference / Find_Orb &sigma;"], rows.map(([n, k, fk, fs, u, d]) =>
+    [n, `${fmt(E[k], d)}${u} &plusmn; ${fmt(ES[k], d)}`, `${fmt(FO[fk], d)}${u} &plusmn; ${fmt(FO[fs], d)}`, fmt((E[k] - FO[fk]) / FO[fs], 1)]), [1, 2, 3]) +
+    `<p class="small muted">Perigee ${fmt(FO.perigee_km)} km, apogee ${fmt(FO.apogee_km)} km, period ${FO.period_days} days. A 0.7&deg; inclination difference
+    would be a different orbit; these agree to a few hundred-thousandths of a degree.</p>`;
+  $("modelsText").innerHTML = `Only Earth + Moon + Sun reaches the noise floor. The CR3BP fit is ${fmt(D.models[2].rms / D.models[3].rms)} times worse, and its best-fit position on
+    15 January is ${fmt(D.models[2].dpos_km)} km away from the full-model solution. The toolkit's three-body tools are still the right way to <i>understand</i>
+    and <i>design</i> such trajectories (section 9). For matching real measurements they need the real Sun and Moon behind them.`;
+  $("impactTiles").innerHTML = tileHtml([["Predicted impact (UTC)", N.utc.slice(5)], ["Location", `${fmt(N.lat, 2)}&deg;N ${fmt(N.lon, 2)}&deg;E`],
+    ["Speed", `${fmt(N.speed_kms, 2)} <small>km/s</small>`], ["Angle from vertical", `${fmt(N.angle_deg, 0)}&deg; <small>(reported: ~15&deg;)</small>`],
+    ["Distance from crater", `${fmt(N.miss_km)} <small>km</small>`]]);
+  const mc = D.mc, lon = mc.lon, lat = mc.lat;
+  const sd = (a) => { const m = a.reduce((x, y) => x + y) / a.length; return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / a.length); };
+  const close = mc.lat.map((v, i) => miss(v, mc.lon[i])).sort((a, b) => a - b);
+  $("whereText").innerHTML = `The ${mc.n} Monte Carlo impacts spread &plusmn;${fmt(sd(lon), 1)}&deg; in longitude (about &plusmn;${fmt(sd(lon) * 30)} km along
+    the track) and &plusmn;${fmt(sd(mc.dt_s))} s in time, but only &plusmn;${fmt(sd(lat), 2)}&deg; across. The nearest sample is ${fmt(close[0])} km from the crater, and
+    the median is ${fmt(close[Math.floor(close.length / 2)])} km. The crater lies along the predicted track but off to one side of the cloud, where the January
+    data alone say it can't be. Something is missing from the force model, and the obvious candidate is sunlight pressure. Gray's own prediction, which
+    also used February observations, landed 16 km from the crater; JPL's landed 8 km away.`;
+  $("srpText").innerHTML = `With no sunlight pressure the forecast misses by ${fmt(N.miss_km)} km. At <i>C<sub>r</sub>A/m</i> = ${fmt(M.amr, 4)} m&sup2;/kg it lands
+    ${fmt(M.miss_km, 1)} km from the crater, at ${M.utc.slice(11)} UTC. Over the whole range the January fit changes by
+    &Delta;&chi;&sup2; &lt; ${fmt(D["jan_profile_dchi2_0_to_0.02"] + 0.5, 0)}: no statistical preference. In other words, the January data put the stage on a line across the
+    Moon. Where along that line depends on a number they can't measure.`;
+  $("febN").textContent = F.n_obs;
+  $("febText").innerHTML = `Simulated follow-up: ${F.n_obs} observations on ${F.first_utc.slice(0, 10)} to ${F.last_utc.slice(0, 10)} from ${F.stations.join(", ")},
+    taken only when the object was more than 20&deg; above the horizon in full darkness, with 1&Prime; noise. Together with January they would fix
+    <i>C<sub>r</sub>A/m</i> to &plusmn;${fmt(F.sigma_amr, 4)} m&sup2;/kg. That is about &plusmn;${fmt(F.sigma_amr * srpSlope() / 0.01)} km on the Moon, in line with the "dozen kilometres" Gray quotes for the real
+    predictions. The February observations are what turned a line across the Moon into a point.`;
+})();
+function srpSlope() {  // km on the Moon per 0.01 m^2/kg, from the scan
+  const s = D.srp_scan.filter((x) => x.impact), a = s[0], b = s[Math.min(3, s.length - 1)];
+  const d = 1737.4 * Math.PI / 180 * Math.hypot(b.impact.lat - a.impact.lat, (b.impact.lon - a.impact.lon) * Math.cos(CR.lat_deg * Math.PI / 180));
+  return d / (b.amr - a.amr) * 0.01;
+}
+
+/* ---------------------------------------------------------------- figures */
+register(function sky() {
+  const t = tok(), tr = [0, 1, 2, 3].map((g) => {
+    const k = R.st.map((s, i) => GROUP(s) === g ? i : -1).filter((i) => i >= 0);
+    return {type: "scatter", mode: "markers", name: GNAME[g], x: k.map((i) => R.ra_deg[i]), y: k.map((i) => R.dec_deg[i]),
+      marker: {color: t.s[g], size: 6}, customdata: k.map((i) => [R.st[i], R.mag[i] ?? "-", fmt(R.t_d[i], 3)]),
+      hovertemplate: "%{customdata[0]} &middot; +%{customdata[2]} d &middot; mag %{customdata[1]}<br>RA %{x:.3f}&deg; Dec %{y:.3f}&deg;<extra></extra>"};
+  });
+  Plotly.react("fig-sky", tr, layout2d(t, "right ascension [deg]", "declination [deg]", {legend: {orientation: "h", y: 1.12, font: {color: t.ink}}}), CFG);
+});
+register(function resid() {
+  const t = tok(), tr = [];
+  [0, 1, 2, 3].forEach((g) => {
+    const k = R.st.map((s, i) => GROUP(s) === g ? i : -1).filter((i) => i >= 0);
+    tr.push({type: "scatter", mode: "markers", name: GNAME[g], legendgroup: g, x: k.map((i) => R.t_d[i]), y: k.map((i) => R.dra[i]),
+      marker: {color: t.s[g], size: 6}, hovertemplate: `${GNAME[g]}<br>RA %{y:.2f}&Prime;<extra></extra>`});
+    tr.push({type: "scatter", mode: "markers", name: GNAME[g], legendgroup: g, showlegend: false, x: k.map((i) => R.t_d[i]), y: k.map((i) => R.ddec[i]),
+      xaxis: "x2", yaxis: "y2", marker: {color: t.s[g], size: 6, symbol: "diamond"}, hovertemplate: `${GNAME[g]}<br>Dec %{y:.2f}&Prime;<extra></extra>`});
+  });
+  Plotly.react("fig-resid", tr, layout2d(t, "", "RA cos(Dec) [arcsec]", {grid: {rows: 1, columns: 2, pattern: "independent"},
+    xaxis: axis(t, "days after 15.756 Jan (RA)"), xaxis2: axis(t, "days (Dec)"), yaxis: axis(t, "residual RA cos(Dec) [arcsec]", {range: [-3, 3]}),
+    yaxis2: axis(t, "residual Dec [arcsec]", {range: [-3, 3]}), legend: {orientation: "h", y: 1.15, font: {color: t.ink}}}), CFG);
+});
+register(function models() {
+  const t = tok(), m = D.models;
+  Plotly.react("fig-models", [{type: "bar", orientation: "h", y: m.map((x) => x.name), x: m.map((x) => x.rms),
+    marker: {color: m.map((x, i) => i === m.length - 1 ? t.s[0] : t.muted)}, text: m.map((x) => fmt(x.rms, x.rms < 2 ? 2 : 1) + "″"), textposition: "outside",
+    textfont: {color: t.ink2}, hovertemplate: "%{y}: %{x:.2f} arcsec<extra></extra>"}],
+    layout2d(t, "RMS residual [arcsec, log scale]", "", {xaxis: axis(t, "RMS residual [arcsec, log scale]", {type: "log", range: [-0.6, 2]}),
+      yaxis: axis(t, "", {autorange: "reversed"}), margin: {l: 220, r: 40, t: 10, b: 46}, showlegend: false,
+      shapes: [{type: "line", x0: 0.7, x1: 0.7, yref: "paper", y0: 0, y1: 1, line: {color: t.ink2, dash: "dash", width: 1}}],
+      annotations: [{x: Math.log10(0.7), y: 1.02, yref: "paper", text: "measurement noise", showarrow: false, font: {size: 11, color: t.ink2}, xanchor: "left"}]}), CFG);
+});
+register(function traj() {
+  const t = tok(), T = D.traj, o = T.obj, m = T.moon, n = o.length - 1;
+  const k = (a, i) => a.map((p) => p[i] / 1000);
+  Plotly.react("fig-traj", [
+    {type: "scatter", mode: "lines", name: "Moon's path", x: k(m, 0), y: k(m, 1), line: {color: t.moon, width: 1.5}, hoverinfo: "skip"},
+    {type: "scatter", mode: "lines", name: "rocket stage (forecast)", x: k(o, 0), y: k(o, 1), line: {color: t.s[0], width: 2},
+      customdata: T.t_d, hovertemplate: "+%{customdata:.1f} d<br>x %{x:.0f}, y %{y:.0f} [1000 km]<extra></extra>"},
+    {type: "scatter", mode: "markers", name: "Earth", x: [0], y: [0], marker: {color: t.earth, size: 12}, hoverinfo: "name"},
+    {type: "scatter", mode: "markers+text", name: "15 Jan (first observation)", x: [o[0][0] / 1000], y: [o[0][1] / 1000], text: ["15 Jan"], textposition: "top right",
+      marker: {color: t.ink, size: 8}, textfont: {color: t.ink2}, showlegend: false, hoverinfo: "skip"},
+    {type: "scatter", mode: "markers+text", name: "impact", x: [o[n][0] / 1000], y: [o[n][1] / 1000], text: ["impact 4 Mar"], textposition: "bottom left",
+      marker: {color: t.critical, size: 10, symbol: "x"}, textfont: {color: t.ink2}, showlegend: false, hoverinfo: "skip"}],
+    layout2d(t, "x [1000 km]", "y [1000 km]", {yaxis: axis(t, "y [1000 km]", {scaleanchor: "x"}), legend: {x: 0.01, y: 0.99, font: {color: t.ink}}}), CFG);
+});
+register(function approach() {
+  const t = tok(), A = D.approach_bf, k = (i) => A.map((p) => p[i] / 1000);
+  const circ = [...Array(73).keys()].map((i) => [1.7374 * Math.cos(i * Math.PI / 36), 1.7374 * Math.sin(i * Math.PI / 36)]);
+  Plotly.react("fig-approach", [
+    {type: "scatter", mode: "lines", name: "Moon (equator slice)", x: circ.map((p) => p[0]), y: circ.map((p) => p[1]), fill: "toself",
+      fillcolor: t.moon, line: {color: t.moon}, hoverinfo: "skip"},
+    {type: "scatter", mode: "lines", name: "last 24 h", x: k(0), y: k(1), line: {color: t.s[0], width: 2}, hoverinfo: "skip"},
+    {type: "scatter", mode: "markers", name: "impact", x: [A[A.length - 1][0] / 1000], y: [A[A.length - 1][1] / 1000], marker: {color: t.critical, size: 10, symbol: "x"}}],
+    layout2d(t, "x toward Earth [1000 km]", "y [1000 km]", {yaxis: axis(t, "y [1000 km]", {scaleanchor: "x"}), legend: {x: 0.01, y: 0.99, font: {color: t.ink}}}), CFG);
+});
+register(function moonMap() {
+  const t = tok(), mc = D.mc, sc = D.srp_scan.filter((s) => s.impact), N = D.nominal, M = D.srp_match;
+  Plotly.react("fig-moon", [
+    {type: "scatter", mode: "markers", name: `January-only Monte Carlo (${mc.lat.length})`, x: mc.lon, y: mc.lat, marker: {color: t.s[0], size: 4, opacity: 0.45},
+      hovertemplate: "%{y:.3f}&deg;N %{x:.3f}&deg;E<extra></extra>"},
+    {type: "scatter", mode: "lines+markers+text", name: "with sunlight pressure (C<sub>r</sub>A/m, m²/kg)", x: sc.map((s) => s.impact.lon), y: sc.map((s) => s.impact.lat),
+      text: sc.map((s) => s.amr.toFixed(3)), textposition: "top center", textfont: {size: 10, color: t.ink2}, line: {color: t.s[1], width: 1.5},
+      marker: {color: t.s[1], size: 6}, hovertemplate: "C<sub>r</sub>A/m %{text}<br>%{y:.2f}&deg;N %{x:.2f}&deg;E<extra></extra>"},
+    {type: "scatter", mode: "markers", name: "this fit, gravity only", x: [N.lon], y: [N.lat], marker: {color: t.s[0], size: 12, symbol: "circle-open", line: {width: 2}}},
+    {type: "scatter", mode: "markers", name: "Gray's prediction (Jan + Feb data)", x: [GR.lon_east_deg], y: [GR.lat_deg], marker: {color: t.s[3], size: 11, symbol: "diamond"}},
+    {type: "scatter", mode: "markers", name: "crater found by LRO", x: [CR.lon_east_deg], y: [CR.lat_deg], marker: {color: t.critical, size: 16, symbol: "star"}}],
+    layout2d(t, "east longitude [deg]", "latitude [deg]", {xaxis: axis(t, "east longitude [deg]", {range: [208, 252]}),
+      yaxis: axis(t, "latitude [deg]", {range: [1.5, 8.5]}), legend: {x: 0.01, y: 0.01, font: {color: t.ink}, bgcolor: t.surface}}), CFG);
+});
+register(function srp() {
+  const t = tok(), s = D.srp_scan.filter((x) => x.impact), c0 = s[0].chi2;
+  Plotly.react("fig-srp", [
+    {type: "scatter", mode: "lines+markers", name: "distance from crater", x: s.map((x) => x.amr), y: s.map((x) => miss(x.impact.lat, x.impact.lon)),
+      line: {color: t.s[1], width: 2}, hovertemplate: "C<sub>r</sub>A/m %{x}: %{y:.0f} km<extra></extra>"},
+    {type: "scatter", mode: "lines+markers", name: "&Delta;&chi;&sup2; of the January fit", x: s.map((x) => x.amr), y: s.map((x) => x.chi2 - c0), yaxis: "y2",
+      line: {color: t.muted, width: 1.5, dash: "dot"}, hovertemplate: "&Delta;&chi;&sup2; %{y:.2f}<extra></extra>"}],
+    layout2d(t, "C<sub>r</sub>A/m [m²/kg]", "distance from crater [km]", {yaxis2: axis(t, "Δχ² (January data)", {overlaying: "y", side: "right", range: [0, 10]}),
+      margin: {l: 64, r: 64, t: 20, b: 50}, legend: {x: 0.02, y: 0.98, font: {color: t.ink}}}), CFG);
+});
+register(function feb() {
+  const t = tok(), P = D.feb.profile, s = D.srp_scan;
+  const p0 = Math.min(...P.map((x) => x.chi2)), s0 = Math.min(...s.map((x) => x.chi2));
+  Plotly.react("fig-feb", [
+    {type: "scatter", mode: "lines+markers", name: "January only (real)", x: s.map((x) => x.amr), y: s.map((x) => x.chi2 - s0), line: {color: t.muted, width: 1.5}},
+    {type: "scatter", mode: "lines+markers", name: "January + February (simulated)", x: P.map((x) => x.amr), y: P.map((x) => x.chi2 - p0), line: {color: t.s[0], width: 2}}],
+    layout2d(t, "C<sub>r</sub>A/m [m²/kg]", "Δχ² (1 = one standard deviation)", {yaxis: axis(t, "Δχ²", {range: [0, 12]}),
+      xaxis: axis(t, "C<sub>r</sub>A/m [m²/kg]", {range: [0, 0.012]}), legend: {x: 0.55, y: 0.98, font: {color: t.ink}}}), CFG);
+});
+register(function jacobi() {
+  const t = tok(), T = D.traj, L = D.jacobi_L;
+  Plotly.react("fig-jacobi", [{type: "scatter", mode: "lines", name: "Jacobi value", x: T.t_d, y: T.jacobi, line: {color: t.s[0], width: 2},
+    hovertemplate: "+%{x:.1f} d: C = %{y:.4f}<extra></extra>"}],
+    layout2d(t, "days after first observation", "Jacobi value C", {showlegend: false,
+      shapes: ["L1", "L2"].map((k) => ({type: "line", xref: "paper", x0: 0, x1: 1, y0: L[k], y1: L[k], line: {color: t.ink2, dash: "dash", width: 1}})),
+      annotations: ["L1", "L2"].map((k, i) => ({xref: "paper", x: 0.99, y: L[k], text: `C at ${k}`, showarrow: false, xanchor: "right", yanchor: i ? "top" : "bottom",
+        font: {size: 11, color: t.ink2}}))}), CFG);
+});
+</script>
+</body>
+</html>
